@@ -24,7 +24,6 @@ AGASCharacterPlayer::AGASCharacterPlayer()
 	InitializeObjectFinder(MainAttackAction, TEXT("/Game/_Dev/Input/IA_MainAttack.IA_MainAttack"));
 	InitializeObjectFinder(SubAttackAction, TEXT("/Game/_Dev/Input/IA_SubAttack.IA_SubAttack"));
 	InitializeObjectFinder(SkillAction, TEXT("/Game/_Dev/Input/IA_Skill.IA_Skill"));
-	
 	InitializeObjectFinder(DefaultContext, TEXT("/Game/_Dev/Input/IMC_Player.IMC_Player"));
 	InitializeObjectFinder(MainAttackMontage, TEXT("/Game/_Assets/ParagonKhaimera/Characters/Heroes/Khaimera/Animations/Montage/Melee_Combo_Montage.Melee_Combo_Montage"));
 	
@@ -64,7 +63,7 @@ void AGASCharacterPlayer::Move(const FInputActionValue& Value)
 	AddMovementInput(MoveDirection, MovementVectorSize);
 }
 
-void AGASCharacterPlayer::Look()
+void AGASCharacterPlayer::Look() // 캐릭터 방향 전환 TODO: 추후 변경
 {
 	FVector WorldMouseLocation,	WorldMouseDirection;
 	if(GetLocalViewingPlayerController()->DeprojectMousePositionToWorld(WorldMouseLocation, WorldMouseDirection))
