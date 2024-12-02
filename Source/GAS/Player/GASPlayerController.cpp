@@ -9,6 +9,4 @@ AGASPlayerController::AGASPlayerController()
 void AGASPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-	SetShowMouseCursor(true);
-	
 }

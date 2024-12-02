@@ -1,33 +1,34 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA/GA_AttackHitCheck.h"
+#include "GA/KYGA_AttackHitCheck.h"
 #include "GAS.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GA/AT/AT_Trace.h"
+#include "GA/AT/KYAT_Trace.h"
 #include "Attribute/GASCharacterAttributeSet.h"
-#include "TA/TA_Trace.h"
+#include "TA/KYTA_Trace.h"
 #include "Tag/GASGameplayTag.h"
 
-UGA_AttackHitCheck::UGA_AttackHitCheck()
+UKYGA_AttackHitCheck::UKYGA_AttackHitCheck()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
-void UGA_AttackHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void UKYGA_AttackHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	
 	CurrentLevel = TriggerEventData->EventMagnitude;
 	
-	UAT_Trace* AttackTraceTask = UAT_Trace::CreateTask(this, TargetActorClass);
+	UKYAT_Trace* AttackTraceTask = UKYAT_Trace::CreateTask(this, TargetActorClass);
 
-	AttackTraceTask->OnTraceComplete.AddDynamic(this, &UGA_AttackHitCheck::OnTraceResultCallback);
+	AttackTraceTask->OnTraceComplete.AddDynamic(this, &UKYGA_AttackHitCheck::OnTargetCompleteCallback);
 	AttackTraceTask->ReadyForActivation();
 	
 }
 
-void UGA_AttackHitCheck::OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
+void UKYGA_AttackHitCheck::OnTargetCompleteCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
 	bool bReplicatedEndAbility = true;
 	bool bWasCanceled = false;

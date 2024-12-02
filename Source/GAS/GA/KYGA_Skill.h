@@ -3,30 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
-#include "GA_Skill.generated.h"
+#include "KYGameplayAbility.h"
+#include "KYGA_Skill.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class GAS_API UGA_Skill : public UGameplayAbility
+class GAS_API UKYGA_Skill : public UKYGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_Skill();
+	UKYGA_Skill();
 
 public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	
-protected:
-	UFUNCTION()
-	void OnCompleteCallback();
-
-	UFUNCTION()
-	void OnInterruptedCallback();
 
 protected:
 	UPROPERTY()

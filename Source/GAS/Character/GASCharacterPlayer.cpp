@@ -25,8 +25,10 @@ AGASCharacterPlayer::AGASCharacterPlayer()
 	InitializeObjectFinder(SubAttackAction, TEXT("/Game/_Dev/Input/IA_SubAttack.IA_SubAttack"));
 	InitializeObjectFinder(SkillAction, TEXT("/Game/_Dev/Input/IA_Skill.IA_Skill"));
 	InitializeObjectFinder(DefaultContext, TEXT("/Game/_Dev/Input/IMC_Player.IMC_Player"));
-	InitializeObjectFinder(MainAttackMontage, TEXT("/Game/_Assets/ParagonKhaimera/Characters/Heroes/Khaimera/Animations/Montage/Melee_Combo_Montage.Melee_Combo_Montage"));
-	
+	//InitializeObjectFinder(MainAttackMontage, TEXT("/Game/_Assets/ParagonKhaimera/Characters/Heroes/Khaimera/Animations/Montage/Melee_Combo_Montage.Melee_Combo_Montage"));
+
+	WeaponComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
+	WeaponComp->SetupAttachment(GetMesh());
 }
 
 void AGASCharacterPlayer::BeginPlay()
@@ -35,11 +37,6 @@ void AGASCharacterPlayer::BeginPlay()
 	
 }
 
-void AGASCharacterPlayer::Tick(float DeltaSeconds)
-{
-	Super::Tick(DeltaSeconds);
-	Look();
-}
 
 void AGASCharacterPlayer::Move(const FInputActionValue& Value)
 {
@@ -65,7 +62,7 @@ void AGASCharacterPlayer::Move(const FInputActionValue& Value)
 
 void AGASCharacterPlayer::Look() // 캐릭터 방향 전환 TODO: 추후 변경
 {
-	FVector WorldMouseLocation,	WorldMouseDirection;
+	/*FVector WorldMouseLocation,	WorldMouseDirection;
 	if(GetLocalViewingPlayerController()->DeprojectMousePositionToWorld(WorldMouseLocation, WorldMouseDirection))
 	{
 		FVector CharacterLocation = GetActorLocation();
@@ -79,7 +76,7 @@ void AGASCharacterPlayer::Look() // 캐릭터 방향 전환 TODO: 추후 변경
 		LOG_SCREEN(0, TEXT("Yaw : %f"), TargetRotation.Yaw);
 		
 		GetController()->SetControlRotation(TargetRotation);
-	}
+	}*/
 }
 
 void AGASCharacterPlayer::PossessedBy(AController* NewController)
@@ -93,7 +90,7 @@ void AGASCharacterPlayer::PossessedBy(AController* NewController)
 		const UGASCharacterAttributeSet* CurrentAttributeSet = ASC->GetSet<UGASCharacterAttributeSet>();
 		if(CurrentAttributeSet)
 		{
-			CurrentAttributeSet->OnOutOfHealth.AddDynamic(this, &ThisClass::OnOutOfHealth);
+			CurrentAttributeSet->OnOutOfHealth.AddDynamic(this, &ThisClass::OnOutOfHealth); // 사망 델리게이트 바인딩
 		}
 		for(const auto& StartAbility : StartAbilities)
 		{
@@ -110,6 +107,7 @@ void AGASCharacterPlayer::PossessedBy(AController* NewController)
 		}
 		SetupGASInputComponent();
 
+		
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 		PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
 	}
@@ -133,6 +131,7 @@ void AGASCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	EnhancedInputComponent->BindAction(MoveAction,ETriggerEvent::Triggered, this, &AGASCharacterPlayer::Move);
 
 	SetupGASInputComponent();
+	
 }
 
 void AGASCharacterPlayer::SetupGASInputComponent()
@@ -148,7 +147,7 @@ void AGASCharacterPlayer::SetupGASInputComponent()
 	}
 }
 
-void AGASCharacterPlayer::GASInputPressed(int32 InputId)
+void AGASCharacterPlayer::GASInputPressed(int32 InputId) // 입력시 어빌리티 InputID에 맞게 발동시킨다.
 {
 	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromInputID(InputId);
 	if(Spec)
@@ -162,6 +161,7 @@ void AGASCharacterPlayer::GASInputPressed(int32 InputId)
 		{ 
 			ASC->TryActivateAbility(Spec->Handle);
 		}
+		GAS_LOG(LogGAS, Log, TEXT("Input Pressed"));
 	}
 }
 

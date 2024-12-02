@@ -3,20 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
-#include "GA_Attack.generated.h"
+#include "KYGameplayAbility.h"
+#include "KYGA_MeleeAttack.generated.h"
 
 
 /**
  * 
  */
 UCLASS()
-class GAS_API UGA_Attack : public UGameplayAbility
+class GAS_API UKYGA_MeleeAttack : public UKYGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_Attack();
+	UKYGA_MeleeAttack();
 
 	
 public:
@@ -29,11 +29,6 @@ public:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
-	UFUNCTION()
-	void OnCompleteCallback();
-
-	UFUNCTION()
-	void OnInterruptedCallback();
 
 	FName GetNextSection();
 

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/Tasks/AbilityTask.h"
-#include "AT_Trace.generated.h"
+#include "KYAT_Trace.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTraceResultDelegate, const FGameplayAbilityTargetDataHandle&, TargetDataHandle);
 
@@ -12,15 +12,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTraceResultDelegate, const FGamepla
  * 
  */
 UCLASS()
-class GAS_API UAT_Trace : public UAbilityTask
+class GAS_API UKYAT_Trace : public UAbilityTask
 {
 	GENERATED_BODY()
 
 public:
-	UAT_Trace();
+	UKYAT_Trace();
 
 	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (DisplayName = "WaitForTrace",	HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
-	static UAT_Trace* CreateTask(UGameplayAbility* OwningAbility, TSubclassOf<class ATA_Trace> TargetActorClass);
+	static UKYAT_Trace* CreateTask(UGameplayAbility* OwningAbility, TSubclassOf<class AKYTA_Trace> TargetActorClass);
 	
 	virtual void Activate() override;
 	virtual void OnDestroy(bool bInOwnerFinished) override;
@@ -38,8 +38,8 @@ public:
 
 protected:
 	UPROPERTY()
-	TSubclassOf<class ATA_Trace> TargetActorClass;
+	TSubclassOf<class AKYTA_Trace> TargetActorClass;
 
 	UPROPERTY()
-	TObjectPtr<class ATA_Trace> SpawnedTargetACtor;
+	TObjectPtr<class AKYTA_Trace> SpawnedTargetACtor;
 };

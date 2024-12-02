@@ -27,7 +27,6 @@ public:
 	FORCEINLINE class UGASComboActionData* GetComboActionData() const { return ComboActionData; }
 protected:
 	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaSeconds) override;
 
 
 #pragma region BASE
@@ -96,4 +95,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TSubclassOf<class UGameplayAbility> SkillAbilityClass;
+
+	UPROPERTY(EditAnywhere, Category=Weapon)
+	UStaticMeshComponent* WeaponComp;
 };

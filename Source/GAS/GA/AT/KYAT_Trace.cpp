@@ -1,23 +1,23 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA/AT/AT_Trace.h"
-#include "GA/TA/TA_Trace.h"
+#include "GA/AT/KYAT_Trace.h"
+#include "GA/TA/KYTA_Trace.h"
 #include "AbilitySystemComponent.h"
 
-UAT_Trace::UAT_Trace()
+UKYAT_Trace::UKYAT_Trace()
 {
 	
 }
 
-UAT_Trace* UAT_Trace::CreateTask(UGameplayAbility* OwningAbility, TSubclassOf<ATA_Trace> TargetActorClass)
+UKYAT_Trace* UKYAT_Trace::CreateTask(UGameplayAbility* OwningAbility, TSubclassOf<AKYTA_Trace> TargetActorClass)
 {
-	UAT_Trace* NewTask = NewAbilityTask<UAT_Trace>(OwningAbility);
+	UKYAT_Trace* NewTask = NewAbilityTask<UKYAT_Trace>(OwningAbility);
 	NewTask->TargetActorClass = TargetActorClass;
 	return NewTask;
 }
 
-void UAT_Trace::Activate()
+void UKYAT_Trace::Activate()
 {
 	Super::Activate();
 
@@ -27,7 +27,7 @@ void UAT_Trace::Activate()
 	SetWaitingOnAvatar();
 }
 
-void UAT_Trace::OnDestroy(bool bInOwnerFinished)
+void UKYAT_Trace::OnDestroy(bool bInOwnerFinished)
 {
 	Super::OnDestroy(bInOwnerFinished);
 	if(SpawnedTargetACtor)
@@ -36,17 +36,17 @@ void UAT_Trace::OnDestroy(bool bInOwnerFinished)
 	}
 }
 
-void UAT_Trace::SpawnAndInitializeTargetActor()
+void UKYAT_Trace::SpawnAndInitializeTargetActor()
 {
-	SpawnedTargetACtor = Cast<ATA_Trace>(Ability->GetWorld()->SpawnActorDeferred<AGameplayAbilityTargetActor>(TargetActorClass, FTransform::Identity, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn));
+	SpawnedTargetACtor = Cast<AKYTA_Trace>(Ability->GetWorld()->SpawnActorDeferred<AGameplayAbilityTargetActor>(TargetActorClass, FTransform::Identity, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn));
 	if(SpawnedTargetACtor)
 	{
 		SpawnedTargetACtor->SetShowDebug(true);
-		SpawnedTargetACtor->TargetDataReadyDelegate.AddUObject(this, &UAT_Trace::OnTargetDataReadyCallback);
+		SpawnedTargetACtor->TargetDataReadyDelegate.AddUObject(this, &UKYAT_Trace::OnTargetDataReadyCallback);
 	}
 }
 
-void UAT_Trace::FinalizeTargetActor()
+void UKYAT_Trace::FinalizeTargetActor()
 {
 	UAbilitySystemComponent* ASC = AbilitySystemComponent.Get();
 	if(ASC)
@@ -60,7 +60,7 @@ void UAT_Trace::FinalizeTargetActor()
 	}
 }
 
-void UAT_Trace::OnTargetDataReadyCallback(const FGameplayAbilityTargetDataHandle& DataHandle)
+void UKYAT_Trace::OnTargetDataReadyCallback(const FGameplayAbilityTargetDataHandle& DataHandle)
 {
 	if(ShouldBroadcastAbilityTaskDelegates())
 	{

@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "GA/TA/TA_Trace.h"
+#include "GA/TA/KYTA_Trace.h"
 #include "Abilities/GameplayAbility.h"
 #include "GameFramework/Character.h"
 #include "Components/CapsuleComponent.h"
@@ -12,19 +12,19 @@
 #include "GAS.h"
 
 
-ATA_Trace::ATA_Trace()
+AKYTA_Trace::AKYTA_Trace()
 {
 	
 }
 
-void ATA_Trace::StartTargeting(UGameplayAbility* Ability)
+void AKYTA_Trace::StartTargeting(UGameplayAbility* Ability)
 {
 	Super::StartTargeting(Ability);
 	
 	SourceActor = Ability->GetCurrentActorInfo()->AvatarActor.Get();
 }
 
-void ATA_Trace::ConfirmTargetingAndContinue()
+void AKYTA_Trace::ConfirmTargetingAndContinue()
 {
 	if(SourceActor)
 	{
@@ -33,7 +33,7 @@ void ATA_Trace::ConfirmTargetingAndContinue()
 	}
 }
 
-FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
+FGameplayAbilityTargetDataHandle AKYTA_Trace::MakeTargetData() const
 {
 	ACharacter* Character = CastChecked<ACharacter>(SourceActor);
 
@@ -63,6 +63,7 @@ FGameplayAbilityTargetDataHandle ATA_Trace::MakeTargetData() const
 
 	//bool HitDetected = GetWorld()->SweepSingleByChannel(OutHitResult, Start, End, FQuat::Identity, ECC_Pawn ,FCollisionShape::MakeSphere(AttackRadius), Params);
 	bool HitDetected = GetWorld()->SweepMultiByChannel(OutHitResults, Start, End, FQuat::Identity, ECC_Pawn ,FCollisionShape::MakeSphere(AttackRadius), Params);
+
 	
 
 	FGameplayAbilityTargetDataHandle DataHandle;
