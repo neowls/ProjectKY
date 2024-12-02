@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbilityTargetActor.h"
-#include "TA_Trace.generated.h"
+#include "KYTA_Trace.generated.h"
 
 
 
@@ -12,12 +12,12 @@
  * 
  */
 UCLASS()
-class GAS_API ATA_Trace : public AGameplayAbilityTargetActor
+class GAS_API AKYTA_Trace : public AGameplayAbilityTargetActor
 {
 	GENERATED_BODY()
 
 public:
-	ATA_Trace();
+	AKYTA_Trace();
 
 	virtual void StartTargeting(UGameplayAbility* Ability) override;
 

@@ -3,25 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
-#include "GA_Jump.generated.h"
+#include "KYGameplayAbility.h"
+#include "KYGA_Jump.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class GAS_API UGA_Jump : public UGameplayAbility
+class GAS_API UKYGA_Jump : public UKYGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
-	UGA_Jump();
+	UKYGA_Jump();
 
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const override;
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
 protected:
-	UFUNCTION()
-	void OnLandedCallback();
 };

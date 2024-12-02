@@ -3,25 +3,26 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
-#include "GA_AttackHitCheck.generated.h"
+#include "KYGameplayAbility.h"
+#include "KYGA_AttackHitCheck.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class GAS_API UGA_AttackHitCheck : public UGameplayAbility
+class GAS_API UKYGA_AttackHitCheck : public UKYGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UGA_AttackHitCheck();
+	UKYGA_AttackHitCheck();
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 protected:
 	UFUNCTION()
-	void OnTraceResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle);
+	void OnTargetCompleteCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle);
+	
 
 	UPROPERTY(EditAnywhere, Category="GAS")
 	TSubclassOf<class UGameplayEffect> AttackDamageEffect;
@@ -32,6 +33,6 @@ protected:
 	float CurrentLevel = 0;
 
 	UPROPERTY(EditAnywhere, Category="GAS")
-	TSubclassOf<class ATA_Trace> TargetActorClass;
+	TSubclassOf<class AKYTA_Trace> TargetActorClass;
 
 };

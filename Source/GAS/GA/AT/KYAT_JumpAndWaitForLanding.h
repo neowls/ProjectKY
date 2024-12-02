@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/Tasks/AbilityTask.h"
-#include "AT_JumpAndWaitForLanding.generated.h"
+#include "KYAT_JumpAndWaitForLanding.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAndWaitForLandingDelegate);
 
@@ -12,14 +12,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAndWaitForLandingDelegate);
  * 
  */
 UCLASS()
-class GAS_API UAT_JumpAndWaitForLanding : public UAbilityTask
+class GAS_API UKYAT_JumpAndWaitForLanding : public UAbilityTask
 {
 	GENERATED_BODY()
 public:
-	UAT_JumpAndWaitForLanding();
+	UKYAT_JumpAndWaitForLanding();
 
 	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", meta = (DisplayName = "JumpAndWaitForLanding",	HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
-	static UAT_JumpAndWaitForLanding* CreateTask(UGameplayAbility* OwningAbility);
+	static UKYAT_JumpAndWaitForLanding* CreateTask(UGameplayAbility* OwningAbility);
 
 	virtual void Activate() override;
 	virtual void OnDestroy(bool bInOwnerFinished) override;

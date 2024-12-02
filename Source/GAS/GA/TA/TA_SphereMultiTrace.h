@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GA/TA/TA_Trace.h"
+#include "GA/TA/KYTA_Trace.h"
 #include "TA_SphereMultiTrace.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class GAS_API ATA_SphereMultiTrace : public ATA_Trace
+class GAS_API ATA_SphereMultiTrace : public AKYTA_Trace
 {
 	GENERATED_BODY()
 
