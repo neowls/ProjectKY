@@ -10,6 +10,6 @@ public class ProjectKYTarget : TargetRules
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_4;
-		ExtraModuleNames.AddRange(new string [] {"ProjectKY", "GAS"});
+		ExtraModuleNames.Add("ProjectKY");
 	}
 }

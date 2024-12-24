@@ -9,18 +9,9 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
-				"Engine"
-			]
-		},
-		{
-			"Name": "GAS",
-			"Type": "Runtime",
-			"LoadingPhase": "PostDefault",
-			"AdditionalDependencies": [
 				"Engine",
 				"GameplayAbilities",
-				"ProjectKY",
-				"UMG"
+				"GameFeatures"
 			]
 		}
 	],
@@ -30,42 +21,7 @@
 			"Enabled": true
 		},
 		{
-			"Name": "ModelingToolsEditorMode",
-			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
-		},
-		{
-			"Name": "AnimationWarping",
-			"Enabled": true
-		},
-		{
-			"Name": "MotionWarping",
-			"Enabled": true
-		},
-		{
-			"Name": "HairStrands",
-			"Enabled": true
-		},
-		{
-			"Name": "AnimationLocomotionLibrary",
-			"Enabled": true
-		},
-		{
-			"Name": "GameplayInsights",
-			"Enabled": true
-		},
-		{
-			"Name": "RigLogic",
-			"Enabled": true
-		},
-		{
-			"Name": "Chooser",
-			"Enabled": true
-		},
-		{
-			"Name": "PoseSearch",
+			"Name": "GameFeatures",
 			"Enabled": true
 		}
 	]
