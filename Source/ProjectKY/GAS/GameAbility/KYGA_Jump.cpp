@@ -31,6 +31,7 @@ void UKYGA_Jump::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 	UKYAT_JumpAndWaitForLanding* JumpAndWaitForLandingTask = UKYAT_JumpAndWaitForLanding::CreateTask(this);
 
 	JumpAndWaitForLandingTask->OnComplete.AddDynamic(this, &UKYGA_Jump::OnSimpleCompleteCallback);
+	
 	JumpAndWaitForLandingTask->ReadyForActivation();
 }
 

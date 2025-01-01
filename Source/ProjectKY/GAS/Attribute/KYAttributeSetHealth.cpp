@@ -5,8 +5,8 @@
 #include "GameplayEffectExtension.h"
 
 UKYAttributeSetHealth::UKYAttributeSetHealth() : 
-	Health(100.0f),
-	MaxHealth(100.0f),
+	Health(200.0f),
+	MaxHealth(200.0f),
 	Shield(0.0f),
 	MaxShield(100.0f)
 {

@@ -17,10 +17,17 @@ class PROJECTKY_API UKYGameplayAbility : public UGameplayAbility
 public:
 	UKYGameplayAbility();
 
+	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+
+	void TryActivatePassiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec);
+
 protected:
 	UFUNCTION()
 	virtual void OnSimpleCompleteCallback();
 
 	UFUNCTION()
 	virtual void OnSimpleInterruptedCallback();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Activation")
+	bool bPassiveAbility = false;
 };

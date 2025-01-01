@@ -16,16 +16,14 @@ class PROJECTKY_API UKYCharacterMovementComponent : public UCharacterMovementCom
 
 public:
 	UKYCharacterMovementComponent();
-
-	virtual void UpdateCharacterStateAfterMovement(float DeltaSeconds) override;
+	
+	virtual void OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity) override;
 
 protected:
-
-	UPROPERTY(EditAnywhere, Category="Custom Movement")
-	float AirAttackHangGravityScale;
-
+	
 	UPROPERTY(EditAnywhere, Category="Custom Movement")
 	float GeneralGravityScale;
 
-	bool ClearVelocityZ = false;
+	UPROPERTY(EditAnywhere, Category="Custom Movement")
+	float MaxFallingSpeed;
 };

@@ -8,26 +8,29 @@
 
 UKYCharacterMovementComponent::UKYCharacterMovementComponent()
 {
-	AirAttackHangGravityScale = 0.1f;
-	GeneralGravityScale = 1.0f;
+	GeneralGravityScale = 2.0f;
+	MaxFallingSpeed = 10.0f;
 }
 
-void UKYCharacterMovementComponent::UpdateCharacterStateAfterMovement(float DeltaSeconds)
+void UKYCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity)
 {
-	Super::UpdateCharacterStateAfterMovement(DeltaSeconds);
-
+	Super::OnMovementUpdated(DeltaSeconds, OldLocation, OldVelocity);
 	AKYCharacterBase* CharacterBase = Cast<AKYCharacterBase>(GetOwner());
 	
 	if(CharacterBase)
 	{
+		if (IsFalling() && !CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
+		{
+			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(KYTAG_CHARACTER_ISFALLING);
+		}
+		else if (!IsFalling() && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
+		{
+			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISFALLING);
+		}
+		
 		if (CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGLIDING))
 		{
-			GravityScale = AirAttackHangGravityScale;
-		}
-		else
-		{
-			GravityScale = GeneralGravityScale;
+			Velocity.Z = FMath::Clamp(Velocity.Z, -MaxFallingSpeed, 1200.0f);
 		}
 	}
 }
-

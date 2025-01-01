@@ -9,15 +9,6 @@
 
 class UKYCharacterMovementComponent;
 
-UENUM(BlueprintType)
-enum class EHitDirection : uint8
-{
-	Forward,
-	Backward,
-	Left,
-	Right
-};
-
 UCLASS()
 class PROJECTKY_API AKYCharacterBase : public ACharacter, public IAbilitySystemInterface
 {
@@ -38,6 +29,8 @@ public:
 
 protected:
 	virtual void SetDead();
+
+	virtual void GiveStartAbilities();	// 기본 어빌리티 부여
 	
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
@@ -52,7 +45,4 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess=true))
 	TObjectPtr<UKYCharacterMovementComponent> KYCharacterMovement;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Animation, meta=(AllowPrivateAccess=true))
-	TMap<EHitDirection,TObjectPtr<UAnimMontage>> HitMontage;
-	
 };

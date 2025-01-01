@@ -23,8 +23,12 @@ public:
 
 	void SetShowDebug(bool InShowDebug) { bShowDebug = InShowDebug; }
 
+	void SetShapeTrace(bool InShapeTrace) { bShapeTrace = InShapeTrace; }
+
 protected:
 	virtual FGameplayAbilityTargetDataHandle MakeTargetData() const;
 
 	bool bShowDebug = false;
+
+	bool bShapeTrace = false;
 };

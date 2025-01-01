@@ -59,7 +59,16 @@ FGameplayAbilityTargetDataHandle AKYTA_Trace::MakeTargetData() const
 	
 	FCollisionObjectQueryParams ObjectQueryParams;
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_ENEMY);
-	bool HitDetected = GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), Params);
+	bool HitDetected = false;
+	
+	if (bShapeTrace)
+	{
+		HitDetected = GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), Params);
+	}
+	else
+	{
+		HitDetected = GetWorld()->LineTraceSingleByObjectType(HitResult, Start, End, ObjectQueryParams, Params);
+	}
 	
 	FGameplayAbilityTargetDataHandle DataHandle;
 
@@ -73,10 +82,17 @@ FGameplayAbilityTargetDataHandle AKYTA_Trace::MakeTargetData() const
 #if ENABLE_DRAW_DEBUG
 	if(bShowDebug)
 	{
-		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-		float CapsuleHalfHeight = TraceRange * 0.5f;
 		FColor DrawColor = HitDetected ? FColor::Green : FColor::Red;
-		DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, TraceRadius, FRotationMatrix::MakeFromZ(Forward).ToQuat(), DrawColor);
+		if (bShapeTrace)
+		{
+			FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
+			float CapsuleHalfHeight = TraceRange * 0.5f;
+			DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, TraceRadius, FRotationMatrix::MakeFromZ(Forward).ToQuat(), DrawColor);
+		}
+		else
+		{
+			DrawDebugLine(GetWorld(), Start, End, DrawColor);
+		}
 	}
 #endif
 	return DataHandle;

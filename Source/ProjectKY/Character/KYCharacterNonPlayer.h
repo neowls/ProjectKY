@@ -19,10 +19,10 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 
-	virtual void DamageTaken(AActor* Instigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage) override;
-
 protected:
 	virtual void SetDead() override;
+	
+	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage) override;
 
 protected:
 	UPROPERTY()
@@ -30,6 +30,5 @@ protected:
 
 	UPROPERTY()
 	TSubclassOf<class UGameplayEffect> InitStatEffect;
-
-	//UPROPERTY()
+	
 };

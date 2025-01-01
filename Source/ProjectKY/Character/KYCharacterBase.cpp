@@ -3,8 +3,12 @@
 
 #include "Character/KYCharacterBase.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "KYCharacterMovementComponent.h"
+#include "ProjectKY.h"
+#include "Components/CapsuleComponent.h"
 #include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
 // Sets default values
 AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
@@ -16,6 +20,8 @@ AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
 	
 	ASC = nullptr;
 	KYCharacterMovement = Cast<UKYCharacterMovementComponent>(GetCharacterMovement());
+
+	
 }
 
 class UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
@@ -31,10 +37,26 @@ void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCause
 
 void AKYCharacterBase::OutOfHealth()
 {
-	SetDead();	
+	ASC->CancelAllAbilities();
+	ASC->ClearAllAbilities();
+	ASC->AddLooseGameplayTag(KYTAG_CHARACTER_ISDEAD);
+	SetDead();
 }
+
 
 void AKYCharacterBase::SetDead()
 {
-	// Progress Base Character Death 
+	bBlockInput = true;
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("DeadPawn"));
+	StopAnimMontage();
+	PlayAnimMontage(DeathMontage);
+}
+
+void AKYCharacterBase::GiveStartAbilities()
+{
+	for (const auto& StartAbility : StartAbilities)	// 기본 어빌리티 부여
+	{
+		FGameplayAbilitySpec StartSpec(StartAbility);
+		ASC->GiveAbility(StartSpec);
+	}
 }

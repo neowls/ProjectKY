@@ -6,7 +6,7 @@
 #include "GAS/Attribute/KYAttributeSetBase.h"
 #include "KYAttributeSetHealth.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_FourParams(FDamageTakenEvent, AActor* /*EffectInstigator*/, AActor* /*EffectCause*/, const FGameplayTagContainer& /*GameplayTagContainer*/, float /*Damage*/)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FDamageTakenEvent, AActor*, DamageInstigator, AActor*, DamageCauser, const FGameplayTagContainer&, GameplayTagContainer, float, DamageAmount);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOutOfHealthDelegate);
 
 UCLASS()
@@ -27,11 +27,11 @@ public:
 	mutable FOutOfHealthDelegate OnOutOfHealth;
 
 protected:
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", Meta=(AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Health;
 
 
-	UPROPERTY(BlueprintReadOnly, Category="Attributes", Meta=(AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData MaxHealth;
 
 

@@ -31,7 +31,6 @@ void UKYAT_JumpAndWaitForLanding::OnDestroy(bool bInOwnerFinished)
 	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActor());
 	Character->LandedDelegate.RemoveDynamic(this, &UKYAT_JumpAndWaitForLanding::OnLandedCallback);
 	Super::OnDestroy(bInOwnerFinished);
-	
 }
 
 void UKYAT_JumpAndWaitForLanding::OnLandedCallback(const FHitResult& Hit)

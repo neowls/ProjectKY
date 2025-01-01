@@ -25,6 +25,8 @@ public:
 	virtual void SetupGASInputComponent();
 
 protected:
+	virtual void GiveStartAbilities() override;
+	
 	void Move(const FInputActionValue& Value);
 	void Rotate(const FInputActionValue& Value);
 
@@ -63,7 +65,7 @@ protected:
 	TObjectPtr<UInputAction> MainAttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SubAttackAction;
+	TObjectPtr<UInputAction> SkillAttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> UpperAttackAction;

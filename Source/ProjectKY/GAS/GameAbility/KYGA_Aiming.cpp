@@ -47,8 +47,6 @@ void UKYGA_Aiming::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	
 	TargetedActor->StartTargeting(this);
 	
-	
-	KY_LOG(LogKY, Log, TEXT("Activate"));
 }
 
 void UKYGA_Aiming::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -84,7 +82,6 @@ void UKYGA_Aiming::InputReleased(const FGameplayAbilitySpecHandle Handle, const 
 	const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
-	KY_LOG(LogKY, Log, TEXT("Input Released"));
 	bool bReplicatedEndAbility = true;
 	bool bWasCanceled = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCanceled);
