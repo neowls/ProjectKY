@@ -52,6 +52,7 @@ void UKYGA_Damage::HitEventCallBack(FGameplayEventData Payload)
 		if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
 		{
 			MontageToPlay = AirKnockBackMontage;
+			Character->GetCharacterMovement()->Launch(FVector::UpVector * 400.0f);
 		}
 		else
 		{

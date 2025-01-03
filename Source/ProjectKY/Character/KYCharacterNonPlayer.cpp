@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
+#include "AI/KYAIController.h"
 
 #include "GAS/Attribute/KYAttributeSetHealth.h"
 #include "GAS/Tag/KYGameplayTag.h"
@@ -15,6 +16,8 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 {
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	AttributeSetHealth = CreateDefaultSubobject<UKYAttributeSetHealth>(TEXT("AttributeSetHealth"));
+	AIControllerClass = AKYAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
