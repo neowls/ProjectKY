@@ -76,6 +76,8 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 		PlayerController->ConsoleCommand(TEXT("showdebug abilitySystem"));	// 어빌리티 시스템 디버깅
+
+		
 		
 	}
 }

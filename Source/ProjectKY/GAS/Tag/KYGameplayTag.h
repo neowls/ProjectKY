@@ -4,6 +4,7 @@
 
 #define KYTAG_DATA_DAMAGE FGameplayTag::RequestGameplayTag(FName("Data.Damage"))
 
+#define KYTAG_CHARACTER_ATTACK FGameplayTag::RequestGameplayTag(FName("Character.State.Attack"))
 #define KYTAG_CHARACTER_ATTACK_LIGHT FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Light"))
 #define KYTAG_CHARACTER_ATTACK_HEAVY FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Heavy"))
 #define KYTAG_CHARACTER_ATTACK_UPPER FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Upper"))
@@ -21,14 +22,11 @@
 #define KYTAG_CHARACTER_ROTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.IsRotable"))
 #define KYTAG_CHARACTER_ISFALLING FGameplayTag::RequestGameplayTag(FName("Character.State.IsFalling"))
 
+#define KYTAG_CHARACTER_HIT FGameplayTag::RequestGameplayTag(FName("Character.State.Hit"))
+
 #define KYTAG_EVENT_COMBO_AVAILABLE FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.ComboAvailable"))
 #define KYTAG_EVENT_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.AttackHitCheck"))
 
 #define KYTAG_EVENT_HIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit"))
-#define KYTAG_EVENT_HIT_STAGGER FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit.Stagger"))
-#define KYTAG_EVENT_HIT_LAUNCH FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit.Launch"))
-#define KYTAG_EVENT_HIT_KNOCKBACK FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit.Knockback"))
-#define KYTAG_EVENT_HIT_SLAM FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit.Slam"))
-#define KYTAG_EVENT_HIT_SNATCH FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit.Snatch"))
 
 #define GAMEPLAYCUE_CHARACTER_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("GameplayCue.Character.AttackHit"))

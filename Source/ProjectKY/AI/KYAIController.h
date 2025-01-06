@@ -18,10 +18,7 @@ public:
 	
 	void RunAI();
 	void StopAI();
-
-	static const FName HomePosKey;
-	static const FName PatrolPosKey;
-	static const FName TargetKey;
+	void SetHitStatus(bool bIsHit);
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;

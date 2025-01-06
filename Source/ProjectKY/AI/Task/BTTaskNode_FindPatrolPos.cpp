@@ -3,6 +3,8 @@
 
 #include "AI/Task/BTTaskNode_FindPatrolPos.h"
 #include "NavigationSystem.h"
+#include "ProjectKY.h"
+#include "AI/KYAI.h"
 #include "AI/KYAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -17,20 +19,28 @@ EBTNodeResult::Type UBTTaskNode_FindPatrolPos::ExecuteTask(UBehaviorTreeComponen
 	EBTNodeResult::Type Result = Super::ExecuteTask(OwnerComp, NodeMemory);
 
 	APawn* ControlledPawn = OwnerComp.GetAIOwner()->GetPawn();
-	if(ControlledPawn == nullptr) return EBTNodeResult::Failed;
+	if(ControlledPawn == nullptr)
+	{
+		KY_LOG(LogKY, Log, TEXT("Can't find Controlled Pawn"));
+		return EBTNodeResult::Failed;
+	}
 
-	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetNavigationSystem(ControlledPawn->GetWorld());
+	UNavigationSystemV1* NavSystem = UNavigationSystemV1::GetNavigationSystem(GetWorld());
 
-	if(NavSystem == nullptr) return EBTNodeResult::Failed;
+	if(NavSystem == nullptr)
+	{
+		KY_LOG(LogKY, Log, TEXT("Can't find NavSystem"));
+		return EBTNodeResult::Failed;
+	}
 
+	FVector Origin = OwnerComp.GetBlackboardComponent()->GetValueAsVector(BBKEY_BASEPOS);
 	
-
-	FVector Origin = OwnerComp.GetBlackboardComponent()->GetValueAsVector(AKYAIController::HomePosKey);
 	FNavLocation NextPatrol;
 
 	if(NavSystem->GetRandomPointInNavigableRadius(Origin, 500.0f, NextPatrol))
 	{
-		OwnerComp.GetBlackboardComponent()->SetValueAsVector(AKYAIController::PatrolPosKey, NextPatrol.Location);
+		OwnerComp.GetBlackboardComponent()->SetValueAsVector(BBKEY_PATROLPOS, NextPatrol.Location);
+		KY_LOG(LogKY, Log, TEXT("Patrol Pos : %s"), *NextPatrol.Location.ToString());
 		return EBTNodeResult::Succeeded;
 	}
 	

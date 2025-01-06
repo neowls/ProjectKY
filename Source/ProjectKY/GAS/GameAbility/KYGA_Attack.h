@@ -23,10 +23,7 @@ protected:
 
 	UFUNCTION()
 	void AttackHitCheckCallback(FGameplayEventData Payload);
-
-	UPROPERTY(EditAnywhere)
-	FGameplayTag AttackType;
-
+	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UGameplayEffect> TargetHitEffect;
 

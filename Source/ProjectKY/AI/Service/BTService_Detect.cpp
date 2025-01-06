@@ -6,6 +6,8 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Engine/OverlapResult.h"
 #include "DrawDebugHelpers.h"
+#include "ProjectKY.h"
+#include "AI/KYAI.h"
 #include "GameFramework/Character.h"
 
 
@@ -15,10 +17,15 @@ UBTService_Detect::UBTService_Detect()
 	Interval = 1.0f;
 }
 
+void UBTService_Detect::InitializeMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryInit::Type InitType) const
+{
+	Super::InitializeMemory(OwnerComp, NodeMemory, InitType);
+}
+
 void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
-
+	
 	APawn* ControlledPawn = OwnerComp.GetAIOwner()->GetPawn();
 	if(ControlledPawn == nullptr) return;
 	UWorld* World = ControlledPawn->GetWorld();
@@ -42,7 +49,8 @@ void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 			ACharacter* Character = Cast<ACharacter>(OverlapResult.GetActor());
 			if(Character && Character->GetController()->IsPlayerController())
 			{
-				OwnerComp.GetBlackboardComponent()->SetValueAsObject(AKYAIController::TargetKey, Character);
+				OwnerComp.GetBlackboardComponent()->SetValueAsObject(BBKEY_TARGET, Character);
+				OwnerComp.GetBlackboardComponent()->SetValueAsVector(BBKEY_BASEPOS, Character->GetActorLocation());
 				DrawDebugSphere(World, Center, DetectRadius, 16, FColor::Green, false, 0.2f);
 
 				DrawDebugPoint(World, Character->GetActorLocation(), 10.0f, FColor::Blue, false, 0.2f);
@@ -50,7 +58,7 @@ void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 				return;
 			}
 		}
-		OwnerComp.GetBlackboardComponent()->SetValueAsObject(AKYAIController::TargetKey, nullptr);
+		OwnerComp.GetBlackboardComponent()->SetValueAsObject(BBKEY_TARGET, nullptr);
 	}
 	DrawDebugSphere(World, Center, DetectRadius, 16, FColor::Red, false, 0.2f);
 }

@@ -36,8 +36,11 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	{
 		ASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
-
+	
 	GiveStartAbilities();
+
+	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_HIT).AddUObject(this, &ThisClass::OnHitTagChanged);
+	
 }
 
 
@@ -64,12 +67,15 @@ void AKYCharacterNonPlayer::DamageTaken(AActor* DamageInstigator, AActor* Damage
 	EventData.InstigatorTags = GameplayTagContainer;
 	EventData.EventMagnitude = Damage;
 	
-	for (const auto& iter : GameplayTagContainer)
-	{
-		if (iter.IsValid())
-		{
-			KY_LOG(LogKY, Log, TEXT("Tag Name : %s"), *iter.GetTagName().ToString());
-		}
-	}
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
 }
+
+void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	AKYAIController* AIController = Cast<AKYAIController>(GetController());
+	if (AIController)
+	{
+		AIController->SetHitStatus(NewCount>0);
+	}
+}
+

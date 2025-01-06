@@ -3,14 +3,14 @@
 
 #include "AI/KYAIController.h"
 
+#include "KYAI.h"
 #include "ProjectKY.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Character/KYCharacterNonPlayer.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
-const FName AKYAIController::HomePosKey(TEXT("HomePos"));
-const FName AKYAIController::PatrolPosKey(TEXT("PatrolPos"));
-const FName AKYAIController::TargetKey(TEXT("Target"));
 
 AKYAIController::AKYAIController()
 {
@@ -35,8 +35,7 @@ void AKYAIController::RunAI()
 	UBlackboardComponent* BBComponent = Blackboard.Get();
 	if(UseBlackboard(BBAsset, BBComponent))
 	{
-		Blackboard->SetValueAsVector(HomePosKey, GetPawn()->GetActorLocation());
-		
+		Blackboard->SetValueAsVector(BBKEY_BASEPOS, GetPawn()->GetActorLocation());
 		bool RunResult = RunBehaviorTree(BTAsset);
 		ensure(RunResult);
 	}
@@ -51,3 +50,11 @@ void AKYAIController::StopAI()
 	}
 }
 
+void AKYAIController::SetHitStatus(bool bIsHit)
+{
+	UBlackboardComponent* BBComponent = Blackboard.Get();
+	if(UseBlackboard(BBAsset, BBComponent))
+	{
+		Blackboard->SetValueAsBool(BBKEY_ISHIT, bIsHit);
+	}
+}
