@@ -4,13 +4,12 @@
 #include "AI/Decorator/BTDecorator_IsInAttackRange.h"
 
 #include "AI/KYAI.h"
-#include "GameFramework/Character.h"
 #include "AI/KYAIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 UBTDecorator_IsInAttackRange::UBTDecorator_IsInAttackRange()
 {
-	NodeName = TEXT("CanAttack");
+	NodeName = TEXT("Check Attack Range");
 }
 
 bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp,
@@ -21,9 +20,10 @@ bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeCompo
 	auto ControlledPawn = OwnerComp.GetAIOwner()->GetPawn();
 	if(ControlledPawn == nullptr) return false;
 
-	auto Target = Cast<ACharacter>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_TARGET));
+	auto Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_TARGET));
 	if(Target == nullptr) return false;
 
-	bResult = (Target->GetDistanceTo(ControlledPawn) <= 200.0f);
+	bResult = (Target->GetDistanceTo(ControlledPawn) <= 300.0f);
+	
 	return bResult;
 }

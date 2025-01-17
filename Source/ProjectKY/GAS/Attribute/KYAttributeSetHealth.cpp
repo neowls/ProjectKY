@@ -3,6 +3,8 @@
 
 #include "GAS/Attribute/KYAttributeSetHealth.h"
 #include "GameplayEffectExtension.h"
+#include "ProjectKY.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
 UKYAttributeSetHealth::UKYAttributeSetHealth() : 
 	Health(200.0f),
@@ -39,7 +41,7 @@ void UKYAttributeSetHealth::PostGameplayEffectExecute(const struct FGameplayEffe
 				const FGameplayEffectContextHandle& EffectContextHandle = Data.EffectSpec.GetEffectContext();
 				AActor* Instigator = EffectContextHandle.GetInstigator();
 				AActor* Causer = EffectContextHandle.GetEffectCauser();
-
+				
 				OnDamageTaken.Broadcast(Instigator, Causer, Data.EffectSpec.CapturedSourceTags.GetSpecTags(), Data.EvaluatedData.Magnitude);
 			}
 
@@ -56,13 +58,12 @@ void UKYAttributeSetHealth::PostGameplayEffectExecute(const struct FGameplayEffe
 				SetHealth(FMath::Clamp(NewHealth, 0.0f, GetMaxHealth()));
 			}
 
-			if (GetHealth() <= 0.0f && !bOutOfHealth)
+			if (GetHealth() <= 0.0f && !bOutOfHealth)		// 현재 사망 처리가 되었는지 확인, 이로 인해 죽은뒤 들어온 데미지로 인한 델리게이트 브로드 캐스팅 방지
 			{
-				//Data.Target.AddLooseGameplayTag()		// 사망 태그 추가
 				OnOutOfHealth.Broadcast();
 			}
 
-			bOutOfHealth = (GetHealth() <= 0.0f);
+			bOutOfHealth = (GetHealth() <= 0.0f); 
 		}
 	}
 }

@@ -3,19 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/BTDecorator.h"
-#include "BTDecorator_IsDamageTaken.generated.h"
+#include "BehaviorTree/Decorators/BTDecorator_CheckGameplayTagsOnActor.h"
+#include "BTDecorator_CheckGameplayTags.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTKY_API UBTDecorator_IsDamageTaken : public UBTDecorator
+class PROJECTKY_API UBTDecorator_CheckGameplayTags : public UBTDecorator_CheckGameplayTagsOnActor
 {
 	GENERATED_BODY()
 
-public:
-	UBTDecorator_IsDamageTaken();
-
+protected:
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 };

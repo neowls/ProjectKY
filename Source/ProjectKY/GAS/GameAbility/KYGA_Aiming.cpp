@@ -6,7 +6,6 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "GAS/TargetActor/KYTA_Trace.h"
-#include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -33,7 +32,7 @@ void UKYGA_Aiming::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	}
 	
 	TargetedActor = Cast<AKYTA_Trace>(GetWorld()->SpawnActorDeferred<AGameplayAbilityTargetActor>(TargetActorClass, FTransform::Identity, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn));
-
+	
 	if(TargetedActor)
 	{
 		TargetedActor->SetShowDebug(true);
@@ -47,6 +46,7 @@ void UKYGA_Aiming::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	
 	TargetedActor->StartTargeting(this);
 	
+	OnGameplayAbilityCancelled.AddUObject(this, &UKYGA_Aiming::OnSimpleInterruptedCallback);
 }
 
 void UKYGA_Aiming::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -145,45 +145,3 @@ void UKYGA_Aiming::RotateCharacter(FVector& TargetLocation)
 	LookAtRotation.Pitch = CurrentRotation.Pitch;
 	GetAvatarActorFromActorInfo()->SetActorRotation(LookAtRotation);
 }
-
-/*
-AGameplayAbilityTargetActor* UKYGA_Aiming::FindTarget(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo& ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo)
-{
-	APlayerController* PlayerController = Cast<APlayerController>(ActorInfo.PlayerController);
-	if (PlayerController != nullptr)
-	{
-
-		FHitResult HitResult;
-
-		ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
-		
-		const FVector Forward = Character->GetActorForwardVector();
-		const FVector Start = Character->GetActorLocation() + Forward * Character->GetCapsuleComponent()->GetScaledCapsuleRadius();
-		const FVector End = Start + Forward * TargetingRange;
-		
-		FCollisionObjectQueryParams ObjectQueryParams;
-		
-		ObjectQueryParams.AddObjectTypesToQuery(ECC_ENEMY);
-		bool HitDetected = GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(100.0f));
-
-
-		FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
-		float CapsuleHalfHeight = TargetingRange * 0.5f;
-		FColor DrawColor = HitDetected ? FColor::Green : FColor::Red;
-		DrawDebugCapsule(GetWorld(), CapsuleOrigin, CapsuleHalfHeight, TargetingRadius, FRotationMatrix::MakeFromZ(Forward).ToQuat(), DrawColor);
-
-		if (HitDetected)
-		{
-			bIsTargeting = true;
-			TargetedActor = Cast<AGameplayAbilityTargetActor>(HitResult.GetActor());
-			return TargetedActor;
-		}
-
-		bIsTargeting = false;
-		TargetedActor = nullptr;
-		return nullptr;
-	}
-	return nullptr;
-}
-*/

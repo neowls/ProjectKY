@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/GameAbility/KYGameplayAbility.h"
-#include "KYGA_Move.generated.h"
+#include "Abilities/Tasks/AbilityTask.h"
+#include "KYAbilityTask.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTKY_API UKYGA_Move : public UKYGameplayAbility
+class PROJECTKY_API UKYAbilityTask : public UAbilityTask
 {
 	GENERATED_BODY()
 	

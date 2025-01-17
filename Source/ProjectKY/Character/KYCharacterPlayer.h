@@ -16,23 +16,22 @@ class PROJECTKY_API AKYCharacterPlayer : public AKYCharacterBase
 
 public:
 	AKYCharacterPlayer(const FObjectInitializer& ObjectInitializer);
-
-	FORCEINLINE UStaticMeshComponent* GetWeaponComponent() const { return WeaponComp; }
-	FORCEINLINE void ClearIgnoreActors() { HitIgnoreActors.Empty(); }
-
+	
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void SetupGASInputComponent();
 
 protected:
 	virtual void GiveStartAbilities() override;
-	
+
 	void Move(const FInputActionValue& Value);
 	void Rotate(const FInputActionValue& Value);
 
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
 
+	virtual void SetDead() override;
+	
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;
@@ -73,16 +72,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> SkillAction;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Weapon)
-	UStaticMeshComponent* WeaponComp;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Camera)
 	TObjectPtr<class UCameraComponent> CameraComp;
 
 	UPROPERTY(EditAnywhere, Category=Camera)
 	TObjectPtr<class USpringArmComponent> SpringArmComp;
-
-	UPROPERTY(BlueprintReadWrite, Category=Collision, meta=(AllowPrivateAccess="true"))
-	TSet<AActor*> HitIgnoreActors;
 };
 

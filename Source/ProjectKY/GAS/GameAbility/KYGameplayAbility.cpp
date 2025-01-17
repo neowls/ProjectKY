@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 
+
 UKYGameplayAbility::UKYGameplayAbility()
 {
 	
@@ -13,7 +14,7 @@ UKYGameplayAbility::UKYGameplayAbility()
 void UKYGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
-	TryActivatePassiveAbility(ActorInfo, Spec);
+	if(bPassiveAbility) TryActivatePassiveAbility(ActorInfo, Spec);
 }
 
 void UKYGameplayAbility::TryActivatePassiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
@@ -21,7 +22,7 @@ void UKYGameplayAbility::TryActivatePassiveAbility(const FGameplayAbilityActorIn
 	const bool bIsPredicting = (Spec.ActivationInfo.ActivationMode == EGameplayAbilityActivationMode::Predicting);
  
 	// Try to activate if activation type is Passive. Passive abilities are auto activated when given.
-	if (ActorInfo && !Spec.IsActive() && !bIsPredicting && bPassiveAbility)
+	if (ActorInfo && !Spec.IsActive() && !bIsPredicting)
 	{
 		UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get();
 		const AActor* AvatarActor = ActorInfo->AvatarActor.Get();
@@ -54,5 +55,6 @@ void UKYGameplayAbility::OnSimpleInterruptedCallback()
 {
 	bool bReplicatedEndAbility = true;
 	bool bWasCanceled = true;
+	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCanceled);
 }

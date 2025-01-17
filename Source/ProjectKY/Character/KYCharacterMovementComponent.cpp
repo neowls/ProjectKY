@@ -23,6 +23,7 @@ void UKYCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const 
 		{
 			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(KYTAG_CHARACTER_ISFALLING);
 		}
+		
 		else if (!IsFalling() && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
 		{
 			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISFALLING);

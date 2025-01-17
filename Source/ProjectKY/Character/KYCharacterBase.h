@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "KYCharacterBase.generated.h"
 
+class UKYAT_DamageReaction;
 class UKYCharacterMovementComponent;
 
 UCLASS()
@@ -19,30 +21,61 @@ public:
 
 	FORCEINLINE UKYCharacterMovementComponent* GetKYCharacterMovement() const { return KYCharacterMovement; }
 
-	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	FORCEINLINE UStaticMeshComponent* GetWeaponComponent() const { return WeaponComp; }
+
+	FORCEINLINE void ClearIgnoreActors() { HitIgnoreActors.Empty(); }
+
+	UFUNCTION(BlueprintCallable, meta=(BlueprintThreadSafe))
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION()
 	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage);
+
+	UFUNCTION()
+	virtual void OnStanceEvent(AActor* Causer, const FGameplayTagContainer& GameplayTagContainer, uint8 CurrentStanceState);
 	
 	UFUNCTION()
 	virtual void OutOfHealth();
+
+	UFUNCTION(BlueprintCallable, Category="Animation")
+	UAnimMontage* GetAnimMontageByTag(FGameplayTag& InHitTag);
+
+	UFUNCTION()
+	TSubclassOf<UKYAT_DamageReaction> GetDamageTask(const FGameplayTag& InAttackTag);
 
 protected:
 	virtual void SetDead();
 
 	virtual void GiveStartAbilities();	// 기본 어빌리티 부여
+
+	virtual void BeginPlay() override;
 	
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
-	TObjectPtr<class UAbilitySystemComponent> ASC;
+	TObjectPtr<UAbilitySystemComponent> ASC;
 
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
+
+	UPROPERTY(EditAnywhere, Category=GAS, meta=(Categories = "Character.State.Hit"))
+	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> HitMontages;
+
+	UPROPERTY(EditAnywhere, meta=(Categories = "Character.State.Attack"))
+	TMap<FGameplayTag, TSubclassOf<UKYAT_DamageReaction>> DamageTaskGround;
+
+	UPROPERTY(EditAnywhere, meta=(Categories = "Character.State.Attack"))
+	TMap<FGameplayTag, TSubclassOf<UKYAT_DamageReaction>> DamageTaskAir;
 
 	UPROPERTY(EditAnywhere, Category=Animation)
 	TObjectPtr<UAnimMontage> DeathMontage;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Movement, meta=(AllowPrivateAccess=true))
 	TObjectPtr<UKYCharacterMovementComponent> KYCharacterMovement;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Weapon)
+	UStaticMeshComponent* WeaponComp;
+
+	UPROPERTY(BlueprintReadWrite, Category=Collision, meta=(AllowPrivateAccess="true"))
+	TSet<AActor*> HitIgnoreActors;
 
 };

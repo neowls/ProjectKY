@@ -23,8 +23,6 @@ public:
 protected:
 	virtual void SetDead() override;
 	
-	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage) override;
-	
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 	
 protected:
@@ -32,6 +30,11 @@ protected:
 	TObjectPtr<class UKYAttributeSetHealth> AttributeSetHealth;
 
 	UPROPERTY()
+	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;
+
+	UPROPERTY(EditAnywhere)
 	TSubclassOf<class UGameplayEffect> InitStatEffect;
+
+	
 	
 };

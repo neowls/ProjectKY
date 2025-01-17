@@ -18,6 +18,7 @@ public:
 	
 	void RunAI();
 	void StopAI();
+	
 	void SetHitStatus(bool bIsHit);
 
 protected:

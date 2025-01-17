@@ -3,12 +3,11 @@
 
 #include "Character/KYCharacterNonPlayer.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "AI/KYAIController.h"
-
 #include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/Attribute/KYAttributeSetStance.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectInitializer)
@@ -16,6 +15,7 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 {
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	AttributeSetHealth = CreateDefaultSubobject<UKYAttributeSetHealth>(TEXT("AttributeSetHealth"));
+	AttributeSetStance = CreateDefaultSubobject<UKYAttributeSetStance>(TEXT("AttributeSetStance"));
 	AIControllerClass = AKYAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
@@ -25,8 +25,12 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 	
 	ASC->InitAbilityActorInfo(this, this);
+
+	
 	AttributeSetHealth->OnOutOfHealth.AddDynamic(this, &AKYCharacterNonPlayer::OutOfHealth);
 	AttributeSetHealth->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
+	
+	AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
 
 	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
 	EffectContextHandle.AddSourceObject(this);
@@ -39,14 +43,34 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	
 	GiveStartAbilities();
 
-	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_HIT).AddUObject(this, &ThisClass::OnHitTagChanged);
-	
+	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_ISINACTIVE).AddUObject(this, &ThisClass::OnHitTagChanged);
 }
 
 
 void AKYCharacterNonPlayer::SetDead()
 {
 	Super::SetDead();
+	AKYAIController* AIController = Cast<AKYAIController>(GetController());
+	if (AIController)
+	{
+		AIController->StopAI();
+		KY_LOG(LogKY, Log, TEXT("Stop AI"));
+	}
+
+	FVector ImpulseDirection = GetActorRotation().Vector() * -1.0f;
+	ImpulseDirection.Normalize();
+
+	float ImpulseStrength = 2000.0f;
+
+	FVector FinalImpulse = ImpulseDirection * ImpulseStrength;
+	
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+
+	GetMesh()->SetPhysicsLinearVelocity(FVector::ZeroVector);
+	GetMesh()->AddImpulseToAllBodiesBelow(FinalImpulse);
+	
+	
 	FTimerHandle DeadTimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda(
 	[&]()
@@ -56,19 +80,6 @@ void AKYCharacterNonPlayer::SetDead()
 	), 2.0f, false);
 }
 
-
-void AKYCharacterNonPlayer::DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer,
-	float Damage)
-{
-	Super::DamageTaken(DamageInstigator, DamageCauser, GameplayTagContainer, Damage);
-
-	FGameplayEventData EventData;
-	EventData.Instigator = DamageCauser;
-	EventData.InstigatorTags = GameplayTagContainer;
-	EventData.EventMagnitude = Damage;
-	
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
-}
 
 void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {

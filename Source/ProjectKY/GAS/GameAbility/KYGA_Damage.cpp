@@ -7,19 +7,19 @@
 #include "ProjectKY.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "GameFramework/Character.h"
+#include "Character/KYCharacterBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 
 UKYGA_Damage::UKYGA_Damage()
 {
-	KnockbackStrength = 100.0f;
-	KnockbackDuration = 1.0f;
+	MomentumStrength = 1200.0f;
 }
 
+
 void UKYGA_Damage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+                                   const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
@@ -28,6 +28,7 @@ void UKYGA_Damage::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
 		return;
 	}
+
 	
 	
 	UAbilityTask_WaitGameplayEvent* EventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, KYTAG_EVENT_HIT, nullptr, false,  false);
@@ -39,100 +40,96 @@ void UKYGA_Damage::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGa
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	
+}
+
+
+void UKYGA_Damage::ApplyHitReactionMomentum(FGameplayTag& InHitTag, AKYCharacterBase* Character, const FVector& InstigatorLocation)
+{
+	
 }
 
 void UKYGA_Damage::HitEventCallBack(FGameplayEventData Payload)
 {
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(GetAvatarActorFromActorInfo());
+	if (Character == nullptr) return;
 
-	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
-	UAnimMontage* MontageToPlay = nullptr;
-	
-	if (Payload.InstigatorTags.HasTagExact(KYTAG_CHARACTER_ATTACK_LIGHT))
+	if (Payload.ContextHandle.GetHitResult())
 	{
-		if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
-		{
-			MontageToPlay = AirKnockBackMontage;
-			Character->GetCharacterMovement()->Launch(FVector::UpVector * 400.0f);
-		}
-		else
-		{
-			MontageToPlay = HitMontage[GetHitDirection(Payload.Instigator)];
-		}
+		KY_LOG(LogKY, Log, TEXT("Hit Result"));
+	}
+	else
+	{
+		KY_LOG(LogKY, Log, TEXT("No Hit Result"));
 	}
 
-	else if (Payload.InstigatorTags.HasTagExact(KYTAG_CHARACTER_ATTACK_HEAVY))
+	FVector HitDirection = Payload.Instigator.Get()->GetActorLocation() - Character->GetActorLocation();
+	HitDirection.Normalize();
+	
+	Character->SetActorRotation(HitDirection.Rotation());
+
+	FGameplayTag ReactionTag;
+	for (auto& Tag : Payload.InstigatorTags)
 	{
-		if (Character != nullptr)
-		{
-			FVector KnockBackDirection = Payload.Instigator->GetActorLocation() - Character->GetActorLocation();
-			KnockBackDirection.Normalize();
-			
-			FRotator KnockBackRotation = KnockBackDirection.Rotation();
-			KnockBackRotation.Pitch = 0.0f;
-			
-			Character->SetActorRotation(KnockBackRotation);
-			
-			MontageToPlay = KnockBackMontage;
-		}
+		KY_LOG(LogKY, Log, TEXT("GE Tag : %s"), *Tag.GetTagName().ToString());
+		ReactionTag = Tag;
+	}
+
+	if (ReactionTag.MatchesTag(KYTAG_CHARACTER_ATTACK) && Payload.EventMagnitude > 1.0f)
+	{
+		HitReaction(Character,  ReactionTag);
 	}
 	
-	else if(Payload.InstigatorTags.HasTagExact(KYTAG_CHARACTER_ATTACK_UPPER))
-	{
-		if (Character != nullptr)
-		{
-			FVector KnockBackDirection = Payload.Instigator->GetActorLocation() - Character->GetActorLocation();
-			KnockBackDirection.Normalize();
-			
-			FRotator KnockBackRotation = KnockBackDirection.Rotation();
-			KnockBackRotation.Pitch = 0.0f;
-			
-			Character->SetActorRotation(KnockBackRotation);
-			
-			Character->GetCharacterMovement()->Launch(FVector::UpVector * 1200.0f);
-			MontageToPlay = AirKnockBackMontage;
-		}
-	}
-
-	else if (Payload.InstigatorTags.HasTagExact(KYTAG_CHARACTER_ATTACK_SLAM))
-	{
-		Character->GetCharacterMovement()->Launch(FVector::DownVector * KnockbackStrength);
-		MontageToPlay = AirKnockBackMontage;
-	}
-
-	if (MontageToPlay == nullptr) return;
+	//UAnimMontage* MontageToPlay = Character->GetAnimMontageByTag();
 	
-	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("HitReaction"), MontageToPlay);
-	MontageTask->ReadyForActivation();
-}
-
-void UKYGA_Damage::ApplyMomentum()
-{
+	
+	/*UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("HitReaction"), MontageToPlay);
+	MontageTask->OnCompleted.AddDynamic(this, &UKYGA_Damage::OnHitMontageCallback);
+	MontageTask->OnInterrupted.AddDynamic(this, &UKYGA_Damage::OnHitMontageCallback);
+	
+	MontageTask->ReadyForActivation();*/
 	
 }
 
-EHitDirection UKYGA_Damage::GetHitDirection(const AActor* HitCauser)
+void UKYGA_Damage::HitReaction(const ACharacter* InCharacter, const FGameplayTag& InReactionTag) const
 {
-	AActor* HitActor = GetOwningActorFromActorInfo();
-	FVector DirectionVector = HitCauser->GetActorLocation() - HitActor->GetActorLocation();
+	FVector NewDirection;
+
+	if (InReactionTag.MatchesTagExact(KYTAG_CHARACTER_ATTACK_HEAVY))
+	{
+		NewDirection = -InCharacter->GetActorForwardVector();
+		NewDirection.Z = 0.2f;
+	}
+	else if(InReactionTag.MatchesTagExact(KYTAG_CHARACTER_ATTACK_UPPER))
+	{
+		NewDirection = FVector::UpVector;
+	}
+	else if(InReactionTag.MatchesTagExact(KYTAG_CHARACTER_ATTACK_SLAM))
+	{
+		NewDirection = FVector::DownVector;
+	}
+	else
+	{
+		KY_LOG(LogKY, Warning, TEXT("Matches Nothing."));
+		return;
+	}
 	
-	float Angle = FMath::UnwindRadians(FMath::Atan2(DirectionVector.Y, DirectionVector.X) - 
-									  FMath::Atan2(HitActor->GetActorForwardVector().Y, HitActor->GetActorForwardVector().X)); 
+	InCharacter->GetCharacterMovement()->Launch(NewDirection * MomentumStrength);
+}
 
-	constexpr float Angle45Rad = FMath::DegreesToRadians(45.0f);
-	constexpr float Angle135Rad = FMath::DegreesToRadians(135.0f);
+void UKYGA_Damage::OnHitMontageCallback()
+{
+	KY_LOG(LogKY, Log, TEXT("Hit Montage Call Back"));
+	if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISSTAGGERED))
+	{
+		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISSTAGGERED, 2);
+	}
+}
 
-	if (Angle >= Angle45Rad && Angle < Angle135Rad)
-	{
-		return EHitDirection::Right;
-	}
-	if (Angle >= -Angle135Rad && Angle < -Angle45Rad)
-	{
-		return EHitDirection::Left;
-	}
-	if (Angle >= Angle135Rad || Angle <= -Angle135Rad)
-	{
-		return EHitDirection::Backward;
-	}
-
-	return EHitDirection::Forward; 
+void UKYGA_Damage::OnLandedCallback(const FHitResult& Hit)
+{
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(GetAvatarActorFromActorInfo());
+	if (Character == nullptr) return;
+	Character->LandedDelegate.RemoveDynamic(this, &ThisClass::OnLandedCallback);
+	GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISKNOCKDOWN);
 }

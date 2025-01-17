@@ -11,7 +11,6 @@
 UKYGA_ComboAttack::UKYGA_ComboAttack()
 {
 	MaxCombo = 0;
-	OriginTags = AbilityTags;
 }
 
 void UKYGA_ComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -20,11 +19,9 @@ void UKYGA_ComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	AbilityTags = OriginTags;
 	
-	CurrentActorInfo = ActorInfo;
-	CurrentCombo = 0;
+	CurrentAttackIndex = 0;
 	HasNextComboInput = false;
-
-	AbilityTags.AddTag(ComboAttackTypes[CurrentCombo]);
+	
 }
 
 void UKYGA_ComboAttack::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -49,12 +46,9 @@ void UKYGA_ComboAttack::InputCallback_Implementation()
 
 FName UKYGA_ComboAttack::GetNextSection()
 {
-	AbilityTags.RemoveTag(ComboAttackTypes[CurrentCombo]);
+	CurrentAttackIndex = FMath::Clamp(CurrentAttackIndex + 1, 0, MaxCombo);
+	FName NextSection = *FString::Printf(TEXT("Attack%d"), CurrentAttackIndex);
 	
-	CurrentCombo = FMath::Clamp(CurrentCombo + 1, 0, MaxCombo);
-	FName NextSection = *FString::Printf(TEXT("Attack%d"), CurrentCombo);
-
-	AbilityTags.AddTag(ComboAttackTypes[CurrentCombo]);
 	return NextSection;
 }
 

@@ -22,14 +22,23 @@ public:
 protected:
 
 	UFUNCTION()
-	void AttackHitCheckCallback(FGameplayEventData Payload);
+	void AttackHitEventCallback(FGameplayEventData Payload);
 	
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<UGameplayEffect> TargetHitEffect;
-
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UAnimMontage> AttackMontage;
 
 	UPROPERTY(EditAnywhere)
 	float AttackSpeed;
+
+	UPROPERTY(EditAnywhere)
+	TArray<TSubclassOf<UGameplayEffect>> AttackGameplayEffect;
+
+	UPROPERTY(EditAnywhere)
+	uint8 CurrentAttackIndex = 0;
+
+	UFUNCTION()
+	void AttackCompleteEventCallback(FGameplayEventData Payload);
+
+	UFUNCTION()
+	void AttackInterruptEventCallback(FGameplayEventData Payload);
 };

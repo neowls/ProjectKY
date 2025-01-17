@@ -3,19 +3,27 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BehaviorTree/Decorators/BTDecorator_CheckGameplayTagsOnActor.h"
-#include "BTDecorator_CheckGameplayTagsASC.generated.h"
+#include "BehaviorTree/BTDecorator.h"
+#include "BTDecorator_IsInAttackAngle.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTKY_API UBTDecorator_CheckGameplayTagsASC : public UBTDecorator_CheckGameplayTagsOnActor
+class PROJECTKY_API UBTDecorator_IsInAttackAngle : public UBTDecorator
 {
 	GENERATED_BODY()
 
 public:
-	UBTDecorator_CheckGameplayTagsASC();
+	UBTDecorator_IsInAttackAngle();
 
+protected:
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
+
+
+	
+	
+	UPROPERTY(EditAnywhere)
+	float AttackAngle;
+	
 };

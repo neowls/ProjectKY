@@ -24,6 +24,10 @@ protected:
 	virtual void NativeBeginPlay() override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
+	virtual void UpdateCharacterMovement();
+	virtual void UpdateCharacterState();
+	
+
 	TObjectPtr<AKYCharacterBase> Owner;
 
 	//	Velocity Property
@@ -41,6 +45,9 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = Velocity)
 	float LocalVelocityDirectionAngle;
+
+	UPROPERTY(BlueprintReadOnly, Category = Velocity)
+	float GroundSpeed;
 	
 	//	Acceleration Data
 	UPROPERTY(BlueprintReadOnly, Category = Acceleration)
@@ -73,7 +80,13 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	uint8 bIsOnGround : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = State)
+	uint8 bIsKnockDown : 1;
 	
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	float TimeToJumpApex;
+
+	
 };
+

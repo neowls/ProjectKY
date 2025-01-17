@@ -13,7 +13,7 @@ void UANS_KYActiveCollider::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(MeshComp->GetOwner());
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(MeshComp->GetOwner());
 	if (Character)
 	{
 		Character->GetWeaponComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -23,7 +23,7 @@ void UANS_KYActiveCollider::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 void UANS_KYActiveCollider::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(MeshComp->GetOwner());
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(MeshComp->GetOwner());
 	if (Character)
 	{
 		Character->GetWeaponComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

@@ -6,17 +6,9 @@
 #include "GAS/GameAbility/KYGameplayAbility.h"
 #include "KYGA_Damage.generated.h"
 
-class UKYDA_HitReaction;
 
-UENUM(BlueprintType)
-enum class EHitDirection : uint8
-{
-	Forward,
-	Backward,
-	Left,
-	Right
-};
-
+class UKYAT_DamageReaction;
+class AKYCharacterBase;
 
 UCLASS()
 class PROJECTKY_API UKYGA_Damage : public UKYGameplayAbility
@@ -25,34 +17,29 @@ class PROJECTKY_API UKYGA_Damage : public UKYGameplayAbility
 
 public:
 	UKYGA_Damage();
-
+	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-
 
 protected:
 	UFUNCTION()
 	void HitEventCallBack(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void ApplyMomentum();
+	void HitReaction(const ACharacter* InCharacter, const FGameplayTag& InReactionTag) const;
+	
+	UFUNCTION()
+	void OnHitMontageCallback();
 
 	UFUNCTION()
-	EHitDirection GetHitDirection(const AActor* HitCauser);
-
-	UPROPERTY(EditAnywhere)
-	TMap<EHitDirection, TObjectPtr<UAnimMontage>> HitMontage;
-
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAnimMontage> KnockBackMontage;
-
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAnimMontage> AirKnockBackMontage;
+	void OnLandedCallback(const FHitResult& Hit);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage", meta=(AllowPrivateAccess=true))
-	float KnockbackStrength;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Damage", meta=(AllowPrivateAccess=true))
-	float KnockbackDuration;
+	UFUNCTION()
+	void ApplyHitReactionMomentum(FGameplayTag& InHitTag,AKYCharacterBase* Character, const FVector& InstigatorLocation);
+	3
+	UPROPERTY(EditAnywhere)
+	float MomentumStrength;
+	
 };
+

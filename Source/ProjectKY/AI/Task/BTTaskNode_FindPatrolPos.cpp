@@ -40,7 +40,6 @@ EBTNodeResult::Type UBTTaskNode_FindPatrolPos::ExecuteTask(UBehaviorTreeComponen
 	if(NavSystem->GetRandomPointInNavigableRadius(Origin, 500.0f, NextPatrol))
 	{
 		OwnerComp.GetBlackboardComponent()->SetValueAsVector(BBKEY_PATROLPOS, NextPatrol.Location);
-		KY_LOG(LogKY, Log, TEXT("Patrol Pos : %s"), *NextPatrol.Location.ToString());
 		return EBTNodeResult::Succeeded;
 	}
 	

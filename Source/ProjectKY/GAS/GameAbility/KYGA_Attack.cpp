@@ -2,9 +2,10 @@
 
 
 #include "GAS/GameAbility/KYGA_Attack.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystemComponent.h"
+#include "ProjectKY.h"
+#include "GAS/AbilityTask/KYAT_PlayMontageAndWaitForEvent.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 class UAbilityTask_WaitGameplayEvent;
@@ -20,20 +21,50 @@ void UKYGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
                                    const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	CurrentSpecHandle = Handle;
+	CurrentActorInfo = ActorInfo;
+	CurrentActivationInfo = ActivationInfo;
 
-	UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttackMontage"), AttackMontage, AttackSpeed);
+	UKYAT_PlayMontageAndWaitForEvent* PMT = UKYAT_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(this, TEXT("PlayAttackMontage"), AttackMontage, KYTAG_EVENT_ATTACKHIT, AttackSpeed);
+	
+	
+	PMT->EventReceived.AddDynamic(this, &UKYGA_Attack::AttackHitEventCallback);
+	PMT->OnCompleted.AddDynamic(this, &UKYGA_Attack::AttackCompleteEventCallback);
+	PMT->OnInterrupted.AddDynamic(this, &UKYGA_Attack::AttackInterruptEventCallback);
+
+	/*UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttackMontage"), AttackMontage, AttackSpeed);
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UKYGA_Attack::OnSimpleCompleteCallback);
 	PlayAttackTask->OnInterrupted.AddDynamic(this, &UKYGA_Attack::OnSimpleInterruptedCallback);
 	
 	UAbilityTask_WaitGameplayEvent* HitCheckTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, KYTAG_EVENT_ATTACKHIT, nullptr, false, true);
-	HitCheckTask->EventReceived.AddDynamic(this, &UKYGA_Attack::AttackHitCheckCallback);
-
+	HitCheckTask->EventReceived.AddDynamic(this, &UKYGA_Attack::AttackHitEventCallback);
+	
 	PlayAttackTask->ReadyForActivation();
-	HitCheckTask->ReadyForActivation();
+	HitCheckTask->ReadyForActivation();*/
+
+	PMT->ReadyForActivation();
 }
 
 
-void UKYGA_Attack::AttackHitCheckCallback(FGameplayEventData Payload)
+void UKYGA_Attack::AttackHitEventCallback(FGameplayEventData Payload)
 {
-	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, TargetHitEffect, 1.0f);
+	if(IsValid(AttackGameplayEffect[CurrentAttackIndex]))
+	{
+		TArray<FActiveGameplayEffectHandle> EffectHandles = ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, AttackGameplayEffect[CurrentAttackIndex], 1.0f);
+	}
+	else
+	{
+		KY_LOG(LogKY, Warning, TEXT("Can't find Gameplay Effect, Please Add It."))
+	}
 }
+
+void UKYGA_Attack::AttackCompleteEventCallback(FGameplayEventData Payload)
+{
+	OnSimpleCompleteCallback();
+}
+
+void UKYGA_Attack::AttackInterruptEventCallback(FGameplayEventData Payload)
+{
+	OnSimpleInterruptedCallback();
+}
+

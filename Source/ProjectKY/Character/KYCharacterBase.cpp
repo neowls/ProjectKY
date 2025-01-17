@@ -21,18 +21,67 @@ AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
 	ASC = nullptr;
 	KYCharacterMovement = Cast<UKYCharacterMovementComponent>(GetCharacterMovement());
 
+	WeaponComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
+	WeaponComp->SetupAttachment(GetMesh(), TEXT("weapon_r"));
+	WeaponComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	
 }
 
-class UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
+UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
 {
 	return ASC;
+}
+
+UAnimMontage* AKYCharacterBase::GetAnimMontageByTag(FGameplayTag& InHitTag)
+{
+	if (HitMontages.Contains(InHitTag))
+	{
+		if (HitMontages[InHitTag])
+		{
+			return HitMontages[InHitTag];
+		}
+	}
+	else
+	{
+		KY_LOG(LogKY, Log, TEXT("Can't Find Montage"));
+	}
+	return nullptr;
+}
+
+TSubclassOf<UKYAT_DamageReaction> AKYCharacterBase::GetDamageTask(const FGameplayTag& InAttackTag)
+{
+	if (GetCharacterMovement()->IsFalling()) return DamageTaskAir[InAttackTag];
+	return DamageTaskGround[InAttackTag];
+}
+
+
+void AKYCharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 
 void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage)
 {
-	
+	FGameplayEventData EventData;
+	EventData.Instigator = DamageCauser;
+	EventData.InstigatorTags = GameplayTagContainer; // GE에 담겨진 태그들
+	EventData.EventMagnitude = Damage;
+
+	KY_LOG(LogKY, Log, TEXT("Damage Taken"));
+	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
+}
+
+void AKYCharacterBase::OnStanceEvent(AActor* Causer, const FGameplayTagContainer& GameplayTagContainer, uint8 CurrentStanceState)
+{
+	FGameplayEventData EventData;
+	EventData.Instigator = Causer;
+	EventData.InstigatorTags = GameplayTagContainer; // GE에 담겨진 태그들
+	EventData.EventMagnitude = CurrentStanceState;
+
+	KY_LOG(LogKY, Log, TEXT("OnStanceEvent"));
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
 }
 
 void AKYCharacterBase::OutOfHealth()
@@ -43,13 +92,11 @@ void AKYCharacterBase::OutOfHealth()
 	SetDead();
 }
 
-
 void AKYCharacterBase::SetDead()
 {
 	bBlockInput = true;
 	GetCapsuleComponent()->SetCollisionProfileName(TEXT("DeadPawn"));
 	StopAnimMontage();
-	PlayAnimMontage(DeathMontage);
 }
 
 void AKYCharacterBase::GiveStartAbilities()
@@ -60,3 +107,4 @@ void AKYCharacterBase::GiveStartAbilities()
 		ASC->GiveAbility(StartSpec);
 	}
 }
+

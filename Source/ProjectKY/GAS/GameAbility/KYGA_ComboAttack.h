@@ -28,16 +28,11 @@ protected:
 
 	void InputCallback_Implementation();
 
-	UPROPERTY(EditAnywhere)
-	TArray<FGameplayTag> ComboAttackTypes;
-
 
 private:
 	void StartNextCombo();
 	
 	FName GetNextSection();
-
-	uint8 CurrentCombo = 0;
 
 	FGameplayTagContainer OriginTags;
 

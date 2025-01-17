@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/Attribute/KYAttributeSetStance.h"
 #include "GAS/Tag/KYGameplayTag.h"
 #include "Player/KYPlayerState.h"
 
@@ -38,10 +39,6 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	GetMesh()->SetSkeletalMesh(CharacterMesh);
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;	// 이동 방향으로 캐릭터가 회전한다.
-
-	WeaponComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
-	WeaponComp->SetupAttachment(GetMesh(), TEXT("weapon_r"));
-	WeaponComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
 
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -69,6 +66,13 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 		if(AttributeSetHealth)
 		{
 			AttributeSetHealth->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);	// 사망 델리게이트 바인딩
+			AttributeSetHealth->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
+		}
+
+		const UKYAttributeSetStance* AttributeSetStance = ASC->GetSet<UKYAttributeSetStance>();
+		if (AttributeSetStance)
+		{
+			AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
 		}
 		
 		GiveStartAbilities();
@@ -76,9 +80,6 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 		PlayerController->ConsoleCommand(TEXT("showdebug abilitySystem"));	// 어빌리티 시스템 디버깅
-
-		
-		
 	}
 }
 
@@ -132,26 +133,27 @@ void AKYCharacterPlayer::GiveStartAbilities()
 	}
 }
 
+
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 {
 	if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNMOVABLE)) return;	// 해당 태그 부착시 캐릭터 이동 제한
-	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr)) GetMesh()->GetAnimInstance()->Montage_Stop(0.1f);	// 재생중인 몽타주가 있다면 중단한다.
+	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr)) GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	// 재생중인 몽타주가 있다면 중단한다.
 	
-	FVector2D MovementVector = Value.Get<FVector2d>();
+	FVector2D MovementVector = Value.Get<FVector2d>(); // X, Y 입력 벡터 저장
 	
 	float MovementVectorSize = 1.0f;
-	float MovementVectorSizeSquared = MovementVector.SquaredLength();
-	if(MovementVectorSizeSquared > 1.0f)
+	float MovementVectorSizeSquared = MovementVector.SizeSquared();		// 이동 속도 제곱 연산
+	if(MovementVectorSizeSquared > 1.0f)	// 조이 스틱 사용시 1.0f 아래의 미세값들을 위한 연산
 	{
-		MovementVector.Normalize();
+		MovementVector.Normalize(); // 이동 벡터 정규화
 	}
 	
 	else
 	{
-		MovementVectorSize = FMath::Sqrt(MovementVectorSizeSquared);
+		MovementVectorSize = FMath::Sqrt(MovementVectorSizeSquared);	// 이동 속도 제곱근 연산
 	}
 
-	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.0f);
+	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.0f);	// 이동 방향 벡터 연산
 	
 	AddMovementInput(MoveDirection, MovementVectorSize);
 }
@@ -184,7 +186,7 @@ void AKYCharacterPlayer::GASInputPressed(int32 InputId)		// 입력시 어빌리�
 			ASC->AbilitySpecInputPressed(*Spec);
 		}
 		else
-		{ 
+		{
 			ASC->TryActivateAbility(Spec->Handle);
 		}
 	}
@@ -201,5 +203,11 @@ void AKYCharacterPlayer::GASInputReleased(int32 InputId)
 			ASC->AbilitySpecInputReleased(*Spec);
 		}
 	}
+}
+
+void AKYCharacterPlayer::SetDead()
+{
+	Super::SetDead();
+	PlayAnimMontage(DeathMontage);
 }
 
