@@ -38,10 +38,7 @@ public:
 	virtual void OutOfHealth();
 
 	UFUNCTION(BlueprintCallable, Category="Animation")
-	UAnimMontage* GetAnimMontageByTag(FGameplayTag& InHitTag);
-
-	UFUNCTION()
-	TSubclassOf<UKYAT_DamageReaction> GetDamageTask(const FGameplayTag& InAttackTag);
+	UAnimMontage* GetAnimMontageByTag(uint8 Index);
 
 protected:
 	virtual void SetDead();
@@ -58,14 +55,8 @@ protected:
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 
 	UPROPERTY(EditAnywhere, Category=GAS, meta=(Categories = "Character.State.Hit"))
-	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> HitMontages;
-
-	UPROPERTY(EditAnywhere, meta=(Categories = "Character.State.Attack"))
-	TMap<FGameplayTag, TSubclassOf<UKYAT_DamageReaction>> DamageTaskGround;
-
-	UPROPERTY(EditAnywhere, meta=(Categories = "Character.State.Attack"))
-	TMap<FGameplayTag, TSubclassOf<UKYAT_DamageReaction>> DamageTaskAir;
-
+	TArray<TObjectPtr<UAnimMontage>> HitMontageArray;
+	
 	UPROPERTY(EditAnywhere, Category=Animation)
 	TObjectPtr<UAnimMontage> DeathMontage;
 
@@ -77,5 +68,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category=Collision, meta=(AllowPrivateAccess="true"))
 	TSet<AActor*> HitIgnoreActors;
+	
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UGameplayEffect> InitStatEffect;
 
 };

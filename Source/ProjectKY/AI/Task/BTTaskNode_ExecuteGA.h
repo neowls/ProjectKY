@@ -21,7 +21,7 @@ public:
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
 protected:
-	// 클래스
+	// 실행할 어빌리티 클래스
 	UPROPERTY(EditAnywhere, Category = "Gameplay Ability")
 	TSubclassOf<UGameplayAbility> AbilityToActivate;
 };

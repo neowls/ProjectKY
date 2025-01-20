@@ -4,42 +4,40 @@
 
 #include "CoreMinimal.h"
 #include "GAS/GameAbility/KYGameplayAbility.h"
-#include "KYGA_Damage.generated.h"
+#include "KYGA_HitReaction.generated.h"
 
 
 class UKYAT_DamageReaction;
 class AKYCharacterBase;
 
 UCLASS()
-class PROJECTKY_API UKYGA_Damage : public UKYGameplayAbility
+class PROJECTKY_API UKYGA_HitReaction : public UKYGameplayAbility
 {
 	GENERATED_BODY()
 
 public:
-	UKYGA_Damage();
+	UKYGA_HitReaction();
 	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	
-	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 protected:
 	UFUNCTION()
 	void HitEventCallBack(FGameplayEventData Payload);
 
 	UFUNCTION()
-	void HitReaction(const ACharacter* InCharacter, const FGameplayTag& InReactionTag) const;
-	
-	UFUNCTION()
-	void OnHitMontageCallback();
+	void ApplyHitReactionMomentum(ACharacter* InCharacter, const FGameplayTag& InReactionTag) const;
 
 	UFUNCTION()
-	void OnLandedCallback(const FHitResult& Hit);
+	void OnLandedCallback(const FHitResult& Result);
 	
 	UFUNCTION()
-	void ApplyHitReactionMomentum(FGameplayTag& InHitTag,AKYCharacterBase* Character, const FVector& InstigatorLocation);
-	3
+	void PlayStanceMontage(UAnimMontage* MontageToPlay);
+
 	UPROPERTY(EditAnywhere)
 	float MomentumStrength;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameplayEffect> ResetGameplayEffect;
 	
 };
 

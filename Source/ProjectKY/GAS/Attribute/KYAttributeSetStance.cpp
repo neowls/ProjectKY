@@ -8,8 +8,8 @@
 UKYAttributeSetStance::UKYAttributeSetStance() :
 	Stance(0.f),
 	MaxStance(300.0f),
-	StaggerStance(100.0f),
-	KnockDownStance(200.0f)
+	MinStaggerStance(50.0f),
+	MaxStaggerStance(200.0f)
 {
 }
 
@@ -32,19 +32,19 @@ void UKYAttributeSetStance::PostGameplayEffectExecute(const struct FGameplayEffe
 		{
 			const float NewStance = GetStance() + IncomingStanceDone;
 			SetStance(NewStance);
-			
 			if (OnStanceChange.IsBound())
 			{
 				const FGameplayEffectContextHandle& EffectContextHandle = Data.EffectSpec.GetEffectContext();
 				AActor* Causer = EffectContextHandle.GetEffectCauser();
 
-				OnStanceChange.Broadcast(Causer, Data.EffectSpec.CapturedSourceTags.GetSpecTags(), GetCurrentStanceState());
+				
+				OnStanceChange.Broadcast(Causer, Data.EffectSpec.CapturedSourceTags.GetSpecTags(), GetCurrentStanceState(IncomingStanceDone));
 			}
 		}
 	}
 }
 
-uint8 UKYAttributeSetStance::GetCurrentStanceState() const
+uint8 UKYAttributeSetStance::GetCurrentStanceState(float IncomingStanceValue) const
 {
-	return GetStance() >= GetKnockDownStance() ? 2 : GetStance() >= GetStaggerStance() ? 1 : 0;
+	return GetStance() == GetMaxStance() ? 2 : GetStance() >= GetMaxStaggerStance() ? 1 : IncomingStanceValue >= GetMinStaggerStance() ? 1 : 0;
 }

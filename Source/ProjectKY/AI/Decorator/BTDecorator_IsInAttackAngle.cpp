@@ -4,6 +4,7 @@
 #include "AI/Decorator/BTDecorator_IsInAttackAngle.h"
 
 #include "AIController.h"
+#include "ProjectKY.h"
 #include "AI/KYAI.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
@@ -29,7 +30,7 @@ bool UBTDecorator_IsInAttackAngle::CalculateRawConditionValue(UBehaviorTreeCompo
 	TargetDirection.Normalize();
 
 	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(ControlledPawn->GetActorForwardVector(), TargetDirection)));
-
+	
 	bResult = Angle < AttackAngle; 
 	
 	return bResult;

@@ -33,9 +33,7 @@ private:
 	void StartNextCombo();
 	
 	FName GetNextSection();
-
-	FGameplayTagContainer OriginTags;
-
+	
 	UPROPERTY(EditAnywhere)
 	uint8 MaxCombo = 0;
 

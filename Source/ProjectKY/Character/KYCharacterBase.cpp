@@ -26,6 +26,7 @@ AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
 	WeaponComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	
+	
 }
 
 UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
@@ -33,28 +34,18 @@ UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
 	return ASC;
 }
 
-UAnimMontage* AKYCharacterBase::GetAnimMontageByTag(FGameplayTag& InHitTag)
+UAnimMontage* AKYCharacterBase::GetAnimMontageByTag(uint8 Index)
 {
-	if (HitMontages.Contains(InHitTag))
+	if (HitMontageArray.IsValidIndex(Index))
 	{
-		if (HitMontages[InHitTag])
-		{
-			return HitMontages[InHitTag];
-		}
+		return HitMontageArray[Index];
 	}
 	else
 	{
-		KY_LOG(LogKY, Log, TEXT("Can't Find Montage"));
+		KY_LOG(LogKY, Warning, TEXT("Can't Find '%d' Index Montage"), Index);
 	}
 	return nullptr;
 }
-
-TSubclassOf<UKYAT_DamageReaction> AKYCharacterBase::GetDamageTask(const FGameplayTag& InAttackTag)
-{
-	if (GetCharacterMovement()->IsFalling()) return DamageTaskAir[InAttackTag];
-	return DamageTaskGround[InAttackTag];
-}
-
 
 void AKYCharacterBase::BeginPlay()
 {
@@ -66,21 +57,19 @@ void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCause
 {
 	FGameplayEventData EventData;
 	EventData.Instigator = DamageCauser;
-	EventData.InstigatorTags = GameplayTagContainer; // GE에 담겨진 태그들
 	EventData.EventMagnitude = Damage;
-
-	KY_LOG(LogKY, Log, TEXT("Damage Taken"));
-	//UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
+	
+	// TODO : UI로 브로드캐스팅
 }
 
 void AKYCharacterBase::OnStanceEvent(AActor* Causer, const FGameplayTagContainer& GameplayTagContainer, uint8 CurrentStanceState)
 {
 	FGameplayEventData EventData;
 	EventData.Instigator = Causer;
-	EventData.InstigatorTags = GameplayTagContainer; // GE에 담겨진 태그들
+	EventData.InstigatorTags = GameplayTagContainer;
 	EventData.EventMagnitude = CurrentStanceState;
 
-	KY_LOG(LogKY, Log, TEXT("OnStanceEvent"));
+	KY_LOG(LogKY, Log, TEXT("Stance Event"));
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
 }
 

@@ -22,6 +22,7 @@ void UKYAT_JumpAndWaitForLanding::Activate()
 	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActor());
 	Character->LandedDelegate.AddDynamic(this, &UKYAT_JumpAndWaitForLanding::OnLandedCallback);
 	Character->Jump();
+	
 
 	SetWaitingOnAvatar();
 }

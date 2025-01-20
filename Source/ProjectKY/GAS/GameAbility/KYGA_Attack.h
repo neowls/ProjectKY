@@ -33,7 +33,7 @@ protected:
 	UPROPERTY(EditAnywhere)
 	TArray<TSubclassOf<UGameplayEffect>> AttackGameplayEffect;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY()
 	uint8 CurrentAttackIndex = 0;
 
 	UFUNCTION()

@@ -43,7 +43,7 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	
 	GiveStartAbilities();
 
-	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_ISINACTIVE).AddUObject(this, &ThisClass::OnHitTagChanged);
+	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_UNSTABLE).AddUObject(this, &ThisClass::OnHitTagChanged);
 }
 
 

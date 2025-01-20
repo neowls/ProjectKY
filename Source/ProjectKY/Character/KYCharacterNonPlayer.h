@@ -31,10 +31,6 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UGameplayEffect> InitStatEffect;
-
 	
 	
 };

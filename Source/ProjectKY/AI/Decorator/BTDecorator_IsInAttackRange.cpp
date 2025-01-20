@@ -10,6 +10,7 @@
 UBTDecorator_IsInAttackRange::UBTDecorator_IsInAttackRange()
 {
 	NodeName = TEXT("Check Attack Range");
+	AttackRange = 250.0f;
 }
 
 bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp,
@@ -23,7 +24,7 @@ bool UBTDecorator_IsInAttackRange::CalculateRawConditionValue(UBehaviorTreeCompo
 	auto Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_TARGET));
 	if(Target == nullptr) return false;
 
-	bResult = (Target->GetDistanceTo(ControlledPawn) <= 300.0f);
+	bResult = (Target->GetDistanceTo(ControlledPawn) <= AttackRange);
 	
 	return bResult;
 }

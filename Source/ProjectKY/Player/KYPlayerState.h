@@ -26,4 +26,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UKYAttributeSetHealth> AttributeSetHealth;
+
+	UPROPERTY()
+	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;
 };

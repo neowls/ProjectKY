@@ -74,6 +74,15 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 		{
 			AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
 		}
+
+		FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
+
+		FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(InitStatEffect, 1.0f, EffectContextHandle); // 이펙트 부여
+		if (EffectSpecHandle.IsValid())
+		{
+			ASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
+		}
 		
 		GiveStartAbilities();
 		SetupGASInputComponent();

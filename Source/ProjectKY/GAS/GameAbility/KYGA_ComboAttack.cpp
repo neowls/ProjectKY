@@ -17,11 +17,9 @@ void UKYGA_ComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	AbilityTags = OriginTags;
-	
+
 	CurrentAttackIndex = 0;
 	HasNextComboInput = false;
-	
 }
 
 void UKYGA_ComboAttack::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
