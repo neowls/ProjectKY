@@ -32,6 +32,11 @@ protected:
 
 	virtual void SetDead() override;
 	
+	UFUNCTION(BlueprintNativeEvent)
+	void CurrentWeaponTrailState(const FGameplayTag CallbackTag, int32 NewCount);
+
+	void CurrentWeaponTrailState_Implementation(const FGameplayTag CallbackTag, int32 NewCount);
+	
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;
@@ -46,22 +51,22 @@ protected:
 	TObjectPtr<UInputAction> MoveAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> WalkAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> DashAction;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> SprintAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> GuardAction;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> JumpAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> InteractAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> HeavyAttackAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> MainAttackAction;
+	TObjectPtr<UInputAction> LightAttackAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> SkillAttackAction;
@@ -77,5 +82,13 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category=Camera)
 	TObjectPtr<class USpringArmComponent> SpringArmComp;
-};
 
+	UPROPERTY(EditAnywhere, Category=Debug)
+	bool bShowGASDebug = true;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool bCurrentTrailState = false;
+
+	UPROPERTY(EditAnywhere)
+	FRotator RotationOffset = FRotator(0.0f, -45.0f, 0.0f);
+};

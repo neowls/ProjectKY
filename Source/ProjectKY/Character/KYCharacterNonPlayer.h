@@ -20,6 +20,9 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 
+	UFUNCTION(BlueprintNativeEvent)
+	void UpdateMotionWarpToTransform(FTransform InTransform);
+	
 protected:
 	virtual void SetDead() override;
 	
@@ -29,8 +32,11 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UKYAttributeSetHealth> AttributeSetHealth;
 
-	UPROPERTY()
-	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;
+	/*UPROPERTY()
+	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;*/
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UKYWidgetComponent> HPBar;
 	
 	
 };

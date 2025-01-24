@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "KYPlayerController.generated.h"
 
+class UKYHUDUserWidget;
+
 /**
  * 
  */
@@ -16,4 +18,19 @@ class PROJECTKY_API AKYPlayerController : public APlayerController
 
 public:
 	AKYPlayerController();
+
+	FORCEINLINE class UKYHUDUserWidget* GetHUDWidget() const {  return HUDWidget; }
+
+	virtual void SetupHUDWidget();
+
+protected:
+	virtual void OnPossess(APawn* InPawn) override;
+
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+	TSubclassOf<UKYHUDUserWidget> HUDWidgetClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = UI)
+	TObjectPtr<UKYHUDUserWidget> HUDWidget;
 };

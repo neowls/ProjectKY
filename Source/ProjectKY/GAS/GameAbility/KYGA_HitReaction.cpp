@@ -57,7 +57,7 @@ void UKYGA_HitReaction::HitEventCallBack(FGameplayEventData Payload)
 		ReactionTag = Tag;
 	}
 
-	if (ReactionTag.MatchesTag(KYTAG_CHARACTER_ATTACK))
+	/*if (ReactionTag.MatchesTag(KYTAG_CHARACTER_ATTACK))
 	{
 		if (Payload.EventMagnitude > 0.0f)
 		{
@@ -77,7 +77,7 @@ void UKYGA_HitReaction::HitEventCallBack(FGameplayEventData Payload)
 					UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(Character, FGameplayTagContainer(KYTAG_CHARACTER_ISSTAGGERED));
 			}
 		}
-	}
+	}*/
 }
 
 void UKYGA_HitReaction::ApplyHitReactionMomentum(ACharacter* InCharacter, const FGameplayTag& InReactionTag) const

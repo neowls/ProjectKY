@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayAbilitySpec.h"
 #include "GameplayTagContainer.h"
 #include "KYCharacterBase.generated.h"
 
@@ -31,14 +32,16 @@ public:
 	UFUNCTION()
 	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage);
 
+	/*
 	UFUNCTION()
 	virtual void OnStanceEvent(AActor* Causer, const FGameplayTagContainer& GameplayTagContainer, uint8 CurrentStanceState);
+	*/
 	
 	UFUNCTION()
 	virtual void OutOfHealth();
 
 	UFUNCTION(BlueprintCallable, Category="Animation")
-	UAnimMontage* GetAnimMontageByTag(uint8 Index);
+	UAnimMontage* GetAnimMontageByTag(FGameplayTag InTag);
 
 protected:
 	virtual void SetDead();
@@ -53,9 +56,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
-
+	
 	UPROPERTY(EditAnywhere, Category=GAS, meta=(Categories = "Character.State.Hit"))
-	TArray<TObjectPtr<UAnimMontage>> HitMontageArray;
+	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> HitMontageMap;
 	
 	UPROPERTY(EditAnywhere, Category=Animation)
 	TObjectPtr<UAnimMontage> DeathMontage;

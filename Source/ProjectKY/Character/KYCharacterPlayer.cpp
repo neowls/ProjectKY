@@ -11,7 +11,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GAS/Attribute/KYAttributeSetHealth.h"
-#include "GAS/Attribute/KYAttributeSetStance.h"
 #include "GAS/Tag/KYGameplayTag.h"
 #include "Player/KYPlayerState.h"
 
@@ -21,12 +20,12 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 {
 	InitializeObjectFinder(LookAction, TEXT("/Game/_Dev/Input/IA_Look.IA_Look"));
 	InitializeObjectFinder(MoveAction, TEXT("/Game/_Dev/Input/IA_Move.IA_Move"));
-	InitializeObjectFinder(WalkAction, TEXT("/Game/_Dev/Input/IA_Walk.IA_Walk"));
-	InitializeObjectFinder(SprintAction, TEXT("/Game/_Dev/Input/IA_Sprint.IA_Sprint"));
 	InitializeObjectFinder(DashAction, TEXT("/Game/_Dev/Input/IA_Dash.IA_Dash"));
+	InitializeObjectFinder(GuardAction, TEXT("/Game/_Dev/Input/IA_Guard.IA_Guard"));
 	InitializeObjectFinder(JumpAction, TEXT("/Game/_Dev/Input/IA_Jump.IA_Jump"));
 	InitializeObjectFinder(InteractAction, TEXT("/Game/_Dev/Input/IA_Interact.IA_Interact"));
-	InitializeObjectFinder(MainAttackAction, TEXT("/Game/_Dev/Input/IA_MainAttack.IA_MainAttack"));
+	InitializeObjectFinder(LightAttackAction, TEXT("/Game/_Dev/Input/IA_LightAttack.IA_LightAttack"));
+	InitializeObjectFinder(HeavyAttackAction, TEXT("/Game/_Dev/Input/IA_HeavyAttack.IA_HeavyAttack"));
 	InitializeObjectFinder(SkillAttackAction, TEXT("/Game/_Dev/Input/IA_SubAttack.IA_SubAttack"));
 	InitializeObjectFinder(UpperAttackAction, TEXT("/Game/_Dev/Input/IA_UpperAttack.IA_UpperAttack"));
 	InitializeObjectFinder(SkillAction, TEXT("/Game/_Dev/Input/IA_Skill.IA_Skill"));
@@ -47,8 +46,8 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	SpringArmComp->bInheritPitch = false;
 	SpringArmComp->bInheritYaw = false;
 	SpringArmComp->bInheritRoll = false;
-
 	SpringArmComp->TargetArmLength = 800;
+	SpringArmComp->SetRelativeRotation(FRotator(0.0f, -50.0f, RotationOffset.Yaw));
 	
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraComp->SetupAttachment(SpringArmComp);
@@ -69,11 +68,15 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 			AttributeSetHealth->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
 		}
 
+		/*
 		const UKYAttributeSetStance* AttributeSetStance = ASC->GetSet<UKYAttributeSetStance>();
 		if (AttributeSetStance)
 		{
 			AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
 		}
+		*/
+
+		ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_ISATTACKING).AddUObject(this, &ThisClass::CurrentWeaponTrailState);
 
 		FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
@@ -88,6 +91,7 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 		SetupGASInputComponent();
 
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
+		if (bShowGASDebug)
 		PlayerController->ConsoleCommand(TEXT("showdebug abilitySystem"));	// 어빌리티 시스템 디버깅
 	}
 }
@@ -123,11 +127,12 @@ void AKYCharacterPlayer::SetupGASInputComponent()
 		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 0);
 		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 1);
 		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 1);
-		EnhancedInputComponent->BindAction(MainAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 2);	// 하나는 지상, 하나는 공중 공격 어빌리티
-		EnhancedInputComponent->BindAction(MainAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 3);
-		EnhancedInputComponent->BindAction(UpperAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 4);
-		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 5);
-		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 6);
+		EnhancedInputComponent->BindAction(LightAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 2);	// 하나는 지상, 하나는 공중 공격 어빌리티
+		EnhancedInputComponent->BindAction(LightAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 3);
+		EnhancedInputComponent->BindAction(HeavyAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 4);
+		EnhancedInputComponent->BindAction(UpperAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 5);
+		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 6);
+		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 7);
 	}
 }
 
@@ -141,6 +146,7 @@ void AKYCharacterPlayer::GiveStartAbilities()
 		ASC->GiveAbility(StartSpec);
 	}
 }
+
 
 
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
@@ -161,8 +167,9 @@ void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 	{
 		MovementVectorSize = FMath::Sqrt(MovementVectorSizeSquared);	// 이동 속도 제곱근 연산
 	}
-
+	
 	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.0f);	// 이동 방향 벡터 연산
+	MoveDirection = RotationOffset.RotateVector(MoveDirection);
 	
 	AddMovementInput(MoveDirection, MovementVectorSize);
 }
@@ -218,5 +225,10 @@ void AKYCharacterPlayer::SetDead()
 {
 	Super::SetDead();
 	PlayAnimMontage(DeathMontage);
+}
+
+void AKYCharacterPlayer::CurrentWeaponTrailState_Implementation(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	bCurrentTrailState = NewCount > 0;
 }
 

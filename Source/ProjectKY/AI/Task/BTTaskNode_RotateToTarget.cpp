@@ -31,6 +31,8 @@ EBTNodeResult::Type UBTTaskNode_RotateToTarget::ExecuteTask(UBehaviorTreeCompone
 	ControlledPawn->SetActorRotation(NewRotation);
 
 	Result = EBTNodeResult::Succeeded;
+
+	
 	
 	return Result;
 }

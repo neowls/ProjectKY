@@ -24,7 +24,7 @@ protected:
 	UFUNCTION()
 	void AttackHitEventCallback(FGameplayEventData Payload);
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TObjectPtr<UAnimMontage> AttackMontage;
 
 	UPROPERTY(EditAnywhere)

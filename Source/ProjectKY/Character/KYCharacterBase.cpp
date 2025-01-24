@@ -8,6 +8,7 @@
 #include "ProjectKY.h"
 #include "Components/CapsuleComponent.h"
 #include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/GameAbility/KYGA_SimpleDamageReaction.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 // Sets default values
@@ -24,9 +25,6 @@ AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
 	WeaponComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
 	WeaponComp->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 	WeaponComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	
-	
 }
 
 UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
@@ -34,15 +32,16 @@ UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
 	return ASC;
 }
 
-UAnimMontage* AKYCharacterBase::GetAnimMontageByTag(uint8 Index)
+UAnimMontage* AKYCharacterBase::GetAnimMontageByTag(FGameplayTag InTag)
 {
-	if (HitMontageArray.IsValidIndex(Index))
+	if (HitMontageMap.Find(InTag))
 	{
-		return HitMontageArray[Index];
+		KY_LOG(LogKY, Warning, TEXT("Find Matched Montage, Tag : %s"), *InTag.GetTagName().ToString());
+		return HitMontageMap[InTag];
 	}
 	else
 	{
-		KY_LOG(LogKY, Warning, TEXT("Can't Find '%d' Index Montage"), Index);
+		KY_LOG(LogKY, Warning, TEXT("Can't Find '%s' Tag Montage"), *InTag.GetTagName().ToString());
 	}
 	return nullptr;
 }
@@ -55,23 +54,32 @@ void AKYCharacterBase::BeginPlay()
 
 void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage)
 {
-	FGameplayEventData EventData;
-	EventData.Instigator = DamageCauser;
-	EventData.EventMagnitude = Damage;
+	FGameplayTagContainer FilteredGameplayTags(FGameplayTag(KYTAG_CHARACTER_ATTACK));
 	
-	// TODO : UI로 브로드캐스팅
+	for (auto& InGameplayTag : GameplayTagContainer.Filter(FilteredGameplayTags))
+	{
+		FGameplayEventData EventData;
+		EventData.Instigator = DamageCauser;
+		EventData.EventTag = InGameplayTag;
+		EventData.EventMagnitude = Damage;
+
+		KY_LOG(LogKY, Log, TEXT("InGameplayTag Before Send : %s"), *InGameplayTag.GetTagName().ToString());
+
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, InGameplayTag, EventData);
+	}
 }
 
+/*
 void AKYCharacterBase::OnStanceEvent(AActor* Causer, const FGameplayTagContainer& GameplayTagContainer, uint8 CurrentStanceState)
 {
 	FGameplayEventData EventData;
 	EventData.Instigator = Causer;
 	EventData.InstigatorTags = GameplayTagContainer;
 	EventData.EventMagnitude = CurrentStanceState;
-
-	KY_LOG(LogKY, Log, TEXT("Stance Event"));
+	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
 }
+*/
 
 void AKYCharacterBase::OutOfHealth()
 {

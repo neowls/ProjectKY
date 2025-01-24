@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "AI/KYAI.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Character/KYCharacterNonPlayer.h"
 
 UBTTaskNode_ExecuteGA::UBTTaskNode_ExecuteGA()
 {
@@ -18,8 +19,13 @@ EBTNodeResult::Type UBTTaskNode_ExecuteGA::ExecuteTask(UBehaviorTreeComponent& O
 	UAbilitySystemComponent* ASC = Cast<UAbilitySystemComponent>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_ASC));
 	if(ASC)
 	{
-		ASC->TryActivateAbilityByClass(AbilityToActivate);
-		return EBTNodeResult::Succeeded;
+		AKYCharacterNonPlayer* AICharacter = Cast<AKYCharacterNonPlayer>(ASC->GetAvatarActor());
+		if (AICharacter)
+		{
+			auto Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_TARGET));
+			AICharacter->UpdateMotionWarpToTransform(Target->GetTransform());
+		}
+		if(ASC->TryActivateAbilityByClass(AbilityToActivate)) return EBTNodeResult::Succeeded;
 	}
 	
 	return EBTNodeResult::Failed;

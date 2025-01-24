@@ -49,6 +49,15 @@ static void InitializeObjectFinder(T& Ref, const FString& Path)
 	}
 }
 
+template<typename T>
+static void InitializeClassFinder(TSubclassOf<T>& Ref, const FString& Path)
+{
+	ConstructorHelpers::FClassFinder<T> Finder(*Path);
+	if (Finder.Succeeded()) {
+		Ref = Finder.Class;
+	}
+}
+
 
 /*
 template<typename T>

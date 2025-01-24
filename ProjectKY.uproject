@@ -12,7 +12,8 @@
 				"Engine",
 				"GameplayAbilities",
 				"GameFeatures",
-				"AIModule"
+				"AIModule",
+				"UMG"
 			]
 		}
 	],

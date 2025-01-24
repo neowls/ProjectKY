@@ -10,7 +10,19 @@ public class ProjectKY : ModuleRules
 		
 		PublicIncludePaths.AddRange(new string[] { "ProjectKY" });
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "NavigationSystem", "AIModule", "GameplayTasks" });
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core",
+			"CoreUObject",
+			"Engine",
+			"InputCore",
+			"EnhancedInput",
+			"UMG",
+			"NavigationSystem",
+			"AIModule",
+			"GameplayTasks",
+			"MotionWarping"
+		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "GameFeatures", "GameplayAbilities", "GameplayTags" });
 

@@ -17,6 +17,7 @@ UBTDecorator_IsInAttackAngle::UBTDecorator_IsInAttackAngle()
 bool UBTDecorator_IsInAttackAngle::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
 {
 	bool bResult = Super::CalculateRawConditionValue(OwnerComp, NodeMemory);
+	
 
 	auto ControlledPawn = OwnerComp.GetAIOwner()->GetPawn();
 	auto Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_TARGET));

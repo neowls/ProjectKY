@@ -7,17 +7,31 @@
 #include "ProjectKY.h"
 #include "AI/KYAIController.h"
 #include "GAS/Attribute/KYAttributeSetHealth.h"
-#include "GAS/Attribute/KYAttributeSetStance.h"
 #include "GAS/Tag/KYGameplayTag.h"
+#include "UI/KYWidgetComponent.h"
+#include "UI/KYUserWidget.h"
 
 AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	AttributeSetHealth = CreateDefaultSubobject<UKYAttributeSetHealth>(TEXT("AttributeSetHealth"));
-	AttributeSetStance = CreateDefaultSubobject<UKYAttributeSetStance>(TEXT("AttributeSetStance"));
+	//AttributeSetStance = CreateDefaultSubobject<UKYAttributeSetStance>(TEXT("AttributeSetStance"));
 	AIControllerClass = AKYAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	HPBar = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Widget"));
+	HPBar->SetupAttachment(GetMesh());
+	HPBar->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
+
+	TSubclassOf<UUserWidget> HPBarWidgetClass;
+	InitializeClassFinder(HPBarWidgetClass, TEXT("/Game/_Dev/UI/WBP_EnemyHPBar.WBP_EnemyHPBar_C"));
+	
+	HPBar->SetWidgetClass(HPBarWidgetClass);
+	HPBar->SetWidgetSpace(EWidgetSpace::Screen);
+	HPBar->SetDrawSize(FVector2D(150.0f, 20.0f));
+	HPBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 }
 
 void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
@@ -30,7 +44,7 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	AttributeSetHealth->OnOutOfHealth.AddDynamic(this, &AKYCharacterNonPlayer::OutOfHealth);
 	AttributeSetHealth->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
 	
-	AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
+	//AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
 
 	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
 	EffectContextHandle.AddSourceObject(this);
@@ -44,6 +58,11 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	GiveStartAbilities();
 
 	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_UNSTABLE).AddUObject(this, &ThisClass::OnHitTagChanged);
+}
+
+void AKYCharacterNonPlayer::UpdateMotionWarpToTransform_Implementation(FTransform InTransform)
+{
+	
 }
 
 

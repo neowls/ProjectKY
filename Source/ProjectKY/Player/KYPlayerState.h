@@ -29,4 +29,5 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;
+
 };
