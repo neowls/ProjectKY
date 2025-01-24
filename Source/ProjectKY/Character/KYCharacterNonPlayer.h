@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Character/KYCharacterBase.h"
+#include "Interface/KYTargetableInterface.h"
 #include "KYCharacterNonPlayer.generated.h"
 
 struct FGameplayTag;
@@ -11,7 +12,7 @@ struct FGameplayTag;
  * 
  */
 UCLASS()
-class PROJECTKY_API AKYCharacterNonPlayer : public AKYCharacterBase
+class PROJECTKY_API AKYCharacterNonPlayer : public AKYCharacterBase, public IKYTargetableInterface
 {
 	GENERATED_BODY()
 
@@ -22,11 +23,13 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void UpdateMotionWarpToTransform(FTransform InTransform);
-	
+
 protected:
 	virtual void SetDead() override;
 	
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+
+	virtual void UpdateTargetedStatus(bool InStatus) override;
 	
 protected:
 	UPROPERTY()
@@ -37,6 +40,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UKYWidgetComponent> HPBar;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UKYWidgetComponent> TargetedWidget;
 	
 	
 };

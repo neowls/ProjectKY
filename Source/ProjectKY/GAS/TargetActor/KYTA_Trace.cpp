@@ -31,7 +31,7 @@ void AKYTA_Trace::ConfirmTargetingAndContinue()
 	if(SourceActor)
 	{
 		FGameplayAbilityTargetDataHandle DataHandle = MakeTargetData();
-		TargetDataReadyDelegate.Broadcast(DataHandle);
+		if(DataHandle.IsValid(0)) TargetDataReadyDelegate.Broadcast(DataHandle);
 	}
 }
 

@@ -26,8 +26,16 @@ protected:
 	virtual void OnSimpleCompleteCallback();
 
 	UFUNCTION()
+	virtual void OnSimpleCompleteEventCallback(FGameplayEventData Payload);
+
+	UFUNCTION()
 	virtual void OnSimpleInterruptedCallback();
+
+	UFUNCTION()
+	virtual void OnSimpleInterruptEventCallback(FGameplayEventData Payload);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Activation")
 	bool bPassiveAbility = false;
+
+	
 };

@@ -35,10 +35,4 @@ protected:
 
 	UPROPERTY()
 	uint8 CurrentAttackIndex = 0;
-
-	UFUNCTION()
-	void AttackCompleteEventCallback(FGameplayEventData Payload);
-
-	UFUNCTION()
-	void AttackInterruptEventCallback(FGameplayEventData Payload);
 };

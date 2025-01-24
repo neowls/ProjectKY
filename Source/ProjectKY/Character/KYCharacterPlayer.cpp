@@ -181,6 +181,8 @@ void AKYCharacterPlayer::Rotate(const FInputActionValue& Value)		// 태그가 �
 	FVector2D MovementVector = Value.Get<FVector2d>();
 
 	FVector Direction = FVector(MovementVector.X, MovementVector.Y, 0.0f);
+	Direction = RotationOffset.RotateVector(Direction);
+	
 	if(!MovementVector.IsNearlyZero())
 	{
 		FRotator CurrentRotation = GetActorRotation();

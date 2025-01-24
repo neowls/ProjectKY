@@ -2,7 +2,6 @@
 
 
 #include "Character/KYCharacterNonPlayer.h"
-
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "AI/KYAIController.h"
@@ -31,7 +30,19 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	HPBar->SetWidgetSpace(EWidgetSpace::Screen);
 	HPBar->SetDrawSize(FVector2D(150.0f, 20.0f));
 	HPBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	TargetedWidget = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Targeted"));
+	TargetedWidget->SetupAttachment(GetMesh());
+	TargetedWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+
+	TSubclassOf<UUserWidget> TargetedWidgetClass;
+	InitializeClassFinder(TargetedWidgetClass, TEXT("/Game/_Dev/UI/WBP_TargetPoint.WBP_TargetPoint_C"));
 	
+	TargetedWidget->SetWidgetClass(TargetedWidgetClass);
+	TargetedWidget->SetWidgetSpace(EWidgetSpace::Screen);
+	TargetedWidget->SetDrawSize(FVector2D(50.0f, 50.0f));
+	TargetedWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	TargetedWidget->SetVisibility(false);
 }
 
 void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
@@ -108,4 +119,10 @@ void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int3
 		AIController->SetHitStatus(NewCount>0);
 	}
 }
+
+void AKYCharacterNonPlayer::UpdateTargetedStatus(bool InStatus)
+{
+	TargetedWidget->SetVisibility(InStatus);
+}
+
 

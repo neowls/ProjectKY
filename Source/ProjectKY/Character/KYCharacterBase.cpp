@@ -64,7 +64,7 @@ void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCause
 		EventData.EventMagnitude = Damage;
 
 		KY_LOG(LogKY, Log, TEXT("InGameplayTag Before Send : %s"), *InGameplayTag.GetTagName().ToString());
-
+		UpdateHitFlash();
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, InGameplayTag, EventData);
 	}
 }

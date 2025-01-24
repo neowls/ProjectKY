@@ -43,18 +43,19 @@ protected:
 
 	UFUNCTION()
 	void AimAtCursor(const FGameplayAbilityActorInfo& ActorInfo);
-
-	UFUNCTION()
-	void TraceTarget(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo& ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo);
-
+	
 	UFUNCTION()
 	void RotateCharacter(FVector& TargetLocation);
+
+	UFUNCTION()
+	void SetTargetUIStatus(bool InStatus);
+
+	UFUNCTION()
+	void CheckCurrentTarget();
 	
 private:
 	bool bIsTargeting;
 	
-	FVector LookAtLocation;
-
 	FVector CursorLocation;
 
 	UPROPERTY()
@@ -62,7 +63,7 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<class AKYTA_Trace> TargetedActor;
+
 	
 };
-
 

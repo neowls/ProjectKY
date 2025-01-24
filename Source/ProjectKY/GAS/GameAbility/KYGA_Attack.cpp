@@ -29,8 +29,8 @@ void UKYGA_Attack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	
 	
 	PMT->EventReceived.AddDynamic(this, &UKYGA_Attack::AttackHitEventCallback);
-	PMT->OnCompleted.AddDynamic(this, &UKYGA_Attack::AttackCompleteEventCallback);
-	PMT->OnInterrupted.AddDynamic(this, &UKYGA_Attack::AttackInterruptEventCallback);
+	PMT->OnCompleted.AddDynamic(this, &UKYGA_Attack::OnSimpleCompleteEventCallback);
+	PMT->OnInterrupted.AddDynamic(this, &UKYGA_Attack::OnSimpleCompleteEventCallback);
 
 	/*UAbilityTask_PlayMontageAndWait* PlayAttackTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayAttackMontage"), AttackMontage, AttackSpeed);
 	PlayAttackTask->OnCompleted.AddDynamic(this, &UKYGA_Attack::OnSimpleCompleteCallback);
@@ -56,15 +56,5 @@ void UKYGA_Attack::AttackHitEventCallback(FGameplayEventData Payload)
 	{
 		KY_LOG(LogKY, Warning, TEXT("Can't find Gameplay Effect, Please Add It."))
 	}
-}
-
-void UKYGA_Attack::AttackCompleteEventCallback(FGameplayEventData Payload)
-{
-	OnSimpleCompleteCallback();
-}
-
-void UKYGA_Attack::AttackInterruptEventCallback(FGameplayEventData Payload)
-{
-	OnSimpleInterruptedCallback();
 }
 

@@ -49,6 +49,10 @@ protected:
 	virtual void GiveStartAbilities();	// 기본 어빌리티 부여
 
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateHitFlash();
+
 	
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
