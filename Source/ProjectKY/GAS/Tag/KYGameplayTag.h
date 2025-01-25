@@ -33,3 +33,5 @@
 #define KYTAG_EVENT_HIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit"))
 
 #define GAMEPLAYCUE_CHARACTER_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("GameplayCue.Character.AttackHit"))
+
+#define KYTAG_DATA FGameplayTag::RequestGameplayTag(FName("Data"))

@@ -20,19 +20,15 @@ public:
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
 	void TryActivatePassiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec);
-
+	
+	
 protected:
 	UFUNCTION()
 	virtual void OnSimpleCompleteCallback();
-
-	UFUNCTION()
-	virtual void OnSimpleCompleteEventCallback(FGameplayEventData Payload);
-
+	
 	UFUNCTION()
 	virtual void OnSimpleInterruptedCallback();
-
-	UFUNCTION()
-	virtual void OnSimpleInterruptEventCallback(FGameplayEventData Payload);
+	
 
 	UPROPERTY(EditDefaultsOnly, Category = "Activation")
 	bool bPassiveAbility = false;

@@ -7,8 +7,10 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayAbilitySpec.h"
 #include "GameplayTagContainer.h"
+#include "Struct/KYStruct.h"
 #include "KYCharacterBase.generated.h"
 
+class UKYCharacterBaseAsset;
 class UKYAT_DamageReaction;
 class UKYCharacterMovementComponent;
 
@@ -39,9 +41,9 @@ public:
 	
 	UFUNCTION()
 	virtual void OutOfHealth();
-
+	
 	UFUNCTION(BlueprintCallable, Category="Animation")
-	UAnimMontage* GetAnimMontageByTag(FGameplayTag InTag);
+	FORCEINLINE FEventAnimMontageData GetAnimMontageData(FGameplayTag InGameplayTag);
 
 protected:
 	virtual void SetDead();
@@ -61,8 +63,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
 	
-	UPROPERTY(EditAnywhere, Category=GAS, meta=(Categories = "Character.State.Hit"))
-	TMap<FGameplayTag, TObjectPtr<UAnimMontage>> HitMontageMap;
+	UPROPERTY(EditAnywhere, Category=Animation)
+	UKYCharacterBaseAsset* AnimMontageAsset;
 	
 	UPROPERTY(EditAnywhere, Category=Animation)
 	TObjectPtr<UAnimMontage> DeathMontage;

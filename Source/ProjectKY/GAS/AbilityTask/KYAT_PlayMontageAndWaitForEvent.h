@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GAS/AbilityTask/KYAbilityTask.h"
+#include "Struct/KYStruct.h"
 #include "KYAT_PlayMontageAndWaitForEvent.generated.h"
 
 class UAbilitySystemComponent;
@@ -63,11 +64,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Ability|Tasks", meta = (HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "TRUE"))
 	static UKYAT_PlayMontageAndWaitForEvent* PlayMontageAndWaitForEvent(
 		UGameplayAbility* OwningAbility,
-		FName TaskInstanceName,
-		UAnimMontage* MontageToPlay,
-		FGameplayTag EventTag,
-		float Rate = 1.f,
-		FName StartSection = NAME_None,
+		FEventAnimMontageData PlayEventMontageData,
 		bool bStopWhenAbilityEnds = true,
 		bool OnlyMatchExact = false,
 		float AnimRootMotionTranslationScale = 1.f);

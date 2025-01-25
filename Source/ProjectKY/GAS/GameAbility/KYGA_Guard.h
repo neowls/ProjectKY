@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/GameAbility/KYGameplayAbility.h"
+#include "KYGA_AnimBase.h"
 #include "KYGA_Guard.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTKY_API UKYGA_Guard : public UKYGameplayAbility
+class PROJECTKY_API UKYGA_Guard : public UKYGA_AnimBase
 {
 	GENERATED_BODY()
 
@@ -18,13 +18,6 @@ public:
 	UKYGA_Guard();
 
 protected:
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
-	UFUNCTION()
-	void OnGuardEventCallback(FGameplayEventData Payload);
-
-protected:
-	UPROPERTY(EditAnywhere)
-	UAnimMontage* GuardMontage;
-	
+	void OnSimpleEventReceivedCallback(FGameplayEventData Payload) override;
 };

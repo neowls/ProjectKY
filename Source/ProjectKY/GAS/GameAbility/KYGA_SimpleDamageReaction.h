@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/GameAbility/KYGameplayAbility.h"
+#include "KYGA_AnimBase.h"
 #include "KYGA_SimpleDamageReaction.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTKY_API UKYGA_SimpleDamageReaction : public UKYGameplayAbility
+class PROJECTKY_API UKYGA_SimpleDamageReaction : public UKYGA_AnimBase
 {
 	GENERATED_BODY()
 

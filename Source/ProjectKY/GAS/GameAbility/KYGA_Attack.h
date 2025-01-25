@@ -3,36 +3,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/GameAbility/KYGameplayAbility.h"
+#include "KYGA_AnimBase.h"
 #include "KYGA_Attack.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTKY_API UKYGA_Attack : public UKYGameplayAbility
+class PROJECTKY_API UKYGA_Attack : public UKYGA_AnimBase
 {
 	GENERATED_BODY()
 
 public:
 	UKYGA_Attack();
-
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-
-protected:
-
-	UFUNCTION()
-	void AttackHitEventCallback(FGameplayEventData Payload);
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UAnimMontage> AttackMontage;
-
-	UPROPERTY(EditAnywhere)
-	float AttackSpeed;
-
+protected:
+	virtual void OnSimpleEventReceivedCallback(FGameplayEventData Payload) override;
+	
 	UPROPERTY(EditAnywhere)
 	TArray<TSubclassOf<UGameplayEffect>> AttackGameplayEffect;
-
-	UPROPERTY()
-	uint8 CurrentAttackIndex = 0;
+	
+	uint8 CurrentAttackIndex;
 };

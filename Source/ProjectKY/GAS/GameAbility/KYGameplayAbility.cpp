@@ -51,20 +51,10 @@ void UKYGameplayAbility::OnSimpleCompleteCallback()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCanceled);
 }
 
-void UKYGameplayAbility::OnSimpleCompleteEventCallback(FGameplayEventData Payload)
-{
-	OnSimpleCompleteCallback();
-}
 
 void UKYGameplayAbility::OnSimpleInterruptedCallback()
 {
 	bool bReplicatedEndAbility = true;
 	bool bWasCanceled = true;
-	
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCanceled);
-}
-
-void UKYGameplayAbility::OnSimpleInterruptEventCallback(FGameplayEventData Payload)
-{
-	OnSimpleInterruptedCallback();
 }

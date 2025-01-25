@@ -4,6 +4,7 @@
 #include "Animation/ANS_KYComboCheck.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "ProjectKY.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
 UANS_KYComboCheck::UANS_KYComboCheck()
 {
@@ -17,7 +18,7 @@ void UANS_KYComboCheck::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 	{
 		if (AActor* Owner = MeshComp->GetOwner())
 		{
-			UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(Owner, ComboGameplayTag);
+			UAbilitySystemBlueprintLibrary::AddLooseGameplayTags(Owner, FGameplayTagContainer(KYTAG_EVENT_COMBO_AVAILABLE));
 		}
 	}
 }
@@ -29,7 +30,7 @@ void UANS_KYComboCheck::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenc
 	{
 		if (AActor* Owner = MeshComp->GetOwner())
 		{
-			UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(Owner, ComboGameplayTag);
+			UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(Owner, FGameplayTagContainer(KYTAG_EVENT_COMBO_AVAILABLE));
 		}
 	}
 }

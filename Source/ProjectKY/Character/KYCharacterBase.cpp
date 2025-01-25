@@ -7,6 +7,7 @@
 #include "KYCharacterMovementComponent.h"
 #include "ProjectKY.h"
 #include "Components/CapsuleComponent.h"
+#include "Data/KYCharacterBaseAsset.h"
 #include "GAS/Attribute/KYAttributeSetHealth.h"
 #include "GAS/GameAbility/KYGA_SimpleDamageReaction.h"
 #include "GAS/Tag/KYGameplayTag.h"
@@ -32,18 +33,9 @@ UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
 	return ASC;
 }
 
-UAnimMontage* AKYCharacterBase::GetAnimMontageByTag(FGameplayTag InTag)
+FEventAnimMontageData AKYCharacterBase::GetAnimMontageData(FGameplayTag InGameplayTag)
 {
-	if (HitMontageMap.Find(InTag))
-	{
-		KY_LOG(LogKY, Warning, TEXT("Find Matched Montage, Tag : %s"), *InTag.GetTagName().ToString());
-		return HitMontageMap[InTag];
-	}
-	else
-	{
-		KY_LOG(LogKY, Warning, TEXT("Can't Find '%s' Tag Montage"), *InTag.GetTagName().ToString());
-	}
-	return nullptr;
+	return AnimMontageAsset->GetEventAnimMontageData(InGameplayTag);
 }
 
 void AKYCharacterBase::BeginPlay()

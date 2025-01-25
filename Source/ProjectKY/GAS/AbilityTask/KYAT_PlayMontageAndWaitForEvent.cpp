@@ -15,17 +15,16 @@ UKYAT_PlayMontageAndWaitForEvent::UKYAT_PlayMontageAndWaitForEvent(const FObject
 	bStopWhenAbilityEnds = true;
 }
 
-UKYAT_PlayMontageAndWaitForEvent* UKYAT_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(UGameplayAbility* OwningAbility,
-	FName TaskInstanceName, UAnimMontage* MontageToPlay, FGameplayTag EventTag, float Rate, FName StartSection, bool bStopWhenAbilityEnds, bool OnlyMatchExact,
+UKYAT_PlayMontageAndWaitForEvent* UKYAT_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(UGameplayAbility* OwningAbility, FEventAnimMontageData PlayEventMontageData, bool bStopWhenAbilityEnds, bool OnlyMatchExact,
 	float AnimRootMotionTranslationScale)
 {
-	UAbilitySystemGlobals::NonShipping_ApplyGlobalAbilityScaler_Rate(Rate);
+	UAbilitySystemGlobals::NonShipping_ApplyGlobalAbilityScaler_Rate(PlayEventMontageData.PlayRate);
 
-	UKYAT_PlayMontageAndWaitForEvent* MyObj = NewAbilityTask<UKYAT_PlayMontageAndWaitForEvent>(OwningAbility, TaskInstanceName);
-	MyObj->MontageToPlay = MontageToPlay;
-	MyObj->EventTag = EventTag;
-	MyObj->Rate = Rate;
-	MyObj->StartSection = StartSection;
+	UKYAT_PlayMontageAndWaitForEvent* MyObj = NewAbilityTask<UKYAT_PlayMontageAndWaitForEvent>(OwningAbility, PlayEventMontageData.TaskInstanceName);
+	MyObj->MontageToPlay = PlayEventMontageData.Montage;
+	MyObj->EventTag = PlayEventMontageData.EventTag;
+	MyObj->Rate = PlayEventMontageData.PlayRate;
+	MyObj->StartSection = PlayEventMontageData.StartSectionName;
 	MyObj->AnimRootMotionTranslationScale = AnimRootMotionTranslationScale;
 	MyObj->OnlyMatchExact = OnlyMatchExact;
 	MyObj->bStopWhenAbilityEnds = bStopWhenAbilityEnds;

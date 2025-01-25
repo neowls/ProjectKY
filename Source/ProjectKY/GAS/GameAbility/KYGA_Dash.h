@@ -3,27 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GAS/GameAbility/KYGameplayAbility.h"
+#include "KYGA_AnimBase.h"
 #include "KYGA_Dash.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROJECTKY_API UKYGA_Dash : public UKYGameplayAbility
+class PROJECTKY_API UKYGA_Dash : public UKYGA_AnimBase
 {
 	GENERATED_BODY()
 
 public:
 	UKYGA_Dash();
 
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-
-
 protected:
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAnimMontage> AirDashMontage;
-
-	UPROPERTY(EditAnywhere)
-	TObjectPtr<UAnimMontage> GroundDashMontage;
 };
