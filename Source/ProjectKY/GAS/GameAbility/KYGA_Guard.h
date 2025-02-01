@@ -17,7 +17,9 @@ class PROJECTKY_API UKYGA_Guard : public UKYGA_AnimBase
 public:
 	UKYGA_Guard();
 
+	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
 protected:
 
-	void OnSimpleEventReceivedCallback(FGameplayEventData Payload) override;
+	virtual void OnSimpleEventReceivedCallback(FGameplayEventData Payload) override;
 };

@@ -46,11 +46,13 @@ public:
 	FORCEINLINE FEventAnimMontageData GetAnimMontageData(FGameplayTag InGameplayTag);
 
 protected:
+	virtual void BeginPlay() override;
+	
 	virtual void SetDead();
 
 	virtual void GiveStartAbilities();	// 기본 어빌리티 부여
 
-	virtual void BeginPlay() override;
+	virtual void InitializeStatEffect();	// 기본 스탯 부여
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateHitFlash();
@@ -62,6 +64,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TArray<TSubclassOf<class UGameplayAbility>> StartAbilities;
+
+	UPROPERTY(EditAnywhere, Category=GAS)
+	TArray<TSubclassOf<class UGameplayEffect>> InitStatEffect;
 	
 	UPROPERTY(EditAnywhere, Category=Animation)
 	UKYCharacterBaseAsset* AnimMontageAsset;
@@ -77,8 +82,5 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category=Collision, meta=(AllowPrivateAccess="true"))
 	TSet<AActor*> HitIgnoreActors;
-	
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UGameplayEffect> InitStatEffect;
 
 };

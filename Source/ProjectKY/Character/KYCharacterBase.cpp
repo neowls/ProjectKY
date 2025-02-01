@@ -8,7 +8,7 @@
 #include "ProjectKY.h"
 #include "Components/CapsuleComponent.h"
 #include "Data/KYCharacterBaseAsset.h"
-#include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/Attribute/KYAttributeSetBase.h"
 #include "GAS/GameAbility/KYGA_SimpleDamageReaction.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
@@ -24,7 +24,6 @@ AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
 	KYCharacterMovement = Cast<UKYCharacterMovementComponent>(GetCharacterMovement());
 
 	WeaponComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
-	WeaponComp->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 	WeaponComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
@@ -50,28 +49,26 @@ void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCause
 	
 	for (auto& InGameplayTag : GameplayTagContainer.Filter(FilteredGameplayTags))
 	{
-		FGameplayEventData EventData;
-		EventData.Instigator = DamageCauser;
-		EventData.EventTag = InGameplayTag;
-		EventData.EventMagnitude = Damage;
+		FGameplayEventData EventDataToReceiver;
+		EventDataToReceiver.Instigator = DamageCauser;
+		EventDataToReceiver.EventTag = InGameplayTag;
+		EventDataToReceiver.EventMagnitude = Damage;
 
-		KY_LOG(LogKY, Log, TEXT("InGameplayTag Before Send : %s"), *InGameplayTag.GetTagName().ToString());
-		UpdateHitFlash();
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, InGameplayTag, EventData);
+		KY_LOG(LogKY, Log, TEXT("Damage : %f"), Damage);
+		if (Damage < 0.0f)
+		{
+			KY_LOG(LogKY, Log, TEXT("Attack Parry"));
+			
+			FGameplayEventData EventDataToCauser;
+			EventDataToCauser.Instigator = this;
+			EventDataToCauser.EventTag = KYTAG_CHARACTER_ATTACK_PARRY;
+			EventDataToCauser.EventMagnitude = 1.0f;
+			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(DamageCauser, EventDataToCauser.EventTag, EventDataToCauser);
+		}
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, InGameplayTag, EventDataToReceiver);
 	}
 }
 
-/*
-void AKYCharacterBase::OnStanceEvent(AActor* Causer, const FGameplayTagContainer& GameplayTagContainer, uint8 CurrentStanceState)
-{
-	FGameplayEventData EventData;
-	EventData.Instigator = Causer;
-	EventData.InstigatorTags = GameplayTagContainer;
-	EventData.EventMagnitude = CurrentStanceState;
-	
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, KYTAG_EVENT_HIT, EventData);
-}
-*/
 
 void AKYCharacterBase::OutOfHealth()
 {
@@ -94,6 +91,22 @@ void AKYCharacterBase::GiveStartAbilities()
 	{
 		FGameplayAbilitySpec StartSpec(StartAbility);
 		ASC->GiveAbility(StartSpec);
+	}
+}
+
+void AKYCharacterBase::InitializeStatEffect()
+{
+	for (auto& InitEffect : InitStatEffect)
+	{
+		FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+		EffectContextHandle.AddSourceObject(this);
+		
+		
+		FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(InitEffect, 1.0f, EffectContextHandle); // 이펙트 부여
+		if (EffectSpecHandle.IsValid())
+		{
+			ASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
+		}
 	}
 }
 

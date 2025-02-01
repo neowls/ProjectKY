@@ -5,7 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "AI/KYAIController.h"
-#include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/Attribute/KYAttributeSetEnemy.h"
 #include "GAS/Tag/KYGameplayTag.h"
 #include "UI/KYWidgetComponent.h"
 #include "UI/KYUserWidget.h"
@@ -14,34 +14,33 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	: Super(ObjectInitializer)
 {
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
-	AttributeSetHealth = CreateDefaultSubobject<UKYAttributeSetHealth>(TEXT("AttributeSetHealth"));
-	//AttributeSetStance = CreateDefaultSubobject<UKYAttributeSetStance>(TEXT("AttributeSetStance"));
+	AttributeSetEnemy = CreateDefaultSubobject<UKYAttributeSetEnemy>(TEXT("AttributeSetEnemy"));
 	AIControllerClass = AKYAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
+	WeaponComp->SetupAttachment(GetMesh(), TEXT("weapon_r"));
+
 	HPBar = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Widget"));
+	TargetedWidget = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Targeted"));
+	
 	HPBar->SetupAttachment(GetMesh());
+	TargetedWidget->SetupAttachment(GetMesh());
+	
 	HPBar->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
+	TargetedWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 
 	TSubclassOf<UUserWidget> HPBarWidgetClass;
 	InitializeClassFinder(HPBarWidgetClass, TEXT("/Game/_Dev/UI/WBP_EnemyHPBar.WBP_EnemyHPBar_C"));
 	
 	HPBar->SetWidgetClass(HPBarWidgetClass);
-	HPBar->SetWidgetSpace(EWidgetSpace::Screen);
 	HPBar->SetDrawSize(FVector2D(150.0f, 20.0f));
-	HPBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	TargetedWidget = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Targeted"));
-	TargetedWidget->SetupAttachment(GetMesh());
-	TargetedWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+	
 
 	TSubclassOf<UUserWidget> TargetedWidgetClass;
 	InitializeClassFinder(TargetedWidgetClass, TEXT("/Game/_Dev/UI/WBP_TargetPoint.WBP_TargetPoint_C"));
 	
 	TargetedWidget->SetWidgetClass(TargetedWidgetClass);
-	TargetedWidget->SetWidgetSpace(EWidgetSpace::Screen);
 	TargetedWidget->SetDrawSize(FVector2D(50.0f, 50.0f));
-	TargetedWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	TargetedWidget->SetVisibility(false);
 }
 
@@ -52,34 +51,28 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	ASC->InitAbilityActorInfo(this, this);
 
 	
-	AttributeSetHealth->OnOutOfHealth.AddDynamic(this, &AKYCharacterNonPlayer::OutOfHealth);
-	AttributeSetHealth->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
-	
-	//AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
+	AttributeSetEnemy->OnOutOfHealth.AddDynamic(this, &AKYCharacterNonPlayer::OutOfHealth);
+	AttributeSetEnemy->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
 
-	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(this);
-
-	FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(InitStatEffect, 1.0f, EffectContextHandle); // 이펙트 부여
-	if (EffectSpecHandle.IsValid())
-	{
-		ASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-	}
+	InitializeStatEffect();
 	
 	GiveStartAbilities();
 
 	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_UNSTABLE).AddUObject(this, &ThisClass::OnHitTagChanged);
 }
 
-void AKYCharacterNonPlayer::UpdateMotionWarpToTransform_Implementation(FTransform InTransform)
+void AKYCharacterNonPlayer::UpdateMotionWarpToTransform_Implementation(FVector InLocation)
 {
 	
 }
 
 
-void AKYCharacterNonPlayer::SetDead()
+void AKYCharacterNonPlayer::SetDead_Implementation()
 {
 	Super::SetDead();
+	
+	HPBar->SetVisibility(false);
+	
 	AKYAIController* AIController = Cast<AKYAIController>(GetController());
 	if (AIController)
 	{
@@ -110,6 +103,12 @@ void AKYCharacterNonPlayer::SetDead()
 	), 2.0f, false);
 }
 
+void AKYCharacterNonPlayer::DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer,
+	float Damage)
+{
+	Super::DamageTaken(DamageInstigator, DamageCauser, GameplayTagContainer, Damage);
+	UpdateHitFlash();
+}
 
 void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {

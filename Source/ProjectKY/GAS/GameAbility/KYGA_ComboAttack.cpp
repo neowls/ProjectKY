@@ -19,6 +19,7 @@ void UKYGA_ComboAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	CurrentAttackIndex = 0;
+	MaxCombo = GetCurrentMontage()->GetNumSections();
 	HasNextComboInput = false;
 }
 
@@ -45,7 +46,7 @@ void UKYGA_ComboAttack::InputCallback_Implementation()
 FName UKYGA_ComboAttack::GetNextSection()
 {
 	CurrentAttackIndex = FMath::Clamp(CurrentAttackIndex + 1, 0, MaxCombo);
-	FName NextSection = *FString::Printf(TEXT("Attack%d"), CurrentAttackIndex);
+	const FName NextSection = *FString::Printf(TEXT("Attack%d"), CurrentAttackIndex);
 	
 	return NextSection;
 }

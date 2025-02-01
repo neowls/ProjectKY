@@ -8,10 +8,8 @@
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 #include "AbilitySystemComponent.h"
-#include "GAS/Attribute/KYAttributeSetHealth.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "ProjectKY.h"
-#include "Kismet/KismetSystemLibrary.h"
 
 
 AKYTA_Trace::AKYTA_Trace()

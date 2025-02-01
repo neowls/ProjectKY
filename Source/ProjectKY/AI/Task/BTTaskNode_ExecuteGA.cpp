@@ -3,6 +3,7 @@
 
 #include "AI/Task/BTTaskNode_ExecuteGA.h"
 #include "AbilitySystemComponent.h"
+#include "ProjectKY.h"
 #include "AI/KYAI.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Character/KYCharacterNonPlayer.h"
@@ -23,10 +24,26 @@ EBTNodeResult::Type UBTTaskNode_ExecuteGA::ExecuteTask(UBehaviorTreeComponent& O
 		if (AICharacter)
 		{
 			auto Target = Cast<AActor>(OwnerComp.GetBlackboardComponent()->GetValueAsObject(BBKEY_TARGET));
-			AICharacter->UpdateMotionWarpToTransform(Target->GetTransform());
+
+			const FVector TargetDirection = (Target->GetTargetLocation() - AICharacter->GetTargetLocation()).GetSafeNormal();
+			const FVector TargetLocation = Target->GetTargetLocation() + TargetDirection * -AttackDistanceOffset; 
+			
+			AICharacter->UpdateMotionWarpToTransform(TargetLocation);
+			
+			if(ASC->TryActivateAbilityByClass(AbilityToActivate))
+			{
+				KY_LOG(LogKY, Log, TEXT("Success to Attack"));
+			}
+			else
+			{
+				ASC->CancelAbilities();
+				if(!ASC->TryActivateAbilityByClass(AbilityToActivate)) return EBTNodeResult::Failed;
+			}
+			
+			return EBTNodeResult::Succeeded;
+			
 		}
-		if(ASC->TryActivateAbilityByClass(AbilityToActivate)) return EBTNodeResult::Succeeded;
 	}
-	
+	KY_LOG(LogKY, Log, TEXT("Failed To Attack"));
 	return EBTNodeResult::Failed;
 }

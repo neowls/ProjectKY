@@ -24,4 +24,5 @@ void AKYPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 	SetupHUDWidget();
+	
 }

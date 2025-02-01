@@ -8,9 +8,11 @@
 #include "InputMappingContext.h"
 #include "ProjectKY.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/Attribute/KYAttributeSetPlayer.h"
 #include "GAS/Tag/KYGameplayTag.h"
 #include "Player/KYPlayerState.h"
 
@@ -39,18 +41,25 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;	// 이동 방향으로 캐릭터가 회전한다.
 	
-
+	ItemTriggerComp = CreateDefaultSubobject<USphereComponent>(TEXT("DropCollectTrigger"));
+	InteractTriggerComp = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractTrigger"));
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	SpringArmComp->SetupAttachment(RootComponent);
+	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
+	
+	ItemTriggerComp->SetupAttachment(RootComponent);
+	InteractTriggerComp->SetupAttachment(RootComponent);
+	SpringArmComp->SetupAttachment(RootComponent);
+	CameraComp->SetupAttachment(SpringArmComp);
+	WeaponComp->SetupAttachment(GetMesh(), TEXT("ik_hand_r"));
+
+	
 	SpringArmComp->bInheritPitch = false;
 	SpringArmComp->bInheritYaw = false;
 	SpringArmComp->bInheritRoll = false;
 	SpringArmComp->TargetArmLength = 800;
 	SpringArmComp->SetRelativeRotation(FRotator(0.0f, -50.0f, RotationOffset.Yaw));
 	
-	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	CameraComp->SetupAttachment(SpringArmComp);
 }
 
 void AKYCharacterPlayer::PossessedBy(AController* NewController)
@@ -61,34 +70,20 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 	{
 		ASC = PS->GetAbilitySystemComponent();
 		ASC->InitAbilityActorInfo(PS, this);
-		const UKYAttributeSetHealth* AttributeSetHealth = ASC->GetSet<UKYAttributeSetHealth>();
-		if(AttributeSetHealth)
+		if(const UKYAttributeSetPlayer* AttributeSetPlayer = ASC->GetSet<UKYAttributeSetPlayer>())
 		{
-			AttributeSetHealth->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);	// 사망 델리게이트 바인딩
-			AttributeSetHealth->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
+			AttributeSetPlayer->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);	// 사망 델리게이트 바인딩
+			AttributeSetPlayer->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
 		}
-
-		/*
-		const UKYAttributeSetStance* AttributeSetStance = ASC->GetSet<UKYAttributeSetStance>();
-		if (AttributeSetStance)
-		{
-			AttributeSetStance->OnStanceChange.AddDynamic(this, &ThisClass::OnStanceEvent);
-		}
-		*/
+		
 
 		ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_ISATTACKING).AddUObject(this, &ThisClass::CurrentWeaponTrailState);
 
-		FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
-		EffectContextHandle.AddSourceObject(this);
-
-		FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(InitStatEffect, 1.0f, EffectContextHandle); // 이펙트 부여
-		if (EffectSpecHandle.IsValid())
-		{
-			ASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-		}
-		
+		InitializeStatEffect();
 		GiveStartAbilities();
 		SetupGASInputComponent();
+
+		
 
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 		if (bShowGASDebug)
@@ -112,6 +107,7 @@ void AKYCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Rotate);
+	EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ThisClass::InteractObject);
 	
 	SetupGASInputComponent();
 }
@@ -133,12 +129,15 @@ void AKYCharacterPlayer::SetupGASInputComponent()
 		EnhancedInputComponent->BindAction(UpperAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 5);
 		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 6);
 		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 7);
+		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 8);
+		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 8);
 	}
 }
 
 void AKYCharacterPlayer::GiveStartAbilities()
 {
 	Super::GiveStartAbilities();
+	
 	for (const auto& StartInputAbility : StartInputAbilities)		// 입력 어빌리티 부여
 	{
 		FGameplayAbilitySpec StartSpec(StartInputAbility.Value);
@@ -151,7 +150,7 @@ void AKYCharacterPlayer::GiveStartAbilities()
 
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 {
-	if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNMOVABLE)) return;	// 해당 태그 부착시 캐릭터 이동 제한
+	if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNMOVABLE) || ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNSTABLE)) return;	// 해당 태그 부착시 캐릭터 이동 제한
 	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr)) GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	// 재생중인 몽타주가 있다면 중단한다.
 	
 	FVector2D MovementVector = Value.Get<FVector2d>(); // X, Y 입력 벡터 저장

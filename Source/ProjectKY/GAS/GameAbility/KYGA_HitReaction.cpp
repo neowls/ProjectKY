@@ -127,5 +127,4 @@ void UKYGA_HitReaction::PlayStanceMontage(UAnimMontage* MontageToPlay)
 {
 	UAbilityTask_PlayMontageAndWait* MontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("HitReaction"), MontageToPlay);
 	MontageTask->ReadyForActivation();
-	KY_LOG(LogKY, Log, TEXT("Play Montage : %s"), *MontageToPlay->GetName());
 }

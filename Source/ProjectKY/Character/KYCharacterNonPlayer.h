@@ -22,10 +22,13 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 
 	UFUNCTION(BlueprintNativeEvent)
-	void UpdateMotionWarpToTransform(FTransform InTransform);
+	void UpdateMotionWarpToTransform(FVector InLocation);
 
 protected:
-	virtual void SetDead() override;
+	UFUNCTION(BlueprintNativeEvent)
+	void SetDead() override;
+
+	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage) override;
 	
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
@@ -33,11 +36,8 @@ protected:
 	
 protected:
 	UPROPERTY()
-	TObjectPtr<class UKYAttributeSetHealth> AttributeSetHealth;
-
-	/*UPROPERTY()
-	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;*/
-
+	TObjectPtr<class UKYAttributeSetEnemy> AttributeSetEnemy;
+	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UKYWidgetComponent> HPBar;
 

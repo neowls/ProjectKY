@@ -25,9 +25,6 @@ protected:
 	TObjectPtr<class UAbilitySystemComponent> ASC;
 
 	UPROPERTY()
-	TObjectPtr<class UKYAttributeSetHealth> AttributeSetHealth;
-
-	UPROPERTY()
-	TObjectPtr<class UKYAttributeSetStance> AttributeSetStance;
+	TObjectPtr<class UKYAttributeSetPlayer> AttributeSetPlayer;
 
 };

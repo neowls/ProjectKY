@@ -24,4 +24,7 @@ protected:
 	// 실행할 어빌리티 클래스
 	UPROPERTY(EditAnywhere, Category = "Gameplay Ability")
 	TSubclassOf<UGameplayAbility> AbilityToActivate;
+
+	UPROPERTY(EditAnywhere, Category = "Gameplay Ability")
+	float AttackDistanceOffset = 30.0f;
 };

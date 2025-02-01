@@ -25,7 +25,6 @@ protected:
 protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UProgressBar> HPProgressBar;
-
 	
 	float CurrentHealth = 0.0f;
 	float CurrentMaxHealth = 0.1f;

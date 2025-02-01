@@ -34,8 +34,7 @@ private:
 	
 	FName GetNextSection();
 	
-	UPROPERTY(EditAnywhere)
-	uint8 MaxCombo = 0;
-
+	uint8 MaxCombo = 1;
+	
 	bool HasNextComboInput = false;
 };

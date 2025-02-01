@@ -32,7 +32,7 @@ void UKYGA_AnimBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	}
 	
 	FEventAnimMontageData AnimMontageData = Cast<AKYCharacterBase>(GetAvatarActorFromActorInfo())->GetAnimMontageData(AbilityTag);
-
+	
 	if (AnimMontageData.Montage == nullptr)
 	{
 		KY_LOG(LogKY, Warning, TEXT("%s Tag Has No Anim Montage."), *AbilityTag.GetTagName().ToString());
@@ -44,6 +44,7 @@ void UKYGA_AnimBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	PMT->OnCompleted.AddDynamic(this, &ThisClass::OnSimpleCompleteEventCallback);
 	PMT->OnInterrupted.AddDynamic(this, &ThisClass::OnSimpleInterruptEventCallback);
 	if (AnimMontageData.IsUseEvent) PMT->EventReceived.AddDynamic(this, &ThisClass::OnSimpleEventReceivedCallback);
+	PMT->OnBlendOut.AddDynamic(this, &ThisClass::OnSimpleInterruptEventCallback);
 	PMT->ReadyForActivation();
 }
 

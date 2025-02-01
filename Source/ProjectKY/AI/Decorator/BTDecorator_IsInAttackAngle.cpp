@@ -28,11 +28,17 @@ bool UBTDecorator_IsInAttackAngle::CalculateRawConditionValue(UBehaviorTreeCompo
 	FVector TargetLocation = Target->GetActorLocation();
 
 	FVector TargetDirection = TargetLocation - PawnLocation;
+	TargetDirection.Z = 0.0f;
 	TargetDirection.Normalize();
 
-	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(ControlledPawn->GetActorForwardVector(), TargetDirection)));
+	FVector ForwardVector2D = ControlledPawn->GetActorForwardVector();
+	ForwardVector2D.Z = 0.0f;
 	
-	bResult = Angle < AttackAngle; 
+
+	float Angle = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(ForwardVector2D, TargetDirection)));
+
+	KY_LOG(LogKY, Log, TEXT("Angle : %f"), Angle);
+	bResult = Angle <= AttackAngle; 
 	
 	return bResult;
 }

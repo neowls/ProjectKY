@@ -5,6 +5,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
 class UAbilityTask_WaitGameplayEvent;
 
@@ -17,9 +18,11 @@ UKYGA_Attack::UKYGA_Attack()
 
 void UKYGA_Attack::OnSimpleEventReceivedCallback(FGameplayEventData Payload)
 {
+	KY_LOG(LogKY, Log, TEXT("Tag : %s"), *Payload.EventTag.GetTagName().ToString());
+	
 	if(IsValid(AttackGameplayEffect[CurrentAttackIndex]))
 	{
-		TArray<FActiveGameplayEffectHandle> EffectHandles = ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, AttackGameplayEffect[CurrentAttackIndex], 1.0f);
+		TArray<FActiveGameplayEffectHandle> EffectHandles = ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, AttackGameplayEffect[CurrentAttackIndex], CurrentAttackIndex + 1.0f);
 	}
 	else
 	{

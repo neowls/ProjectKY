@@ -27,6 +27,9 @@ protected:
 	void Move(const FInputActionValue& Value);
 	void Rotate(const FInputActionValue& Value);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void InteractObject();
+
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
 
@@ -40,10 +43,11 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;
-	
+
+#pragma region INPUT
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputMappingContext> DefaultContext;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> LookAction;
 	
@@ -76,6 +80,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> SkillAction;
+
+#pragma endregion 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Camera)
 	TObjectPtr<class UCameraComponent> CameraComp;
@@ -83,6 +89,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category=Camera)
 	TObjectPtr<class USpringArmComponent> SpringArmComp;
 
+	UPROPERTY(EditAnywhere, Category=Trigger)
+	TObjectPtr<class USphereComponent> ItemTriggerComp;
+
+	UPROPERTY(EditAnywhere, Category=Trigger)
+	TObjectPtr<class UBoxComponent> InteractTriggerComp;
+
+	
 	UPROPERTY(EditAnywhere, Category=Debug)
 	bool bShowGASDebug = true;
 
@@ -91,4 +104,5 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	FRotator RotationOffset = FRotator(0.0f, -45.0f, 0.0f);
+
 };

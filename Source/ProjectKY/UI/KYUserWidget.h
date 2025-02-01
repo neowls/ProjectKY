@@ -20,6 +20,6 @@ public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
-	UPROPERTY(EditAnywhere, Category = GAS)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
 	TObjectPtr<class UAbilitySystemComponent> ASC;
 };

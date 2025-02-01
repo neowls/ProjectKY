@@ -14,7 +14,12 @@ class PROJECTKY_API UKYWidgetComponent : public UWidgetComponent
 {
 	GENERATED_BODY()
 
+public:
+	UKYWidgetComponent();
+
 protected:
 	virtual void InitWidget() override;
+
+	virtual void InitializeComponent() override;
 	
 };

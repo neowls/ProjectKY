@@ -3,8 +3,9 @@
 
 #include "UI/KYHPBarUserWidget.h"
 #include "AbilitySystemComponent.h"
+#include "Components/Border.h"
 #include "Components/ProgressBar.h"
-#include "GAS/Attribute/KYAttributeSetHealth.h"
+#include "GAS/Attribute/KYAttributeSetBase.h"
 
 void UKYHPBarUserWidget::SetAbilitySystemComponent(AActor* InOwner)
 {
@@ -12,14 +13,14 @@ void UKYHPBarUserWidget::SetAbilitySystemComponent(AActor* InOwner)
 
 	if (ASC)
 	{
-		ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetHealth::GetHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnHealthChanged);
-		ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetHealth::GetMaxHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnMaxHealthChanged);
+		ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnHealthChanged);
+		ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetMaxHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnMaxHealthChanged);
 
-		const UKYAttributeSetHealth* CurrentAttributeSetHealth = ASC->GetSet<UKYAttributeSetHealth>();
-		if (CurrentAttributeSetHealth)
+		const UKYAttributeSetBase* CurrentAttributeSetBase = ASC->GetSet<UKYAttributeSetBase>();
+		if (CurrentAttributeSetBase)
 		{
-			CurrentHealth = CurrentAttributeSetHealth->GetHealth();
-			CurrentMaxHealth = CurrentAttributeSetHealth->GetMaxHealth();
+			CurrentHealth = CurrentAttributeSetBase->GetHealth();
+			CurrentMaxHealth = CurrentAttributeSetBase->GetMaxHealth();
 
 			if (CurrentMaxHealth > 0.0f)
 			{
@@ -32,10 +33,6 @@ void UKYHPBarUserWidget::SetAbilitySystemComponent(AActor* InOwner)
 void UKYHPBarUserWidget::OnHealthChanged(const FOnAttributeChangeData& ChangeData)
 {
 	CurrentHealth = ChangeData.NewValue;
-	if (CurrentHealth < KINDA_SMALL_NUMBER)
-	{
-		HPProgressBar->SetVisibility(ESlateVisibility::Collapsed);
-	}
 	UpdateHPBar();
 }
 

@@ -2,8 +2,11 @@
 
 
 #include "GAS/GameAbility/KYGA_SimpleDamageReaction.h"
+
+#include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
 UKYGA_SimpleDamageReaction::UKYGA_SimpleDamageReaction()
 {
@@ -15,7 +18,17 @@ void UKYGA_SimpleDamageReaction::ActivateAbility(const FGameplayAbilitySpecHandl
                                                  const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-	KY_LOG(LogKY, Log, TEXT("Instigator Name : %s"), *TriggerEventData->Instigator.GetName());
-	FVector TargetLocation = TriggerEventData->Instigator->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation();
+	const FVector TargetLocation = TriggerEventData->Instigator->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation();
 	GetAvatarActorFromActorInfo()->SetActorRotation(TargetLocation.Rotation());
+	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Character.Hit.Light"));
+}
+
+void UKYGA_SimpleDamageReaction::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISSTAGGERED))
+	{
+		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISSTAGGERED, 99);
+	}
 }
