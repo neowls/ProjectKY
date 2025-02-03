@@ -57,16 +57,20 @@ void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCause
 		KY_LOG(LogKY, Log, TEXT("Damage : %f"), Damage);
 		if (Damage < 0.0f)
 		{
-			KY_LOG(LogKY, Log, TEXT("Attack Parry"));
-			
-			FGameplayEventData EventDataToCauser;
-			EventDataToCauser.Instigator = this;
-			EventDataToCauser.EventTag = KYTAG_CHARACTER_ATTACK_PARRY;
-			EventDataToCauser.EventMagnitude = 1.0f;
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(DamageCauser, EventDataToCauser.EventTag, EventDataToCauser);
+			EventDataToReceiver.EventTag = KYTAG_CHARACTER_ATTACK_BLOCKED;
+			if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_ISPARRY))
+			{
+				FGameplayEventData EventDataToCauser;
+				EventDataToCauser.Instigator = this;
+				EventDataToCauser.EventTag = KYTAG_CHARACTER_ATTACK_PARRY;
+				EventDataToCauser.EventMagnitude = 1.0f;
+				UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(DamageCauser, EventDataToCauser.EventTag, EventDataToCauser);
+			}
 		}
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, InGameplayTag, EventDataToReceiver);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventDataToReceiver.EventTag, EventDataToReceiver);
 	}
+	
+	UpdateHitFlash();
 }
 
 

@@ -27,8 +27,6 @@ public:
 protected:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetDead() override;
-
-	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage) override;
 	
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 

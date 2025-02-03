@@ -13,6 +13,8 @@
 #define KYTAG_CHARACTER_ATTACK_BLAST FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Blast"))
 #define KYTAG_CHARACTER_ATTACK_PARRY FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Parry"))
 
+#define KYTAG_CHARACTER_ATTACK_BLOCKED FGameplayTag::RequestGameplayTag(FName("Character.State.IsBlocked"))
+
 #define KYTAG_CHARACTER_UNMOVABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable"))
 #define KYTAG_CHARACTER_UNSTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable"))
 #define KYTAG_CHARACTER_ISDEAD FGameplayTag::RequestGameplayTag(FName("Character.State.IsDead"))

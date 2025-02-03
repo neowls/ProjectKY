@@ -51,9 +51,11 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	ASC->InitAbilityActorInfo(this, this);
 
 	
-	AttributeSetEnemy->OnOutOfHealth.AddDynamic(this, &AKYCharacterNonPlayer::OutOfHealth);
+	AttributeSetEnemy->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);
 	AttributeSetEnemy->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
 
+	AttributeSetEnemy->InitDropGold(10.0f);
+	
 	InitializeStatEffect();
 	
 	GiveStartAbilities();
@@ -103,12 +105,6 @@ void AKYCharacterNonPlayer::SetDead_Implementation()
 	), 2.0f, false);
 }
 
-void AKYCharacterNonPlayer::DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer,
-	float Damage)
-{
-	Super::DamageTaken(DamageInstigator, DamageCauser, GameplayTagContainer, Damage);
-	UpdateHitFlash();
-}
 
 void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {

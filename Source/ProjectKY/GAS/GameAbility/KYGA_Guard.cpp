@@ -6,7 +6,6 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
-#include "GAS/AbilityTask/KYAT_PlayMontageAndWaitForEvent.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 UKYGA_Guard::UKYGA_Guard()

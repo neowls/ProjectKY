@@ -41,7 +41,6 @@ void UKYAttributeSetPlayer::ClampAttributeOnChange(const FGameplayAttribute& Att
 	}
 	else if (Attribute == GetGoldAttribute())
 	{
-		KY_LOG(LogKY, Log, TEXT("Gold : %f"), NewValue);
 		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxGold());
 	}
 	else if (Attribute == GetExperienceAttribute())

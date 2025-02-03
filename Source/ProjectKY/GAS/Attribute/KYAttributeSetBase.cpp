@@ -6,6 +6,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "GAS/Tag/KYGameplayTag.h"
+#include "Library/KYBlueprintFunctionLibrary.h"
 
 
 UKYAttributeSetBase::UKYAttributeSetBase()  : 
@@ -48,21 +49,28 @@ void UKYAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffect
 		SetInDamage(0.0f);	// 메타 어트리뷰트 처리 
 		if (InDamageDone > 0.0f)
 		{
-			bool IsParryState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISPARRY);
-			bool IsGuardState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGUARD);
+			
+			bool IsFrontAttack = UKYBlueprintFunctionLibrary::GetAngleToTarget(GetActorInfo()->AvatarActor->GetActorLocation(), GetActorInfo()->AvatarActor->GetActorForwardVector(), Data.EffectSpec.GetEffectContext().GetEffectCauser()->GetActorLocation()) < 90.0f;
+			
+			bool IsParryState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISPARRY) && IsFrontAttack;
+			bool IsGuardState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGUARD) && IsFrontAttack;
 			
 			if (OnDamageTaken.IsBound())	// 만약 델리게이트 바인딩 된 게 있다면 실행
 			{
 				const FGameplayEffectContextHandle& EffectContextHandle = Data.EffectSpec.GetEffectContext();
 				AActor* Instigator = EffectContextHandle.GetInstigator();
 				AActor* Causer = EffectContextHandle.GetEffectCauser();
+				
 
-				float DamageMagnitude = IsParryState ? -1.0f : Data.EvaluatedData.Magnitude;
+				float DamageMagnitude = IsParryState || IsGuardState ? -1.0f : Data.EvaluatedData.Magnitude;
 				
 				OnDamageTaken.Broadcast(Instigator, Causer, Data.EffectSpec.CapturedSourceTags.GetSpecTags(), DamageMagnitude);
 			}
 
-			if (IsParryState) return;
+			if (IsParryState)
+			{
+				return;
+			}
 
 			if (IsGuardState)
 			{

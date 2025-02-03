@@ -31,6 +31,8 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogKY, Log, All);
 
+
+
 template<typename T>
 static void InitializeObjectFinder(TObjectPtr<T>& Ref, const FString& Path)
 {
@@ -58,14 +60,3 @@ static void InitializeClassFinder(TSubclassOf<T>& Ref, const FString& Path)
 	}
 }
 
-
-/*
-template<typename T>
-static void InitializeClassFinder(TSubclassOf<T>& Ref, const FString& Path)
-{
-	ConstructorHelpers::FClassFinder<T> Finder(*Path);
-	if (Finder.Succeeded()) {
-		Ref = Finder.Class;
-	}
-}
-*/

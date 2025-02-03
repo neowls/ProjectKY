@@ -20,7 +20,9 @@ void UKYGA_SimpleDamageReaction::ActivateAbility(const FGameplayAbilitySpecHandl
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	const FVector TargetLocation = TriggerEventData->Instigator->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation();
 	GetAvatarActorFromActorInfo()->SetActorRotation(TargetLocation.Rotation());
-	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Character.Hit.Light"));
+	KY_LOG(LogKY,Log, TEXT("Tag : %s"), *TriggerEventData->EventTag.GetTagName().ToString());
+
+	if(!TriggerEventData->EventTag.MatchesTag(KYTAG_CHARACTER_ATTACK_PARRY)) CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Character.Hit.Light"));
 }
 
 void UKYGA_SimpleDamageReaction::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

@@ -9,7 +9,6 @@ AKYItemInteract::AKYItemInteract()
 {
 	InteractWidget = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("InteractableWidget"));
 	InteractWidget->SetupAttachment(RootComponent);
-	
 }
 
 void AKYItemInteract::InteractEvent_Implementation(AActor* Causer)
