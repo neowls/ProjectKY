@@ -7,7 +7,8 @@
 #include "Interface/KYTargetableInterface.h"
 #include "KYCharacterNonPlayer.generated.h"
 
-struct FGameplayTag;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FExecutedAbilityEndDelegate);
+
 /**
  * 
  */
@@ -24,6 +25,18 @@ public:
 	UFUNCTION(BlueprintNativeEvent)
 	void UpdateMotionWarpToTransform(FVector InLocation);
 
+	UFUNCTION(BlueprintCallable)
+	bool ExecuteGameplayAbilityFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
+
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FExecutedAbilityEndDelegate OnExecutedAbilityEnd;
+
+	UFUNCTION(BlueprintCallable)
+	void PlayExecutedMontage(FName SectionName);
+
+	UFUNCTION()
+	void OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted);
+	
 protected:
 	UFUNCTION(BlueprintNativeEvent)
 	void SetDead() override;
@@ -41,6 +54,10 @@ protected:
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UKYWidgetComponent> TargetedWidget;
-	
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<class USceneComponent> ExecuteMotionWarpPoint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TObjectPtr<class UAnimMontage> ExecutedMontage;
 };

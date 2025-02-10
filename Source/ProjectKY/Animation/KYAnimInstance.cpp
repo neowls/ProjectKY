@@ -19,12 +19,12 @@ UKYAnimInstance::UKYAnimInstance()
 	bIsJumping = false;
 	bIsFalling = false;
 	bIsOnGround = true;
-	bIsAiming = false;
+	bIsFocus = false;
 	bIsKnockDown = false;
 
 	GroundSpeed = 0.f;
 	
-	AimYaw = 0.f;
+	FocusYaw = 0.f;
 	TimeToJumpApex = 0.f;
 	
 	LocalVelocityDirectionAngle = 0.f;
@@ -85,6 +85,6 @@ void UKYAnimInstance::UpdateCharacterState()
 	
 	TimeToJumpApex = bIsJumping ? -WorldVelocity.Z / CharacterMovementComponent->GetGravityZ() : 0.f;
 
-	bIsAiming = Owner->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISAIMING);
+	bIsFocus = Owner->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFOCUS);
 	//bIsSprint = Get Sprint Logic
 }

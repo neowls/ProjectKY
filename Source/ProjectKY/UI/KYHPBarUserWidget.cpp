@@ -3,7 +3,6 @@
 
 #include "UI/KYHPBarUserWidget.h"
 #include "AbilitySystemComponent.h"
-#include "Components/Border.h"
 #include "Components/ProgressBar.h"
 #include "GAS/Attribute/KYAttributeSetBase.h"
 

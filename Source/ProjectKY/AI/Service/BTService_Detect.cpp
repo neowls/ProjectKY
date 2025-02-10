@@ -20,21 +20,28 @@ UBTService_Detect::UBTService_Detect()
 void UBTService_Detect::InitializeMemory(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTMemoryInit::Type InitType) const
 {
 	Super::InitializeMemory(OwnerComp, NodeMemory, InitType);
+	
+	CachedAIPawn = OwnerComp.GetAIOwner()->GetPawn();
 }
+
 
 void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 	
-	APawn* ControlledPawn = OwnerComp.GetAIOwner()->GetPawn();
-	if(ControlledPawn == nullptr) return;
-	UWorld* World = ControlledPawn->GetWorld();
-	FVector Center = ControlledPawn->GetActorLocation();
-	float DetectRadius = 600.0f;
+	if (CachedAIPawn == nullptr)
+	{
+		KY_LOG(LogKY, Warning, TEXT("Cached AI Pawn Is Invalid."))
+		return;
+	}
+	
+	UWorld* World = CachedAIPawn->GetWorld();
+	FVector Center = CachedAIPawn->GetActorLocation();
+
 
 	if(World == nullptr) return;
 	TArray<FOverlapResult> OverlapResults;
-	FCollisionQueryParams Params(NAME_None, false, ControlledPawn);
+	FCollisionQueryParams Params(NAME_None, false, CachedAIPawn);
 	bool bResult = World->OverlapMultiByChannel(
 		OverlapResults,
 		Center,
@@ -51,14 +58,15 @@ void UBTService_Detect::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeM
 			{
 				OwnerComp.GetBlackboardComponent()->SetValueAsObject(BBKEY_TARGET, Character);
 				OwnerComp.GetBlackboardComponent()->SetValueAsVector(BBKEY_BASEPOS, Character->GetActorLocation());
-				//DrawDebugSphere(World, Center, DetectRadius, 16, FColor::Green, false, 0.2f);
 
-				DrawDebugPoint(World, Character->GetActorLocation(), 10.0f, FColor::Blue, false, 0.2f);
-				DrawDebugLine(World, ControlledPawn->GetActorLocation(), Character->GetActorLocation(), FColor::Blue, false, 0.2f);
+				if (bShowDebugInfo)
+				{
+					DrawDebugPoint(World, Character->GetActorLocation(), 10.0f, FColor::Blue, false, 0.2f);
+					DrawDebugLine(World, CachedAIPawn->GetActorLocation(), Character->GetActorLocation(), FColor::Blue, false, 0.2f);
+				}
 				return;
 			}
 		}
 		OwnerComp.GetBlackboardComponent()->SetValueAsObject(BBKEY_TARGET, nullptr);
 	}
-	//DrawDebugSphere(World, Center, DetectRadius, 16, FColor::Red, false, 0.2f);
 }

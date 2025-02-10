@@ -37,14 +37,22 @@ void AKYItemObjectBase::ApplyEffectToTarget()
 	if (TargetASC)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = TargetASC->MakeEffectContext();
-		EffectContextHandle.AddSourceObject(TargetASC);
-		
+		EffectContextHandle.AddSourceObject(this);
+		 
 		FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(EffectToApply, 1.0f, EffectContextHandle);
 		if (EffectSpecHandle.IsValid())
 		{
 			TargetASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 			KY_LOG(LogKY, Log, TEXT("Apply Effect"));
 		}
+		else
+		{
+			KY_LOG(LogKY, Log, TEXT("EffectSpecHandle Is Not Valid"));
+		}
+	}
+	else
+	{
+		KY_LOG(LogKY, Log, TEXT("Can't Find TargetActor"));
 	}
 }
 

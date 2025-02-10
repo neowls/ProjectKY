@@ -30,5 +30,5 @@ protected:
 	float InterpSpeed;
 
 private:
-	uint8 bIsApplied = false;
+	bool bIsApplied;
 };

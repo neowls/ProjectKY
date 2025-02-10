@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "AI/KYAIController.h"
+#include "Components/CapsuleComponent.h"
 #include "GAS/Attribute/KYAttributeSetEnemy.h"
 #include "GAS/Tag/KYGameplayTag.h"
 #include "UI/KYWidgetComponent.h"
@@ -20,6 +21,10 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 
 	WeaponComp->SetupAttachment(GetMesh(), TEXT("weapon_r"));
 
+	ExecuteMotionWarpPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ExecuteMotionWarpPoint"));
+	ExecuteMotionWarpPoint->SetupAttachment(RootComponent);
+	ExecuteMotionWarpPoint->SetRelativeLocation(FVector(350.0f, 0.0f, 0.0f));
+
 	HPBar = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Widget"));
 	TargetedWidget = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Targeted"));
 	
@@ -30,14 +35,14 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	TargetedWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 
 	TSubclassOf<UUserWidget> HPBarWidgetClass;
-	InitializeClassFinder(HPBarWidgetClass, TEXT("/Game/_Dev/UI/WBP_EnemyHPBar.WBP_EnemyHPBar_C"));
+	InitializeClassFinder(HPBarWidgetClass, TEXT("/Game/_Dev/UI/WBP/WBP_EnemyHPBar.WBP_EnemyHPBar_C"));
 	
 	HPBar->SetWidgetClass(HPBarWidgetClass);
 	HPBar->SetDrawSize(FVector2D(150.0f, 20.0f));
 	
 
 	TSubclassOf<UUserWidget> TargetedWidgetClass;
-	InitializeClassFinder(TargetedWidgetClass, TEXT("/Game/_Dev/UI/WBP_TargetPoint.WBP_TargetPoint_C"));
+	InitializeClassFinder(TargetedWidgetClass, TEXT("/Game/_Dev/UI/WBP/WBP_TargetPoint.WBP_TargetPoint_C"));
 	
 	TargetedWidget->SetWidgetClass(TargetedWidgetClass);
 	TargetedWidget->SetDrawSize(FVector2D(50.0f, 50.0f));
@@ -62,6 +67,31 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 
 	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_UNSTABLE).AddUObject(this, &ThisClass::OnHitTagChanged);
 }
+
+bool AKYCharacterNonPlayer::ExecuteGameplayAbilityFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
+{
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromClass(InAbilityClass);
+	return ASC->TryActivateAbility(Spec->Handle);
+}
+
+void AKYCharacterNonPlayer::PlayExecutedMontage(FName SectionName)
+{
+	GetMesh()->GetAnimInstance()->Montage_Play(ExecutedMontage);
+	
+	GetCapsuleComponent()->SetCollisionProfileName("IgnoreOnlyPawn");
+
+
+	GetMesh()->SetCollisionProfileName("OverlapAll");
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	GetMesh()->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &ThisClass::OnExecutedMontageEndCallback);
+}
+
+void AKYCharacterNonPlayer::OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted)
+{
+	SetDead();
+}
+
 
 void AKYCharacterNonPlayer::UpdateMotionWarpToTransform_Implementation(FVector InLocation)
 {

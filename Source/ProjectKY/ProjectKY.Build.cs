@@ -17,15 +17,17 @@ public class ProjectKY : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
+			"AnimGraphRuntime",
 			"UMG",
 			"NavigationSystem",
 			"AIModule",
 			"GameplayTasks",
-			"MotionWarping"
+			"MotionWarping",
+			"GameFeatures",
+			"GameplayAbilities",
+			"GameplayTags" 
 		});
-
-		PrivateDependencyModuleNames.AddRange(new string[] { "AnimGraphRuntime", "GameFeatures", "GameplayAbilities", "GameplayTags" });
-
+		
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		

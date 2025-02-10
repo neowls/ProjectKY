@@ -13,5 +13,7 @@ UCLASS()
 class PROJECTKY_API UKYAbilityTask : public UAbilityTask
 {
 	GENERATED_BODY()
+
+public:
 	
 };

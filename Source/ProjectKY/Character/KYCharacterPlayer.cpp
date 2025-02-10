@@ -103,6 +103,7 @@ void AKYCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		{
 			Subsystem->AddMappingContext(DefaultContext, 0);
 		}
+		
 	}
 	
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
@@ -131,7 +132,13 @@ void AKYCharacterPlayer::SetupGASInputComponent()
 		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 7);
 		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 8);
 		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 8);
+		EnhancedInputComponent->BindAction(InteractAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 9);
 	}
+}
+
+class UInputMappingContext* AKYCharacterPlayer::GetCurrentInputMappingContext()
+{
+	return DefaultContext;
 }
 
 void AKYCharacterPlayer::GiveStartAbilities()

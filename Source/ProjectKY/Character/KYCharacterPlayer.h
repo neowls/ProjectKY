@@ -21,6 +21,13 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void SetupGASInputComponent();
 
+	UFUNCTION(BlueprintCallable)
+	class UInputMappingContext* GetCurrentInputMappingContext();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateMotionWarpToTarget(AActor* TargetActor);
+	
+	
 protected:
 	virtual void GiveStartAbilities() override;
 
@@ -39,7 +46,7 @@ protected:
 	void CurrentWeaponTrailState(const FGameplayTag CallbackTag, int32 NewCount);
 
 	void CurrentWeaponTrailState_Implementation(const FGameplayTag CallbackTag, int32 NewCount);
-	
+
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;

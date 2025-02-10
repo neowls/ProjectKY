@@ -61,12 +61,12 @@ protected:
 
 
 	
-	//	Aiming Property
-	UPROPERTY(BlueprintReadOnly, Category = Aiming)
-	float AimYaw;
+	//	Focus Property
+	UPROPERTY(BlueprintReadOnly, Category = Focus)
+	float FocusYaw;
 
-	UPROPERTY(BlueprintReadOnly, Category = Aiming)
-	uint8 bIsAiming : 1;
+	UPROPERTY(BlueprintReadOnly, Category = Focus)
+	uint8 bIsFocus : 1;
 
 	//	State Property
 	UPROPERTY(BlueprintReadOnly, Category = State)
@@ -86,7 +86,7 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	float TimeToJumpApex;
-
+	
 	
 };
 

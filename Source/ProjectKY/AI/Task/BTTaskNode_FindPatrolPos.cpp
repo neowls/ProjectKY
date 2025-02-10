@@ -12,6 +12,7 @@
 UBTTaskNode_FindPatrolPos::UBTTaskNode_FindPatrolPos()
 {
 	NodeName = TEXT("FindPatrolPos");
+	PatrolRandomRadius = 500.0f;
 }
 
 EBTNodeResult::Type UBTTaskNode_FindPatrolPos::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
@@ -37,7 +38,7 @@ EBTNodeResult::Type UBTTaskNode_FindPatrolPos::ExecuteTask(UBehaviorTreeComponen
 	
 	FNavLocation NextPatrol;
 
-	if(NavSystem->GetRandomPointInNavigableRadius(Origin, 500.0f, NextPatrol))
+	if(NavSystem->GetRandomPointInNavigableRadius(Origin, PatrolRandomRadius, NextPatrol))
 	{
 		OwnerComp.GetBlackboardComponent()->SetValueAsVector(BBKEY_PATROLPOS, NextPatrol.Location);
 		return EBTNodeResult::Succeeded;

@@ -5,8 +5,10 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
+#include "ProjectKY.h"
 #include "GAS/Tag/KYGameplayTag.h"
 #include "Library/KYBlueprintFunctionLibrary.h"
+#include "Player/KYPlayerState.h"
 
 
 UKYAttributeSetBase::UKYAttributeSetBase()  : 
@@ -43,6 +45,8 @@ void UKYAttributeSetBase::PreAttributeChange(const FGameplayAttribute& Attribute
 void UKYAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
 {
 	Super::PostGameplayEffectExecute(Data);
+
+
 	if(Data.EvaluatedData.Attribute == GetInDamageAttribute())
 	{
 		float InDamageDone = GetInDamage();
@@ -93,6 +97,18 @@ void UKYAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffect
 			{
 				const float NewHealth = GetHealth() - InDamageDone;
 				SetHealth(FMath::Clamp(NewHealth, 0.0f, GetMaxHealth()));
+			}
+
+			float InHealthRatio = GetHealth() / GetMaxHealth();
+			
+			KY_LOG(LogKY, Log, TEXT("Health Ratio : %f"), InHealthRatio);
+			if (InHealthRatio < 0.2f)
+			{
+				GetOwningAbilitySystemComponent()->AddLooseGameplayTag(KYTAG_CHARACTER_EXECUTABLE);
+			}
+			else
+			{
+				GetOwningAbilitySystemComponent()->RemoveLooseGameplayTag(KYTAG_CHARACTER_EXECUTABLE);
 			}
 
 			if (GetHealth() <= 0.0f && !bOutOfHealth)		// 현재 사망 처리가 되었는지 확인, 이로 인해 죽은뒤 들어온 데미지로 인한 델리게이트 브로드 캐스팅 방지

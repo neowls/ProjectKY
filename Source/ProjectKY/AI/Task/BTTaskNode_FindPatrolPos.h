@@ -18,5 +18,9 @@ public:
 	UBTTaskNode_FindPatrolPos();
 
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;	
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Task")
+	float PatrolRandomRadius;
 	
 };

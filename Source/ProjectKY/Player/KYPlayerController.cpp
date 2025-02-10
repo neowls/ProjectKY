@@ -9,7 +9,7 @@
 AKYPlayerController::AKYPlayerController()
 {
 	SetShowMouseCursor(true);
-	InitializeClassFinder(HUDWidgetClass, TEXT("/Game/_Dev/UI/WBP_HUD.WBP_HUD_C"));
+	InitializeClassFinder(HUDWidgetClass, TEXT("/Game/_Dev/UI/WBP/WBP_HUD.WBP_HUD_C"));
 
 }
 

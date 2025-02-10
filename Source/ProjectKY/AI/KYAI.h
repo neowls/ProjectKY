@@ -5,4 +5,3 @@
 #define BBKEY_PATROLPOS TEXT("PatrolPos")
 #define BBKEY_TARGET TEXT("Target")
 #define BBKEY_ISHIT TEXT("IsHit")
-#define BBKEY_ASC TEXT("ASC")

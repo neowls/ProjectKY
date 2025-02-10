@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "GAS/Tag/KYGameplayTag.h"
+#include "Kismet/GameplayStatics.h"
 
 class UAbilityTask_WaitGameplayEvent;
 
@@ -23,6 +24,10 @@ void UKYGA_Attack::OnSimpleEventReceivedCallback(FGameplayEventData Payload)
 	if(IsValid(AttackGameplayEffect[CurrentAttackIndex]))
 	{
 		TArray<FActiveGameplayEffectHandle> EffectHandles = ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, AttackGameplayEffect[CurrentAttackIndex], CurrentAttackIndex + 1.0f);
+		FTimerHandle SlowTimer;
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.1f);
+		GetWorld()->GetTimerManager().SetTimer(SlowTimer, [this]() { UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1); }, 0.01f, false);
+			
 	}
 	else
 	{

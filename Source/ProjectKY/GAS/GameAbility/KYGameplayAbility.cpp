@@ -44,17 +44,16 @@ void UKYGameplayAbility::TryActivatePassiveAbility(const FGameplayAbilityActorIn
 	}
 }
 
-void UKYGameplayAbility::OnSimpleCompleteCallback()
-{
-	bool bReplicatedEndAbility = true;
-	bool bWasCanceled = false;
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCanceled);
-}
-
-
-void UKYGameplayAbility::OnSimpleInterruptedCallback()
+void UKYGameplayAbility::OnSimpleInterruptedCallback_Implementation()
 {
 	bool bReplicatedEndAbility = true;
 	bool bWasCanceled = true;
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCanceled);
+}
+
+void UKYGameplayAbility::OnSimpleCompleteCallback_Implementation()
+{
+	bool bReplicatedEndAbility = true;
+	bool bWasCanceled = false;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, bReplicatedEndAbility, bWasCanceled);
 }

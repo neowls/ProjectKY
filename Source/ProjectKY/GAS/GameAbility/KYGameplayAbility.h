@@ -23,11 +23,11 @@ public:
 	
 	
 protected:
-	UFUNCTION()
-	virtual void OnSimpleCompleteCallback();
+	UFUNCTION(BlueprintNativeEvent)
+	void OnSimpleCompleteCallback();
 	
-	UFUNCTION()
-	virtual void OnSimpleInterruptedCallback();
+	UFUNCTION(BlueprintNativeEvent)
+	void OnSimpleInterruptedCallback();
 	
 
 	UPROPERTY(EditDefaultsOnly, Category = "Activation")

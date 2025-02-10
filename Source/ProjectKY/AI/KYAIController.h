@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "KYAI.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "KYAIController.generated.h"
 
 /**
@@ -21,10 +23,15 @@ public:
 	
 	void SetHitStatus(bool bIsHit);
 
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE AActor* GetTargetActor() const { return Cast<AActor>(Blackboard->GetValueAsObject(BBKEY_TARGET)); }
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI")
+	bool bIsAutoTarget;
 	
 private:
 	UPROPERTY()

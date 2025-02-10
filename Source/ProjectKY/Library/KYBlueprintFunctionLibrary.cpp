@@ -3,6 +3,7 @@
 
 #include "Library/KYBlueprintFunctionLibrary.h"
 
+
 float UKYBlueprintFunctionLibrary::GetAngleToTarget(const FVector& OriginLocation, const FVector& OriginForwardVector, const FVector& TargetLocation)
 {
 	FVector Direction = (TargetLocation - OriginLocation).GetSafeNormal();
@@ -10,4 +11,9 @@ float UKYBlueprintFunctionLibrary::GetAngleToTarget(const FVector& OriginLocatio
 	float AngleRadians = FMath::Acos(OriginForwardVector.Dot(Direction));
 	
 	return FMath::RadiansToDegrees(AngleRadians);
+}
+
+FRotator UKYBlueprintFunctionLibrary::GetRotationToTarget(const FVector& OriginLocation, const FVector& TargetLocation)
+{
+	return (TargetLocation - OriginLocation).GetSafeNormal().Rotation();
 }

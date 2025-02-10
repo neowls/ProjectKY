@@ -9,6 +9,7 @@ AKYItemDrop::AKYItemDrop()
 	SpawnDirection = {FMath::FRandRange(-1.0f, 1.0f), FMath::FRandRange(-1.0f, 1.0f), 1.0f };
 	TargetActor = nullptr;
 	InterpSpeed = 10.0f;
+	bIsApplied = false;
 }
 
 void AKYItemDrop::PostInitializeComponents()
@@ -20,15 +21,18 @@ void AKYItemDrop::PostInitializeComponents()
 void AKYItemDrop::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	if (TargetActor == nullptr || bIsApplied) return;
-	
-	SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetActor->GetActorLocation(), DeltaSeconds, InterpSpeed));
+	if (TargetActor == nullptr) return;
 
-	if(GetDistanceTo(TargetActor) < 30.0f)
+	if (!bIsApplied)
 	{
-		ApplyEffectToTarget();
-		bIsApplied = true;
-		Destroy();
+		SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetActor->GetActorLocation(), DeltaSeconds, InterpSpeed));
+
+		if(GetDistanceTo(TargetActor) <= 30.0f)
+		{
+			bIsApplied = true;
+			ApplyEffectToTarget();
+			Destroy();
+		}
 	}
 }
 

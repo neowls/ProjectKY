@@ -17,9 +17,10 @@
 
 #define KYTAG_CHARACTER_UNMOVABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable"))
 #define KYTAG_CHARACTER_UNSTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable"))
+#define KYTAG_CHARACTER_EXECUTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Executable"))
 #define KYTAG_CHARACTER_ISDEAD FGameplayTag::RequestGameplayTag(FName("Character.State.IsDead"))
 #define KYTAG_CHARACTER_ISGLIDING FGameplayTag::RequestGameplayTag(FName("Character.State.IsGliding"))
-#define KYTAG_CHARACTER_ISAIMING FGameplayTag::RequestGameplayTag(FName("Character.State.IsAiming"))
+#define KYTAG_CHARACTER_ISFOCUS FGameplayTag::RequestGameplayTag(FName("Character.State.IsFocusing"))
 #define KYTAG_CHARACTER_ISSKILLING FGameplayTag::RequestGameplayTag(FName("Character.State.IsSkilling"))
 #define KYTAG_CHARACTER_UNSTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable"))
 #define KYTAG_CHARACTER_ISKNOCKDOWN FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsKnockDown"))

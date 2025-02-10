@@ -2,20 +2,17 @@
 
 
 #include "AI/KYAIController.h"
-
-#include "AbilitySystemComponent.h"
 #include "KYAI.h"
 #include "ProjectKY.h"
 #include "BehaviorTree/BehaviorTree.h"
-#include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/BlackboardComponent.h"
-#include "Character/KYCharacterNonPlayer.h"
 
 
 AKYAIController::AKYAIController()
 {
 	InitializeObjectFinder(BBAsset, TEXT("/Game/_Dev/AI/BB_Enemy.BB_Enemy"));
 	InitializeObjectFinder(BTAsset, TEXT("/Game/_Dev/AI/BT_Enemy.BT_Enemy"));
+	bIsAutoTarget = true;
 }
 
 void AKYAIController::OnPossess(APawn* InPawn)
@@ -27,7 +24,7 @@ void AKYAIController::OnPossess(APawn* InPawn)
 void AKYAIController::OnUnPossess()
 {
 	Super::OnUnPossess();
-	
+	StopAI();
 }
 
 void AKYAIController::RunAI()
@@ -35,13 +32,14 @@ void AKYAIController::RunAI()
 	UBlackboardComponent* BBComponent = Blackboard.Get();
 	if(UseBlackboard(BBAsset, BBComponent))
 	{
-		UAbilitySystemComponent* ASC = Cast<AKYCharacterNonPlayer>(GetPawn())->GetAbilitySystemComponent();
-		if (ASC)
+		
+		if (bIsAutoTarget)
 		{
-			Blackboard->SetValueAsObject(BBKEY_ASC, ASC);
+			Blackboard->SetValueAsObject(BBKEY_TARGET, GetWorld()->GetFirstPlayerController()->GetPawn());
 		}
-		Blackboard->SetValueAsVector(BBKEY_BASEPOS, GetPawn()->GetActorLocation());
+		
 		bool RunResult = RunBehaviorTree(BTAsset);
+		
 		ensure(RunResult);
 	}
 }
@@ -53,6 +51,7 @@ void AKYAIController::StopAI()
 	{
 		BTComponent->StopTree();
 	}
+	
 }
 
 void AKYAIController::SetHitStatus(bool bIsHit)
