@@ -25,6 +25,7 @@ AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
 
 	WeaponComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Weapon"));
 	WeaponComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 }
 
 UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
@@ -34,6 +35,11 @@ UAbilitySystemComponent* AKYCharacterBase::GetAbilitySystemComponent() const
 
 FEventAnimMontageData AKYCharacterBase::GetAnimMontageData(FGameplayTag InGameplayTag)
 {
+	if (!IsValid(AnimMontageAsset))
+	{
+		KY_LOG(LogKY, Warning, TEXT("AnimMontageAsset Is Empty"));
+		return FEventAnimMontageData();
+	}
 	return AnimMontageAsset->GetEventAnimMontageData(InGameplayTag);
 }
 
@@ -64,7 +70,9 @@ void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCause
 				EventDataToCauser.Instigator = this;
 				EventDataToCauser.EventTag = KYTAG_CHARACTER_ATTACK_PARRY;
 				EventDataToCauser.EventMagnitude = 1.0f;
+				
 				UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(DamageCauser, EventDataToCauser.EventTag, EventDataToCauser);
+				
 			}
 		}
 		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventDataToReceiver.EventTag, EventDataToReceiver);

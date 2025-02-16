@@ -69,7 +69,7 @@ protected:
 	TArray<TSubclassOf<class UGameplayEffect>> InitStatEffect;
 	
 	UPROPERTY(EditAnywhere, Category=Animation)
-	UKYCharacterBaseAsset* AnimMontageAsset;
+	TObjectPtr<class UKYCharacterBaseAsset> AnimMontageAsset;
 	
 	UPROPERTY(EditAnywhere, Category=Animation)
 	TObjectPtr<UAnimMontage> DeathMontage;

@@ -11,7 +11,7 @@ AKYItemInteract::AKYItemInteract()
 	InteractWidget->SetupAttachment(RootComponent);
 }
 
-void AKYItemInteract::InteractEvent_Implementation(AActor* Causer)
+void AKYItemInteract::InteractEvent_Implementation(AActor* Causer, float Magnitude)
 {
 	SetTargetActor(Causer);
 	/* More Interact Function */

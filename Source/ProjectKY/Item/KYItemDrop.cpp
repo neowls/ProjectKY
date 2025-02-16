@@ -8,7 +8,7 @@ AKYItemDrop::AKYItemDrop()
 	PrimaryActorTick.bStartWithTickEnabled = false;
 	SpawnDirection = {FMath::FRandRange(-1.0f, 1.0f), FMath::FRandRange(-1.0f, 1.0f), 1.0f };
 	TargetActor = nullptr;
-	InterpSpeed = 10.0f;
+	InterpSpeed = 12.0f;
 	bIsApplied = false;
 }
 
@@ -30,7 +30,7 @@ void AKYItemDrop::Tick(float DeltaSeconds)
 		if(GetDistanceTo(TargetActor) <= 30.0f)
 		{
 			bIsApplied = true;
-			ApplyEffectToTarget();
+			ApplyEffectToTarget(1.0f);
 			Destroy();
 		}
 	}

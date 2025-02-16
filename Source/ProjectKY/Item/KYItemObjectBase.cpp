@@ -7,11 +7,9 @@
 
 AKYItemObjectBase::AKYItemObjectBase()
 {
-	USceneComponent* Root = CreateDefaultSubobject<USceneComponent>("Root");
-	RootComponent = Root;
 	ASC = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("ASC"));
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(Root);
+	SetRootComponent(Mesh);
 	Mesh->SetCollisionProfileName(TEXT("NoCollision"));
 }
 
@@ -31,7 +29,7 @@ void AKYItemObjectBase::PostInitializeComponents()
 	ASC->InitAbilityActorInfo(this, this);;
 }
 
-void AKYItemObjectBase::ApplyEffectToTarget()
+void AKYItemObjectBase::ApplyEffectToTarget(float Magnitude)
 {
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	if (TargetASC)
@@ -39,11 +37,10 @@ void AKYItemObjectBase::ApplyEffectToTarget()
 		FGameplayEffectContextHandle EffectContextHandle = TargetASC->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
 		 
-		FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(EffectToApply, 1.0f, EffectContextHandle);
+		FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(EffectToApply, Magnitude, EffectContextHandle);
 		if (EffectSpecHandle.IsValid())
 		{
 			TargetASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-			KY_LOG(LogKY, Log, TEXT("Apply Effect"));
 		}
 		else
 		{

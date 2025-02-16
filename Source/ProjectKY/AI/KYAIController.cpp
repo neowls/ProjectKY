@@ -30,6 +30,7 @@ void AKYAIController::OnUnPossess()
 void AKYAIController::RunAI()
 {
 	UBlackboardComponent* BBComponent = Blackboard.Get();
+	
 	if(UseBlackboard(BBAsset, BBComponent))
 	{
 		

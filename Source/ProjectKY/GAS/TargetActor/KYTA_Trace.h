@@ -23,12 +23,26 @@ public:
 
 	void SetShowDebug(bool InShowDebug) { bShowDebug = InShowDebug; }
 
-	void SetShapeTrace(bool InShapeTrace) { bShapeTrace = InShapeTrace; }
+	void SetUseShape(bool InShape) { bUseShape = InShape; }
 
 protected:
 	virtual FGameplayAbilityTargetDataHandle MakeTargetData() const;
-
+	
 	bool bShowDebug = false;
 
-	bool bShapeTrace = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseShape = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bUseMulti = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
+	float TraceRange = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace", meta=(EditCondition="bShapeTrace", EditConditionHides))
+	float TraceRadius = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
+	float CenterOffset = 0.0f;
+	
 };

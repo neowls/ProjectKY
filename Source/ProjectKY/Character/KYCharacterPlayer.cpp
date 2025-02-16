@@ -25,17 +25,18 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	InitializeObjectFinder(DashAction, TEXT("/Game/_Dev/Input/IA_Dash.IA_Dash"));
 	InitializeObjectFinder(GuardAction, TEXT("/Game/_Dev/Input/IA_Guard.IA_Guard"));
 	InitializeObjectFinder(JumpAction, TEXT("/Game/_Dev/Input/IA_Jump.IA_Jump"));
+	InitializeObjectFinder(GlideAction, TEXT("/Game/_Dev/Input/IA_Glide.IA_Glide"));
 	InitializeObjectFinder(InteractAction, TEXT("/Game/_Dev/Input/IA_Interact.IA_Interact"));
 	InitializeObjectFinder(LightAttackAction, TEXT("/Game/_Dev/Input/IA_LightAttack.IA_LightAttack"));
 	InitializeObjectFinder(HeavyAttackAction, TEXT("/Game/_Dev/Input/IA_HeavyAttack.IA_HeavyAttack"));
-	InitializeObjectFinder(SkillAttackAction, TEXT("/Game/_Dev/Input/IA_SubAttack.IA_SubAttack"));
+	InitializeObjectFinder(SkillAttackAction, TEXT("/Game/_Dev/Input/IA_SkillAttack.IA_SkillAttack"));
 	InitializeObjectFinder(UpperAttackAction, TEXT("/Game/_Dev/Input/IA_UpperAttack.IA_UpperAttack"));
-	InitializeObjectFinder(SkillAction, TEXT("/Game/_Dev/Input/IA_Skill.IA_Skill"));
+	InitializeObjectFinder(RangeAttackAction, TEXT("/Game/_Dev/Input/IA_RangeAttack.IA_RangeAttack"));
 	InitializeObjectFinder(DefaultContext, TEXT("/Game/_Dev/Input/IMC_Player.IMC_Player"));
 
 	TObjectPtr<USkeletalMesh> CharacterMesh = nullptr;
-
-	InitializeObjectFinder(CharacterMesh, TEXT("/Game/NO_Cooking/Animation/GreatSword/Mannequin/Character/Mesh/SK_Mannequin.SK_Mannequin"));
+	ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(TEXT("/Game/NO_Cooking/Animation/GreatSword/Mannequin/Character/Mesh/SK_Mannequin"));
+	if (MeshFinder.Succeeded())	CharacterMesh = MeshFinder.Object;
 	
 	GetMesh()->SetSkeletalMesh(CharacterMesh);
 
@@ -59,7 +60,6 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	SpringArmComp->bInheritRoll = false;
 	SpringArmComp->TargetArmLength = 800;
 	SpringArmComp->SetRelativeRotation(FRotator(0.0f, -50.0f, RotationOffset.Yaw));
-	
 }
 
 void AKYCharacterPlayer::PossessedBy(AController* NewController)
@@ -76,14 +76,10 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 			AttributeSetPlayer->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
 		}
 		
-
-		ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_ISATTACKING).AddUObject(this, &ThisClass::CurrentWeaponTrailState);
-
+		
 		InitializeStatEffect();
 		GiveStartAbilities();
 		SetupGASInputComponent();
-
-		
 
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 		if (bShowGASDebug)
@@ -128,17 +124,15 @@ void AKYCharacterPlayer::SetupGASInputComponent()
 		EnhancedInputComponent->BindAction(LightAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 3);
 		EnhancedInputComponent->BindAction(HeavyAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 4);
 		EnhancedInputComponent->BindAction(UpperAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 5);
-		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 6);
+		EnhancedInputComponent->BindAction(RangeAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 6);
 		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 7);
 		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 8);
 		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 8);
-		EnhancedInputComponent->BindAction(InteractAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 9);
+		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 9);
+		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 11);
+		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 12);
+		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 12);
 	}
-}
-
-class UInputMappingContext* AKYCharacterPlayer::GetCurrentInputMappingContext()
-{
-	return DefaultContext;
 }
 
 void AKYCharacterPlayer::GiveStartAbilities()
@@ -158,7 +152,7 @@ void AKYCharacterPlayer::GiveStartAbilities()
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 {
 	if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNMOVABLE) || ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNSTABLE)) return;	// 해당 태그 부착시 캐릭터 이동 제한
-	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr)) GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	// 재생중인 몽타주가 있다면 중단한다.
+	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr) && !ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_MOVEMONTAGEENABLED)) GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	// 재생중인 몽타주가 있다면 중단한다.
 	
 	FVector2D MovementVector = Value.Get<FVector2d>(); // X, Y 입력 벡터 저장
 	
@@ -234,9 +228,3 @@ void AKYCharacterPlayer::SetDead()
 	Super::SetDead();
 	PlayAnimMontage(DeathMontage);
 }
-
-void AKYCharacterPlayer::CurrentWeaponTrailState_Implementation(const FGameplayTag CallbackTag, int32 NewCount)
-{
-	bCurrentTrailState = NewCount > 0;
-}
-

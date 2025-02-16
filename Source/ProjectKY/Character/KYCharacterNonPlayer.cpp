@@ -29,10 +29,9 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	TargetedWidget = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Targeted"));
 	
 	HPBar->SetupAttachment(GetMesh());
-	TargetedWidget->SetupAttachment(GetMesh());
+	TargetedWidget->SetupAttachment(GetMesh(), TEXT("pelvis"));
 	
 	HPBar->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
-	TargetedWidget->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 
 	TSubclassOf<UUserWidget> HPBarWidgetClass;
 	InitializeClassFinder(HPBarWidgetClass, TEXT("/Game/_Dev/UI/WBP/WBP_EnemyHPBar.WBP_EnemyHPBar_C"));
@@ -49,6 +48,11 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	TargetedWidget->SetVisibility(false);
 }
 
+void AKYCharacterNonPlayer::OnExecuteTagChanged(FGameplayTag GameplayTag, int Count)
+{
+	OnExecutableState(Count > 0);
+}
+
 void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
@@ -58,14 +62,15 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	
 	AttributeSetEnemy->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);
 	AttributeSetEnemy->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
-
-	AttributeSetEnemy->InitDropGold(10.0f);
 	
 	InitializeStatEffect();
+	AttributeSetEnemy->InitDropGold(10.0f);
+	
 	
 	GiveStartAbilities();
 
 	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_UNSTABLE).AddUObject(this, &ThisClass::OnHitTagChanged);
+	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_EXECUTABLE).AddUObject(this, &ThisClass::OnExecuteTagChanged);
 }
 
 bool AKYCharacterNonPlayer::ExecuteGameplayAbilityFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
@@ -76,26 +81,18 @@ bool AKYCharacterNonPlayer::ExecuteGameplayAbilityFromClass(TSubclassOf<UGamepla
 
 void AKYCharacterNonPlayer::PlayExecutedMontage(FName SectionName)
 {
+	GetMesh()->GetAnimInstance()->StopAllMontages(0.01f);
 	GetMesh()->GetAnimInstance()->Montage_Play(ExecutedMontage);
+	if (SectionName != TEXT("0")) GetMesh()->GetAnimInstance()->Montage_JumpToSection(SectionName);
 	
 	GetCapsuleComponent()->SetCollisionProfileName("IgnoreOnlyPawn");
-
-
-	GetMesh()->SetCollisionProfileName("OverlapAll");
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
-	GetMesh()->GetAnimInstance()->OnMontageBlendingOut.AddDynamic(this, &ThisClass::OnExecutedMontageEndCallback);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AKYCharacterNonPlayer::OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted)
 {
 	SetDead();
-}
-
-
-void AKYCharacterNonPlayer::UpdateMotionWarpToTransform_Implementation(FVector InLocation)
-{
-	
 }
 
 

@@ -16,8 +16,8 @@ AKYPlayerController::AKYPlayerController()
 void AKYPlayerController::SetupHUDWidget()
 {
 	HUDWidget = CreateWidget<UKYHUDUserWidget>(this, HUDWidgetClass);
-	HUDWidget->AddToViewport();
 	HUDWidget->SetAbilitySystemComponent(PlayerState);
+	HUDWidget->AddToViewport();
 }
 
 void AKYPlayerController::OnPossess(APawn* InPawn)

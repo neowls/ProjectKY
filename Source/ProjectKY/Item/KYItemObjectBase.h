@@ -18,7 +18,7 @@ public:
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 	UFUNCTION(BlueprintCallable)
-	void ApplyEffectToTarget();
+	void ApplyEffectToTarget(float Magnitude);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetTargetActor(AActor* InTargetActor);

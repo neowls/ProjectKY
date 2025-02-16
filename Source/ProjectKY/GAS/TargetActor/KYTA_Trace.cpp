@@ -44,11 +44,6 @@ FGameplayAbilityTargetDataHandle AKYTA_Trace::MakeTargetData() const
 		return FGameplayAbilityTargetDataHandle();
 	}
 	
-	FHitResult HitResult;
-
-	constexpr float TraceRange = 1000.0f;
-	constexpr float TraceRadius = 100.0f;
-	
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(UGASTA_Trace), false, Character);
 	
 	const FVector Forward = Character->GetActorForwardVector();
@@ -59,29 +54,61 @@ FGameplayAbilityTargetDataHandle AKYTA_Trace::MakeTargetData() const
 	ObjectQueryParams.AddObjectTypesToQuery(ECC_ENEMY);
 	bool HitDetected = false;
 	
-	if (bShapeTrace)
+	TArray<FHitResult> HitResults;
+	FHitResult HitResult;
+	
+	if (bUseMulti)
 	{
-		HitDetected = GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), Params);
+		if (bUseShape)
+		{
+			HitDetected = GetWorld()->SweepMultiByObjectType(HitResults, Start, End,FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), Params);
+		}
+		else
+		{
+			HitDetected = GetWorld()->LineTraceMultiByObjectType(HitResults, Start, End, ObjectQueryParams, Params);
+		}
 	}
 	else
 	{
-		HitDetected = GetWorld()->LineTraceSingleByObjectType(HitResult, Start, End, ObjectQueryParams, Params);
+		if (bUseShape)
+		{
+			HitDetected = GetWorld()->SweepSingleByObjectType(HitResult, Start, End, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(TraceRadius), Params);
+		}
+		else
+		{
+			HitDetected = GetWorld()->LineTraceSingleByObjectType(HitResult, Start, End, ObjectQueryParams, Params);
+		}
+	
 	}
 	
 	FGameplayAbilityTargetDataHandle DataHandle;
-
 	
 	if(HitDetected)
 	{
-		FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
-		DataHandle.Add(TargetData);			
+		if (bUseMulti)
+		{
+			TArray<TWeakObjectPtr<AActor>> HitActors;
+			for (auto& Hit : HitResults)
+			{
+				HitActors.Add(Hit.GetActor());
+			}
+			
+			FGameplayAbilityTargetData_ActorArray* TargetData_Actors = new FGameplayAbilityTargetData_ActorArray();
+			TargetData_Actors->SetActors(HitActors);
+			DataHandle.Add(TargetData_Actors);
+		}
+		else
+		{
+			FGameplayAbilityTargetData_SingleTargetHit* TargetData = new FGameplayAbilityTargetData_SingleTargetHit(HitResult);
+			DataHandle.Add(TargetData);
+		}
 	}
 
 #if ENABLE_DRAW_DEBUG
 	if(bShowDebug)
 	{
 		FColor DrawColor = HitDetected ? FColor::Green : FColor::Red;
-		if (bShapeTrace)
+		if (bUseShape)
 		{
 			FVector CapsuleOrigin = Start + (End - Start) * 0.5f;
 			float CapsuleHalfHeight = TraceRange * 0.5f;

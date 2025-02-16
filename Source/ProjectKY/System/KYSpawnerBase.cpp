@@ -37,7 +37,7 @@ void AKYSpawnerBase::OnConstruction(const FTransform& Transform)
             DrawDebugSphere(GetWorld(), SpawnPoint, 10.0f, 12, FColor::Green, true, -1.0f);
         }
 
-        // 🔹 중앙 제거 반경을 빨간색 원으로 표시
+        // 중앙 제거 반경을 빨간색 원으로 표시
         DrawDebugCircle(GetWorld(), Origin, CenterOffset, 32, FColor::Red, true, -1.0f, 0, 5.0f, FVector(1,0,0), FVector(0,1,0));
     }
 }

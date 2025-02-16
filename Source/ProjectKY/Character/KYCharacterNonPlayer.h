@@ -20,11 +20,10 @@ class PROJECTKY_API AKYCharacterNonPlayer : public AKYCharacterBase, public IKYT
 public:
 	AKYCharacterNonPlayer(const FObjectInitializer& ObjectInitializer);
 
+	void OnExecuteTagChanged(FGameplayTag GameplayTag, int Count);
+	
 	virtual void PossessedBy(AController* NewController) override;
-
-	UFUNCTION(BlueprintNativeEvent)
-	void UpdateMotionWarpToTransform(FVector InLocation);
-
+	
 	UFUNCTION(BlueprintCallable)
 	bool ExecuteGameplayAbilityFromClass(TSubclassOf<UGameplayAbility> InAbilityClass);
 
@@ -34,11 +33,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void PlayExecutedMontage(FName SectionName);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnExecutableState(bool IsExecutable);
+
 	UFUNCTION()
 	void OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted);
 	
 protected:
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetDead() override;
 	
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
@@ -49,10 +51,10 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UKYAttributeSetEnemy> AttributeSetEnemy;
 	
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UKYWidgetComponent> HPBar;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UKYWidgetComponent> TargetedWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

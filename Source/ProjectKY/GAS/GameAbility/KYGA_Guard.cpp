@@ -22,9 +22,9 @@ void UKYGA_Guard::InputReleased(const FGameplayAbilitySpecHandle Handle, const F
 	MontageJumpToSection(FName("GuardEnd"));
 }
 
-void UKYGA_Guard::OnSimpleEventReceivedCallback(const FGameplayEventData Payload)
+void UKYGA_Guard::OnSimpleEventReceivedCallback_Implementation(FGameplayEventData Payload)
 {
-	Super::OnSimpleEventReceivedCallback(Payload);
+	Super::OnSimpleEventReceivedCallback_Implementation(Payload);
 	
 	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISPARRY)) // 먼저 패링중인지 확인한다.
 	{
@@ -46,4 +46,3 @@ void UKYGA_Guard::OnSimpleEventReceivedCallback(const FGameplayEventData Payload
 		}
 	}
 }
-

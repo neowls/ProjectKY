@@ -20,8 +20,9 @@ class PROJECTKY_API UKYAttributeSetPlayer : public UKYAttributeSetBase
 public:
 	UKYAttributeSetPlayer();
 
-	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, RagePoint);
-	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, MaxRagePoint);
+	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, Rage);
+	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, MaxRage);
+	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, InRage);
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, SkillPoint);
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, MaxSkillPoint);
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, Gold);
@@ -33,12 +34,15 @@ public:
 
 protected:
 	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
-	FGameplayAttributeData RagePoint;
+	FGameplayAttributeData Rage;
+
+	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
+	FGameplayAttributeData MaxRage;
 	
 	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
-	FGameplayAttributeData MaxRagePoint;
+	FGameplayAttributeData InRage;
 
-
+	
 	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData SkillPoint;
 	
@@ -61,7 +65,7 @@ protected:
 	
 protected:
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
-	
+
 	virtual void ClampAttributeOnChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 	
 };

@@ -33,13 +33,17 @@
 #define KYTAG_CHARACTER_INVINCIBLE FGameplayTag::RequestGameplayTag(FName("Character.State.Invincible"))
 #define KYTAG_CHARACTER_ROTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.IsRotable"))
 #define KYTAG_CHARACTER_ISFALLING FGameplayTag::RequestGameplayTag(FName("Character.State.IsFalling"))
+#define KYTAG_CHARACTER_ISJUMPING FGameplayTag::RequestGameplayTag(FName("Character.State.IsJumping"))
 #define KYTAG_CHARACTER_ISGUARDEND FGameplayTag::RequestGameplayTag(FName("Character.State.IsGuardEnd"))
+#define KYTAG_CHARACTER_MOVEMONTAGEENABLED FGameplayTag::RequestGameplayTag(FName("Character.State.MoveMontageEnabled"))
 
 
 #define KYTAG_EVENT_COMBO_AVAILABLE FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.ComboAvailable"))
 #define KYTAG_EVENT_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.AttackHitCheck"))
+#define KYTAG_EVENT_SKILLHIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.SkillHitCheck"))
 
 #define KYTAG_EVENT_HIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit"))
+
 
 #define GAMEPLAYCUE_CHARACTER_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("GameplayCue.Character.AttackHit"))
 

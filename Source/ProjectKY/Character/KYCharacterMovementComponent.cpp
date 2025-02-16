@@ -9,7 +9,7 @@
 UKYCharacterMovementComponent::UKYCharacterMovementComponent()
 {
 	GeneralGravityScale = 2.0f;
-	MaxFallingSpeed = 10.0f;
+	MaxFallingSpeed = 60.0f;
 }
 
 void UKYCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity)
@@ -27,6 +27,16 @@ void UKYCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const 
 		else if (!IsFalling() && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
 		{
 			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISFALLING);
+		}
+
+		if (Velocity.Z > 0.f && !CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISJUMPING))
+		{
+			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(KYTAG_CHARACTER_ISJUMPING);
+		}
+
+		else if (Velocity.Z < 0.f && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISJUMPING))
+		{
+			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISJUMPING);
 		}
 		
 		if (CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGLIDING))

@@ -21,5 +21,5 @@ public:
 
 protected:
 
-	virtual void OnSimpleEventReceivedCallback(FGameplayEventData Payload) override;
+	virtual void OnSimpleEventReceivedCallback_Implementation(FGameplayEventData Payload) override;
 };

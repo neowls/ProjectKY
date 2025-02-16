@@ -19,7 +19,7 @@ public:
 	AKYItemInteract();
 
 protected:
-	virtual void InteractEvent_Implementation(AActor* Causer) override;
+	virtual void InteractEvent_Implementation(AActor* Causer, float Magnitude) override;
 
 	virtual void SetInteractableStatus_Implementation(bool InStatus) override;
 

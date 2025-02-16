@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GAS/GameAbility/KYGameplayAbility.h"
+#include "Struct/KYStruct.h"
 #include "KYGA_AnimBase.generated.h"
 
 /**
@@ -19,14 +20,19 @@ public:
 
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-
-	UFUNCTION()
-	virtual void OnSimpleEventReceivedCallback(FGameplayEventData Payload) {}
-
+	
+	UFUNCTION(BlueprintNativeEvent)
+	void OnSimpleEventReceivedCallback(FGameplayEventData Payload);
+	
 	UFUNCTION()
 	virtual void OnSimpleCompleteEventCallback(FGameplayEventData Payload);
 
 	UFUNCTION()
 	virtual void OnSimpleInterruptEventCallback(FGameplayEventData Payload);
+
+	UFUNCTION()
+	virtual void PlayAnimMontageTask();
+
+	
 	
 };

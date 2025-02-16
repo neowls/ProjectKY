@@ -16,6 +16,7 @@ void UKYAN_SetVelocity::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBa
 
 	if (Character)
 	{
-		Character->GetCharacterMovement()->Velocity = TargetVelocity;
+		//Character->GetCharacterMovement()->Velocity = TargetVelocity;
+		Character->GetCharacterMovement()->Launch(TargetVelocity);
 	}
 }

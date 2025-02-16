@@ -6,6 +6,7 @@
 #include "UI/KYUserWidget.h"
 #include "KYHUDUserWidget.generated.h"
 
+class UKYRageBarUserWidget;
 class UKYHPBarUserWidget;
 /**
  * 
@@ -21,4 +22,7 @@ public:
 public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UKYHPBarUserWidget> WBPHPBar;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UKYRageBarUserWidget> WBP_PlayerRageBar;
 };

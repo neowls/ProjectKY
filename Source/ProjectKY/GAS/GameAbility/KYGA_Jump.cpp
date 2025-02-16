@@ -3,8 +3,10 @@
 
 #include "GAS/GameAbility/KYGA_Jump.h"
 
+#include "ProjectKY.h"
+#include "Character/KYCharacterBase.h"
 #include "GameFramework/Character.h"
-#include "GAS/AbilityTask/KYAT_JumpAndWaitForLanding.h"
+#include "GAS/AbilityTask/KYAT_PlayMontageAndWaitForEvent.h"
 
 UKYGA_Jump::UKYGA_Jump()
 {
@@ -21,24 +23,21 @@ bool UKYGA_Jump::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	}
 
 	const ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
-	return (Character && Character->CanJump());
+	return Character->CanJump();
 }
 
 void UKYGA_Jump::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
-	UKYAT_JumpAndWaitForLanding* JumpAndWaitForLandingTask = UKYAT_JumpAndWaitForLanding::CreateTask(this);
-
-	JumpAndWaitForLandingTask->OnComplete.AddDynamic(this, &UKYGA_Jump::OnSimpleCompleteCallback);
-	
-	JumpAndWaitForLandingTask->ReadyForActivation();
+	ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
+	Character->Jump();
+	Character->LandedDelegate.AddDynamic(this, &ThisClass::OnLandedCallback);
+	KY_LOG(LogKY, Log, TEXT("Activate"));
 }
 
-void UKYGA_Jump::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
+void UKYGA_Jump::OnLandedCallback(const FHitResult& Hit)
 {
-	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
-
-	ACharacter* Character = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
-	Character->StopJumping();
+	ACharacter* Character = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
+	Character->LandedDelegate.RemoveDynamic(this, &ThisClass::OnLandedCallback);
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
 }

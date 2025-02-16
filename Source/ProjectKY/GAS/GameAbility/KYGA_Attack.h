@@ -18,9 +18,9 @@ public:
 	UKYGA_Attack();
 	
 protected:
-	virtual void OnSimpleEventReceivedCallback(FGameplayEventData Payload) override;
+	virtual void OnSimpleEventReceivedCallback_Implementation(FGameplayEventData Payload) override;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<TSubclassOf<UGameplayEffect>> AttackGameplayEffect;
 	
 	uint8 CurrentAttackIndex;

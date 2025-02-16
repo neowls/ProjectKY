@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "KYInteractableInterface.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnInteractEvent);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractEvent, float, Magnitude);
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI, Blueprintable)
@@ -31,6 +31,8 @@ public:
 	void SetInteractableStatus(bool InStatus);
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void InteractEvent(AActor* Causer);
-	
+	void InteractEvent(AActor* Causer, float Magnitude);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	bool IsCanInteract();
 };

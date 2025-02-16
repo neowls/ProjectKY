@@ -15,7 +15,7 @@ void UANS_KYAddTagInDuration::NotifyBegin(USkeletalMeshComponent* MeshComp, UAni
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-	if (MeshComp)
+	if (MeshComp && MeshComp->GetWorld()->WorldType != EWorldType::Type::EditorPreview)
 	{
 		if (AActor* Owner = MeshComp->GetOwner())
 		{
@@ -27,7 +27,7 @@ void UANS_KYAddTagInDuration::NotifyBegin(USkeletalMeshComponent* MeshComp, UAni
 void UANS_KYAddTagInDuration::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	if (MeshComp)
+	if (MeshComp && MeshComp->GetWorld()->WorldType != EWorldType::Type::EditorPreview)
 	{
 		if (AActor* Owner = MeshComp->GetOwner())
 		{

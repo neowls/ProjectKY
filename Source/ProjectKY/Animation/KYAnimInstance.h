@@ -77,6 +77,9 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	uint8 bIsFalling : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = State)
+	uint8 bIsGliding : 1;
 	
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	uint8 bIsOnGround : 1;
@@ -86,6 +89,8 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	float TimeToJumpApex;
+
+	
 	
 	
 };

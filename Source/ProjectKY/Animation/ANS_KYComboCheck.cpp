@@ -14,7 +14,7 @@ void UANS_KYComboCheck::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 	const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyBegin(MeshComp, Animation, TotalDuration, EventReference);
-	if (MeshComp)
+	if (MeshComp && MeshComp->GetWorld()->WorldType != EWorldType::Type::EditorPreview)
 	{
 		if (AActor* Owner = MeshComp->GetOwner())
 		{
@@ -26,7 +26,7 @@ void UANS_KYComboCheck::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimSeque
 void UANS_KYComboCheck::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::NotifyEnd(MeshComp, Animation, EventReference);
-	if (MeshComp)
+	if (MeshComp && MeshComp->GetWorld()->WorldType != EWorldType::Type::EditorPreview)
 	{
 		if (AActor* Owner = MeshComp->GetOwner())
 		{

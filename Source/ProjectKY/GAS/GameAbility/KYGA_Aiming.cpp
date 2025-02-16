@@ -20,7 +20,7 @@ UKYGA_Aiming::UKYGA_Aiming()
 	TargetingAngleThreshold = 25.0f;
 	bIsTargeting = false;
 	TargetedActor = nullptr;
-	bPassiveAbility = true;
+	bPassiveAbility = false;
 }
 
 void UKYGA_Aiming::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
