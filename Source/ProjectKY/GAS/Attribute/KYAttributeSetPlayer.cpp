@@ -38,6 +38,52 @@ void UKYAttributeSetPlayer::PostGameplayEffectExecute(const struct FGameplayEffe
 			SetRage(FMath::Clamp(NewRage, 0.0f, GetMaxRage()));
 		}
 	}
+
+	if (Data.EvaluatedData.Attribute == GetInExperienceAttribute())
+	{
+		float InExperienceDone = GetInExperience();
+		float InLevel = GetLevel();
+		float NextLevelMaxExperience = GetMaxExperience();
+		float NewMaxHealth = GetMaxHealth();
+		float NewStrikingPower = GetStrikingPower();
+		float NewDefensivePower = GetDefensivePower();
+		float NewMaxRage = GetMaxRage();
+		float NewSkillPoint = GetSkillPoint();
+		
+		SetInExperience(0.0f);
+		if (InExperienceDone > 0.0f)
+		{
+			InExperienceDone += GetExperience();
+			const bool bLevelUp = InExperienceDone >= NextLevelMaxExperience;;
+			
+			while (InExperienceDone >= NextLevelMaxExperience)
+			{
+				InExperienceDone -= NextLevelMaxExperience;
+				InLevel += 1;
+				NewSkillPoint += 1;
+
+				if (PlayerLevelCurveTable)
+				{
+					SetMaxExperience(GetAttributeValueFromCurveTable(TEXT("MaxExperience"), NextLevelMaxExperience, InLevel));
+				}
+			}
+
+			KY_LOG(LogKY, Log, TEXT("Current Exp : %f, Max Exp : %f"), InExperienceDone, NextLevelMaxExperience);
+			if (bLevelUp && PlayerLevelCurveTable)
+			{
+				SetMaxHealth(GetAttributeValueFromCurveTable(TEXT("MaxHealth"), NewMaxHealth, InLevel));
+				SetStrikingPower(GetAttributeValueFromCurveTable(TEXT("StrikingPower"), NewStrikingPower, InLevel));
+				SetDefensivePower(GetAttributeValueFromCurveTable(TEXT("DefensivePower"), NewDefensivePower, InLevel));
+				SetMaxRage(GetAttributeValueFromCurveTable(TEXT("MaxRage"), NewMaxRage, InLevel));
+				SetLevel(InLevel);
+				SetSkillPoint(NewSkillPoint);
+
+				OnLevelUp.Broadcast();
+			}
+			
+			SetExperience(InExperienceDone);
+		}
+	}
 }
 
 void UKYAttributeSetPlayer::ClampAttributeOnChange(const FGameplayAttribute& Attribute, float& NewValue) const
@@ -56,5 +102,15 @@ void UKYAttributeSetPlayer::ClampAttributeOnChange(const FGameplayAttribute& Att
 	{
 		NewValue = FMath::Clamp(NewValue, 0.0f, GetMaxExperience());
 	}
+}
+
+float UKYAttributeSetPlayer::GetAttributeValueFromCurveTable(FName CurveName, float InValue, float InLevel)
+{
+	static const FString ContextString(TEXT("Level Up"));
+	if (FRealCurve* TargetCurve = PlayerLevelCurveTable->FindCurve(CurveName, ContextString, true))
+	{
+		return TargetCurve->Eval(InLevel);
+	}
+	return InValue;
 }
 

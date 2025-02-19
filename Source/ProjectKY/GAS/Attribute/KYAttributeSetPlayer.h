@@ -29,8 +29,13 @@ public:
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, MaxGold);
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, Experience);
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, MaxExperience);
+	ATTRIBUTE_ACCESSORS(UKYAttributeSetPlayer, InExperience);
+	
 
 	mutable FLevelUpDelegate OnLevelUp;
+
+	UPROPERTY()
+	mutable UCurveTable* PlayerLevelCurveTable;
 
 protected:
 	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
@@ -63,9 +68,13 @@ protected:
 	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData MaxExperience;
 	
+	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
+	FGameplayAttributeData InExperience;
+
 protected:
 	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 
 	virtual void ClampAttributeOnChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
-	
+
+	virtual float GetAttributeValueFromCurveTable(FName CurveName, float InValue, float InLevel);
 };

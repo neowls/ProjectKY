@@ -6,6 +6,8 @@
 #include "GAS/Attribute/KYAttributeSetBase.h"
 #include "KYAttributeSetEnemy.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FExperienceBountyEvent);
 /**
  * 
  */
@@ -21,6 +23,11 @@ public:
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetEnemy, MaxDropGold);
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetEnemy, DropExperience)
 	ATTRIBUTE_ACCESSORS(UKYAttributeSetEnemy, MaxDropExperience)
+
+	mutable FExperienceBountyEvent OnDropExperienceBounty;
+
+	UPROPERTY(BlueprintReadWrite, Category="Bounty", Meta=(AllowPrivateAccess=true))
+	mutable TSubclassOf<UGameplayEffect> DropBountyEffect;
 
 protected:
 	UPROPERTY(BlueprintReadWrite, Category="Attributes", Meta=(AllowPrivateAccess=true))
@@ -38,7 +45,10 @@ protected:
 
 
 protected:
+
 	virtual void ClampAttributeOnChange(const FGameplayAttribute& Attribute, float& NewValue) const override;
 
 	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
+
+	virtual void PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data) override;
 };

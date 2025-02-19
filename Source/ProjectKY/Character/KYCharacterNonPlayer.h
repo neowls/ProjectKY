@@ -46,10 +46,15 @@ protected:
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
 	virtual void UpdateTargetedStatus(bool InStatus) override;
+
+	virtual void DropBountyItem();
 	
 protected:
 	UPROPERTY()
 	TObjectPtr<class UKYAttributeSetEnemy> AttributeSetEnemy;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UGameplayEffect> DropBountyEffect;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UKYWidgetComponent> HPBar;

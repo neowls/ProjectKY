@@ -59,8 +59,11 @@ void UKYRageBarUserWidget::OnRageChanged(const FOnAttributeChangeData& ChangeDat
 
 void UKYRageBarUserWidget::OnMaxRageChanged(const FOnAttributeChangeData& ChangeData)
 {
-	MaxCell = ChangeData.NewValue;
+	CurrentMaxRage = ChangeData.NewValue;
+	CreateWidgets();
 	UpdateRageBar();
+
+	KY_LOG(LogKY, Log, TEXT("Max Rage: %f"), CurrentMaxRage);
 }
 
 void UKYRageBarUserWidget::UpdateRageBar()

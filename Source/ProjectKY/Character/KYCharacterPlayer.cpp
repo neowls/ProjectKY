@@ -41,6 +41,8 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	GetMesh()->SetSkeletalMesh(CharacterMesh);
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;	// 이동 방향으로 캐릭터가 회전한다.
+
+	InitializeObjectFinder(PlayerLevelCurveTable, TEXT("/Game/_Dev/DataAsset/PlayerLevelStatTable.PlayerLevelStatTable"));
 	
 	ItemTriggerComp = CreateDefaultSubobject<USphereComponent>(TEXT("DropCollectTrigger"));
 	InteractTriggerComp = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractTrigger"));
@@ -74,6 +76,8 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 		{
 			AttributeSetPlayer->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);	// 사망 델리게이트 바인딩
 			AttributeSetPlayer->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
+			
+			AttributeSetPlayer->PlayerLevelCurveTable = PlayerLevelCurveTable;
 		}
 		
 		
@@ -151,9 +155,6 @@ void AKYCharacterPlayer::GiveStartAbilities()
 
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 {
-	if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNMOVABLE) || ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNSTABLE)) return;	// 해당 태그 부착시 캐릭터 이동 제한
-	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr) && !ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_MOVEMONTAGEENABLED)) GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	// 재생중인 몽타주가 있다면 중단한다.
-	
 	FVector2D MovementVector = Value.Get<FVector2d>(); // X, Y 입력 벡터 저장
 	
 	float MovementVectorSize = 1.0f;
@@ -170,8 +171,20 @@ void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 	
 	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.0f);	// 이동 방향 벡터 연산
 	MoveDirection = RotationOffset.RotateVector(MoveDirection);
+
+	if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNMOVABLE) || ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNSTABLE)) return;	// 해당 태그 부착시 캐릭터 이동 제한
+	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr) && !ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_MOVEMONTAGEENABLED)) GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	// 재생중인 몽타주가 있다면 중단한다.
 	
 	AddMovementInput(MoveDirection, MovementVectorSize);
+}
+
+FVector AKYCharacterPlayer::GetInputDirection() const
+{
+	if (GetCharacterMovement()->GetCurrentAcceleration().IsZero())
+	{
+		return GetActorForwardVector();
+	}
+	return RotationOffset.RotateVector(GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D());
 }
 
 

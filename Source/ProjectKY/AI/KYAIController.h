@@ -32,6 +32,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI")
 	bool bIsAutoTarget;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AI", meta = (AllowPrivateAccess = "true"))
+	UBlackboardComponent* BlackboardComponent;
+	
 	
 private:
 	UPROPERTY()

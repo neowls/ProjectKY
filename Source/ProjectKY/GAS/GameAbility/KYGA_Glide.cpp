@@ -16,7 +16,7 @@ bool UKYGA_Glide::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
 	bool Result = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
-	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(GetAvatarActorFromActorInfo());
+	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(ActorInfo->AvatarActor);
 	if (Character)
 	{
 		Result = Character->GetCharacterMovement()->Velocity.Z < 0.0f;
@@ -29,7 +29,7 @@ void UKYGA_Glide::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	KY_LOG(LogKY, Log, TEXT("Activate"));
-	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(GetAvatarActorFromActorInfo());
+	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(ActorInfo->AvatarActor);
 	if (Character)
 	{
 		Character->GlideShowWingStatus(true);

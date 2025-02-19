@@ -53,7 +53,7 @@ void UKYAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffect
 		if (InDamageDone > 0.0f)
 		{
 			
-			bool IsFrontAttack = UKYBlueprintFunctionLibrary::GetAngleToTarget(GetActorInfo()->AvatarActor->GetActorLocation(), GetActorInfo()->AvatarActor->GetActorForwardVector(), Data.EffectSpec.GetEffectContext().GetEffectCauser()->GetActorLocation()) < 90.0f;
+			bool IsFrontAttack = UKYBlueprintFunctionLibrary::GetAngleFromTarget(GetActorInfo()->AvatarActor->GetActorLocation(), GetActorInfo()->AvatarActor->GetActorForwardVector(), Data.EffectSpec.GetEffectContext().GetEffectCauser()->GetActorLocation()) < 90.0f;
 			
 			bool IsParryState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISPARRY) && IsFrontAttack;
 			bool IsGuardState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGUARD) && IsFrontAttack;

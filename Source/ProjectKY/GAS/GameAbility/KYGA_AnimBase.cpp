@@ -40,10 +40,7 @@ void UKYGA_AnimBase::PlayAnimMontageTask()
 	{
 		KY_LOG(LogKY, Warning, TEXT("%s Tag Has No Anim Montage."), *AbilityTag.GetTagName().ToString());
 	}
-
-	KY_LOG(LogKY, Warning, TEXT("Montage Name : %s"), *GetNameSafe(PlayEventMontageData.Montage));
-	KY_LOG(LogKY, Warning, TEXT("Tag Name : %s"), *PlayEventMontageData.EventTag.GetTagName().ToString());
-
+	
 	UKYAT_PlayMontageAndWaitForEvent* PMT = UKYAT_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(this, PlayEventMontageData);
 
 	PMT->OnCompleted.AddDynamic(this, &ThisClass::OnSimpleCompleteEventCallback);

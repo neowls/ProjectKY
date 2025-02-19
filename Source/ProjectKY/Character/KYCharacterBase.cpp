@@ -59,8 +59,7 @@ void AKYCharacterBase::DamageTaken(AActor* DamageInstigator, AActor* DamageCause
 		EventDataToReceiver.Instigator = DamageCauser;
 		EventDataToReceiver.EventTag = InGameplayTag;
 		EventDataToReceiver.EventMagnitude = Damage;
-
-		KY_LOG(LogKY, Log, TEXT("Damage : %f"), Damage);
+		
 		if (Damage < 0.0f)
 		{
 			EventDataToReceiver.EventTag = KYTAG_CHARACTER_ATTACK_BLOCKED;

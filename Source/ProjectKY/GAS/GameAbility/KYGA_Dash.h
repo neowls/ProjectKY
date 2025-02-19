@@ -18,4 +18,17 @@ public:
 	UKYGA_Dash();
 
 protected:
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	
+	virtual void OnSimpleInterruptedCallback_Implementation() override;
+
+	virtual void OnSimpleCompleteCallback_Implementation() override;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ability)
+	float DashSpeed;
+
+private:
+	void PrepareDash(ACharacter* Character);
+	void RestoreDash(ACharacter* Character);
 };

@@ -12,12 +12,18 @@ AKYAIController::AKYAIController()
 {
 	InitializeObjectFinder(BBAsset, TEXT("/Game/_Dev/AI/BB_Enemy.BB_Enemy"));
 	InitializeObjectFinder(BTAsset, TEXT("/Game/_Dev/AI/BT_Enemy.BT_Enemy"));
+	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("Blackboard"));
 	bIsAutoTarget = true;
 }
 
 void AKYAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+	if (!InPawn)
+	{
+		KY_LOG(LogKY, Warning, TEXT("Pawn is Null"));
+		return;
+	}
 	RunAI();
 }
 
@@ -29,19 +35,36 @@ void AKYAIController::OnUnPossess()
 
 void AKYAIController::RunAI()
 {
+	KY_LOG(LogKY, Log, TEXT("Run AI"));
 	UBlackboardComponent* BBComponent = Blackboard.Get();
+
+	if (!BBComponent)
+	{
+		KY_LOG(LogKY, Warning, TEXT("Blackboard is Null"));
+		return;
+	}
 	
 	if(UseBlackboard(BBAsset, BBComponent))
 	{
-		
+		bool RunResult = RunBehaviorTree(BTAsset);
+
 		if (bIsAutoTarget)
 		{
-			Blackboard->SetValueAsObject(BBKEY_TARGET, GetWorld()->GetFirstPlayerController()->GetPawn());
+			if (GetWorld()->GetFirstPlayerController() && GetWorld()->GetFirstPlayerController()->GetPawn())
+			{
+				Blackboard->SetValueAsObject(BBKEY_TARGET, GetWorld()->GetFirstPlayerController()->GetPawn());
+			}
+			else
+			{
+				KY_LOG(LogKY, Warning, TEXT("Player Pawn is NULL"));
+			}
 		}
 		
-		bool RunResult = RunBehaviorTree(BTAsset);
-		
 		ensure(RunResult);
+	}
+	else
+	{
+		KY_LOG(LogKY, Warning, TEXT("Can't Access Blackboard"));
 	}
 }
 

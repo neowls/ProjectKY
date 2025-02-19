@@ -58,10 +58,10 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 	
 	ASC->InitAbilityActorInfo(this, this);
-
 	
 	AttributeSetEnemy->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);
 	AttributeSetEnemy->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
+	AttributeSetEnemy->DropBountyEffect = DropBountyEffect;
 	
 	InitializeStatEffect();
 	AttributeSetEnemy->InitDropGold(10.0f);
@@ -145,6 +145,11 @@ void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int3
 void AKYCharacterNonPlayer::UpdateTargetedStatus(bool InStatus)
 {
 	TargetedWidget->SetVisibility(InStatus);
+}
+
+void AKYCharacterNonPlayer::DropBountyItem()
+{
+	
 }
 
 

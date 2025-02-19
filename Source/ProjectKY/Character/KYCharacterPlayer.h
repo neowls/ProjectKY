@@ -23,6 +23,12 @@ public:
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void GlideShowWingStatus(bool InStatus);
+
+	UFUNCTION()
+	FVector GetInputDirection() const;
+
+	UFUNCTION()
+	FRotator GetRotationOffset() const { return RotationOffset; }
 	
 protected:
 	virtual void GiveStartAbilities() override;
@@ -41,6 +47,9 @@ protected:
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
 	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category=GAS)
+	TObjectPtr<class UCurveTable> PlayerLevelCurveTable;
 
 #pragma region INPUT
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
@@ -100,7 +109,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category=Debug)
 	bool bShowGASDebug = true;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FRotator RotationOffset = FRotator(0.0f, -45.0f, 0.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FVector InputDirection;
 
 };

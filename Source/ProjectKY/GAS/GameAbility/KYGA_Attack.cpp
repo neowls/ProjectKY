@@ -19,8 +19,7 @@ UKYGA_Attack::UKYGA_Attack()
 void UKYGA_Attack::OnSimpleEventReceivedCallback_Implementation(FGameplayEventData Payload)
 {
 	Super::OnSimpleEventReceivedCallback_Implementation(Payload);
-	KY_LOG(LogKY, Log, TEXT("Tag : %s"), *Payload.EventTag.GetTagName().ToString());
-	
+
 	if(IsValid(AttackGameplayEffect[CurrentAttackIndex]))
 	{
 		ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, AttackGameplayEffect[CurrentAttackIndex], CurrentAttackIndex + 1.0f);

@@ -41,6 +41,7 @@
 #define KYTAG_EVENT_COMBO_AVAILABLE FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.ComboAvailable"))
 #define KYTAG_EVENT_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.AttackHitCheck"))
 #define KYTAG_EVENT_SKILLHIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.SkillHitCheck"))
+#define KYTAG_EVENT_BOUNTY_EXPERIENCE FGameplayTag::RequestGameplayTag(FName("Event.Bounty.Experience"))
 
 #define KYTAG_EVENT_HIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit"))
 
