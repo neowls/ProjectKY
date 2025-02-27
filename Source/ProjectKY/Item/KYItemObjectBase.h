@@ -6,6 +6,7 @@
 #include "AbilitySystemInterface.h"
 #include "KYItemObjectBase.generated.h"
 
+
 UCLASS()
 class PROJECTKY_API AKYItemObjectBase : public AActor, public IAbilitySystemInterface
 {
@@ -19,6 +20,15 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void ApplyEffectToTarget(float Magnitude);
+
+	UFUNCTION(BlueprintCallable)
+	void GrantAbilityToTarget();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void EventAbilityGranted();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void EventEffectGranted();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void SetTargetActor(AActor* InTargetActor);
@@ -35,7 +45,10 @@ protected:
 	TObjectPtr<class UStaticMeshComponent> Mesh;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=GAS)
-	TSubclassOf<class UGameplayEffect> EffectToApply;
+	TArray<TSubclassOf<class UGameplayEffect>> ApplyEffects;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category=GAS)
+	TArray<TSubclassOf<class UKYGameplayAbility>> GrantAbilities;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=GAS)
 	TObjectPtr<AActor> TargetActor;

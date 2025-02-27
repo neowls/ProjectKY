@@ -18,10 +18,12 @@ public:
 	UKYGA_Attack();
 	
 protected:
+	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
+	
 	virtual void OnSimpleEventReceivedCallback_Implementation(FGameplayEventData Payload) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TArray<TSubclassOf<UGameplayEffect>> AttackGameplayEffect;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UGameplayEffect> AttackGameplayEffect;
 	
 	uint8 CurrentAttackIndex;
 };

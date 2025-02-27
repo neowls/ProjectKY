@@ -3,7 +3,7 @@
 
 #include "Animation/ANS_KYActiveCollider.h"
 
-#include "Character/KYCharacterPlayer.h"
+#include "Character/KYCharacterBase.h"
 
 UANS_KYActiveCollider::UANS_KYActiveCollider()
 {
@@ -16,7 +16,8 @@ void UANS_KYActiveCollider::NotifyBegin(USkeletalMeshComponent* MeshComp, UAnimS
 	AKYCharacterBase* Character = Cast<AKYCharacterBase>(MeshComp->GetOwner());
 	if (Character)
 	{
-		Character->GetWeaponComponent()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		if (bIsRight) Character->SetWeaponCollisionState(EWeaponCollisionState::RightOn);
+		if (bIsLeft) Character->SetWeaponCollisionState(EWeaponCollisionState::LeftOn);
 	}
 }
 
@@ -26,7 +27,7 @@ void UANS_KYActiveCollider::NotifyEnd(USkeletalMeshComponent* MeshComp, UAnimSeq
 	AKYCharacterBase* Character = Cast<AKYCharacterBase>(MeshComp->GetOwner());
 	if (Character)
 	{
-		Character->GetWeaponComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		Character->ClearIgnoreActors();
+		if (bIsRight) Character->SetWeaponCollisionState(EWeaponCollisionState::RightOff);
+		if (bIsLeft) Character->SetWeaponCollisionState(EWeaponCollisionState::LeftOff);
 	}
 }

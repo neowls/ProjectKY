@@ -29,6 +29,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float InterpSpeed;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ApplyDistance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	bool bIsHoldPosition;
+
 private:
 	bool bIsApplied;
 };

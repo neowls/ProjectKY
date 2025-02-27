@@ -21,6 +21,7 @@ UKYGA_Aiming::UKYGA_Aiming()
 	bIsTargeting = false;
 	TargetedActor = nullptr;
 	bPassiveAbility = false;
+	bInputAbility = true;
 }
 
 void UKYGA_Aiming::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

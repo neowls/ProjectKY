@@ -3,10 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayAbilitySpecHandle.h"
 #include "Character/KYCharacterBase.h"
 #include "InputActionValue.h"
 #include "KYCharacterPlayer.generated.h"
 
+
+class UKYGameplayAbility;
 class UInputAction;
 
 UCLASS()
@@ -20,33 +23,38 @@ public:
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void SetupGASInputComponent();
+
+	virtual void GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass) override;
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void GlideShowWingStatus(bool InStatus);
 
-	UFUNCTION()
-	FVector GetInputDirection() const;
+	UFUNCTION(Category="Input", meta=(BlueprintThreadSafe))
+	FORCEINLINE FVector GetInputDirection() const;
 
-	UFUNCTION()
-	FRotator GetRotationOffset() const { return RotationOffset; }
+	UFUNCTION(Category="Camera", meta=(BlueprintThreadSafe))
+	FORCEINLINE FRotator GetRotationOffset() const { return RotationOffset; }
+
 	
-protected:
-	virtual void GiveStartAbilities() override;
-
+protected: 
 	void Move(const FInputActionValue& Value);
 	void Rotate(const FInputActionValue& Value);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void InteractObject();
+
 	
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
 
+	void GASInputPressed(FGameplayTag InputTag);
+	void GASInputReleased(FGameplayTag InputTag);
+
 	virtual void SetDead() override;
 
 protected:
-	UPROPERTY(EditAnywhere, Category=GAS)
-	TMap<int32, TSubclassOf<class UGameplayAbility>> StartInputAbilities;
+	UPROPERTY()
+	TMap<FGameplayTag, FGameplayAbilitySpecHandle> AbilitiesTagMap;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category=GAS)
 	TObjectPtr<class UCurveTable> PlayerLevelCurveTable;
@@ -112,7 +120,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FRotator RotationOffset = FRotator(0.0f, -45.0f, 0.0f);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	FVector InputDirection;
+private:
+	UPROPERTY()
+	TSet<int32> OwnAbilityId;
 
 };

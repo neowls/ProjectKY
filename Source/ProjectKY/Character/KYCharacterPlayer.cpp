@@ -4,17 +4,18 @@
 #include "Character/KYCharacterPlayer.h"
 #include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputMappingContext.h"
-#include "ProjectKY.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
 #include "GAS/Attribute/KYAttributeSetPlayer.h"
 #include "GAS/Tag/KYGameplayTag.h"
+#include "GAS/GameAbility/KYGameplayAbility.h"
 #include "Player/KYPlayerState.h"
+#include "ProjectKY.h"
 
 
 AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializer)
@@ -33,13 +34,7 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	InitializeObjectFinder(UpperAttackAction, TEXT("/Game/_Dev/Input/IA_UpperAttack.IA_UpperAttack"));
 	InitializeObjectFinder(RangeAttackAction, TEXT("/Game/_Dev/Input/IA_RangeAttack.IA_RangeAttack"));
 	InitializeObjectFinder(DefaultContext, TEXT("/Game/_Dev/Input/IMC_Player.IMC_Player"));
-
-	TObjectPtr<USkeletalMesh> CharacterMesh = nullptr;
-	ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(TEXT("/Game/NO_Cooking/Animation/GreatSword/Mannequin/Character/Mesh/SK_Mannequin"));
-	if (MeshFinder.Succeeded())	CharacterMesh = MeshFinder.Object;
 	
-	GetMesh()->SetSkeletalMesh(CharacterMesh);
-
 	GetCharacterMovement()->bOrientRotationToMovement = true;	// 이동 방향으로 캐릭터가 회전한다.
 
 	InitializeObjectFinder(PlayerLevelCurveTable, TEXT("/Game/_Dev/DataAsset/PlayerLevelStatTable.PlayerLevelStatTable"));
@@ -54,13 +49,12 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	InteractTriggerComp->SetupAttachment(RootComponent);
 	SpringArmComp->SetupAttachment(RootComponent);
 	CameraComp->SetupAttachment(SpringArmComp);
-	WeaponComp->SetupAttachment(GetMesh(), TEXT("ik_hand_r"));
-
+	
 	
 	SpringArmComp->bInheritPitch = false;
 	SpringArmComp->bInheritYaw = false;
 	SpringArmComp->bInheritRoll = false;
-	SpringArmComp->TargetArmLength = 800;
+	SpringArmComp->TargetArmLength = 600;
 	SpringArmComp->SetRelativeRotation(FRotator(0.0f, -50.0f, RotationOffset.Yaw));
 }
 
@@ -80,10 +74,11 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 			AttributeSetPlayer->PlayerLevelCurveTable = PlayerLevelCurveTable;
 		}
 		
-		
 		InitializeStatEffect();
-		GiveStartAbilities();
+		GrantStartAbilities();
 		SetupGASInputComponent();
+
+		ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.IsCombat).AddUObject(this, &ThisClass::OnCombatState);
 
 		APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
 		if (bShowGASDebug)
@@ -113,52 +108,49 @@ void AKYCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	SetupGASInputComponent();
 }
 
-
 void AKYCharacterPlayer::SetupGASInputComponent()
 {
 	if(IsValid(ASC) && IsValid(InputComponent))
 	{
 		UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent);
 		
-		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 0);
-		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 0);
-		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 1);
-		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 1);
-		EnhancedInputComponent->BindAction(LightAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 2);	// 하나는 지상, 하나는 공중 공격 어빌리티
-		EnhancedInputComponent->BindAction(LightAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 3);
-		EnhancedInputComponent->BindAction(HeavyAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 4);
-		EnhancedInputComponent->BindAction(UpperAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 5);
-		EnhancedInputComponent->BindAction(RangeAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 6);
-		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 7);
-		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 8);
-		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 8);
-		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 9);
-		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 11);
-		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, 12);
-		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, 12);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Common_Jump);
+		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, UKYGameplayTags::Data.Ability_Common_Jump);
+		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_DoubleJump);
+		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Glide);
+		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, UKYGameplayTags::Data.Ability_Player_Glide);
+		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Focus);
+		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, UKYGameplayTags::Data.Ability_Player_Focus);
+		EnhancedInputComponent->BindAction(LightAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Light);
+		EnhancedInputComponent->BindAction(LightAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Air); // Air Attack Ability
+		EnhancedInputComponent->BindAction(HeavyAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Heavy);
+		EnhancedInputComponent->BindAction(UpperAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Upper);
+		EnhancedInputComponent->BindAction(RangeAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Range);
+		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Special);
+		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Dash);
+		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Guard);
+		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, UKYGameplayTags::Data.Ability_Player_Guard);
 	}
 }
 
-void AKYCharacterPlayer::GiveStartAbilities()
+FVector AKYCharacterPlayer::GetInputDirection() const
 {
-	Super::GiveStartAbilities();
-	
-	for (const auto& StartInputAbility : StartInputAbilities)		// 입력 어빌리티 부여
+	if (GetCharacterMovement()->GetCurrentAcceleration().IsZero())
 	{
-		FGameplayAbilitySpec StartSpec(StartInputAbility.Value);
-		StartSpec.InputID = StartInputAbility.Key;
-		ASC->GiveAbility(StartSpec);
+		return GetActorForwardVector();
 	}
+	return RotationOffset.RotateVector(GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D());
 }
-
-
 
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 {
+	if(ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.Unmovable) || ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.Unstable)) return;	// 해당 태그 부착시 캐릭터 이동 제한
+	
 	FVector2D MovementVector = Value.Get<FVector2d>(); // X, Y 입력 벡터 저장
 	
 	float MovementVectorSize = 1.0f;
 	float MovementVectorSizeSquared = MovementVector.SizeSquared();		// 이동 속도 제곱 연산
+	
 	if(MovementVectorSizeSquared > 1.0f)	// 조이 스틱 사용시 1.0f 아래의 미세값들을 위한 연산
 	{
 		MovementVector.Normalize(); // 이동 벡터 정규화
@@ -172,25 +164,18 @@ void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 	FVector MoveDirection = FVector(MovementVector.X, MovementVector.Y, 0.0f);	// 이동 방향 벡터 연산
 	MoveDirection = RotationOffset.RotateVector(MoveDirection);
 
-	if(ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNMOVABLE) || ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_UNSTABLE)) return;	// 해당 태그 부착시 캐릭터 이동 제한
-	if(GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr) && !ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_MOVEMONTAGEENABLED)) GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	// 재생중인 몽타주가 있다면 중단한다.
+	bool bIsPlayingMontage = GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr);
+	if(bIsPlayingMontage && !ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.MoveMontageEnabled)) // 재생중인 몽타주가 있다면 중단한다.
+	{
+		GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	
+	}
 	
 	AddMovementInput(MoveDirection, MovementVectorSize);
 }
 
-FVector AKYCharacterPlayer::GetInputDirection() const
-{
-	if (GetCharacterMovement()->GetCurrentAcceleration().IsZero())
-	{
-		return GetActorForwardVector();
-	}
-	return RotationOffset.RotateVector(GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D());
-}
-
-
 void AKYCharacterPlayer::Rotate(const FInputActionValue& Value)		// 태그가 있는 동안 입력 방향으로 캐릭터가 회전한다.
 {
-	if(!ASC->HasMatchingGameplayTag(KYTAG_CHARACTER_ROTABLE)) return;
+	if(!ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsRotable)) return;
 	FVector2D MovementVector = Value.Get<FVector2d>();
 
 	FVector Direction = FVector(MovementVector.X, MovementVector.Y, 0.0f);
@@ -204,7 +189,6 @@ void AKYCharacterPlayer::Rotate(const FInputActionValue& Value)		// 태그가 �
 		SetActorRotation(NewRotation);
 	}
 }
-
 
 void AKYCharacterPlayer::GASInputPressed(int32 InputId)		// 입력시 어빌리티 InputID에 맞게 발동시킨다.
 {
@@ -235,6 +219,64 @@ void AKYCharacterPlayer::GASInputReleased(int32 InputId)
 		}
 	}
 }
+
+void AKYCharacterPlayer::GASInputPressed(FGameplayTag InputTag)
+{
+	if (!AbilitiesTagMap.Contains(InputTag)) return;
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(AbilitiesTagMap[InputTag]);
+	if (Spec)
+	{
+		Spec->InputPressed = true;
+		if (Spec->IsActive())
+		{
+			ASC->AbilitySpecInputPressed(*Spec);
+		}
+		else
+		{
+			ASC->TryActivateAbility(Spec->Handle);
+		}
+	}
+}
+
+void AKYCharacterPlayer::GASInputReleased(FGameplayTag InputTag)
+{
+	if (!AbilitiesTagMap.Contains(InputTag)) return;
+	FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(AbilitiesTagMap[InputTag]);
+	if(Spec)
+	{
+		Spec->InputPressed = false;
+		if(Spec->IsActive())
+		{
+			ASC->AbilitySpecInputReleased(*Spec);
+		}
+	}
+}
+
+void AKYCharacterPlayer::GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass)
+{
+	if (!IsValid(NewAbilityClass)) return;
+	if (ASC->FindAbilitySpecFromClass(NewAbilityClass)) return; // 이미 보유중인 어빌리티인 경우
+
+	UKYGameplayAbility* AbilityDefaultObject = NewAbilityClass.GetDefaultObject();
+	if (!AbilityDefaultObject) return;	// 어빌리티 클래스가 유효하지 않은 경우
+	
+	FGameplayAbilitySpec NewAbilitySpec(NewAbilityClass);
+
+	FGameplayAbilitySpecHandle Handle = ASC->GiveAbility(NewAbilitySpec);
+	
+	if (AbilityDefaultObject->AbilityTags.HasTag(UKYGameplayTags::Data.Data)) // 데이터 태그를 가지고 있는지 확인
+	{
+		for (const FGameplayTag& Tag : AbilityDefaultObject->AbilityTags)
+		{
+			if (Tag.MatchesTag(UKYGameplayTags::Data.Data)) // 가지고 있다면 태그-스펙핸들 맵에 추가
+			{
+				AbilitiesTagMap.Add(Tag, Handle);
+				break;
+			}
+		}
+	}
+}
+
 
 void AKYCharacterPlayer::SetDead()
 {

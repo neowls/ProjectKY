@@ -17,11 +17,13 @@ UKYAnimInstance::UKYAnimInstance()
 	bHasVelocity = false;
 	bIsSprint = false;
 	bIsJumping = false;
+	bIsDoubleJump = false;
 	bIsFalling = false;
 	bIsGliding = false;
 	bIsOnGround = true;
 	bIsFocus = false;
 	bIsKnockDown = false;
+	bIsCombat = false;
 
 	GroundSpeed = 0.f;
 	
@@ -56,36 +58,45 @@ void UKYAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 void UKYAnimInstance::UpdateCharacterMovement()
 {
 	const FRotator WorldRotation = Owner->GetActorRotation();
-	
 	WorldVelocity = Owner->GetVelocity();
 	const FVector WorldVelocity2D = FVector(WorldVelocity.X, WorldVelocity.Y, 0.0f);
-
-	WorldVelocityDirectionAngle = UKismetAnimationLibrary::CalculateDirection(WorldVelocity2D, WorldRotation);
 	
-	LocalVelocity2D = WorldRotation.UnrotateVector(WorldVelocity2D);
-	LocalVelocityDirectionAngle = UKismetAnimationLibrary::CalculateDirection(LocalVelocity2D, WorldRotation);
 	GroundSpeed = WorldVelocity2D.Size();
-	bHasVelocity = !UKismetMathLibrary::NearlyEqual_FloatFloat(UKismetMathLibrary::VSizeXYSquared(LocalVelocity2D), 0.0f);
-
+	bHasVelocity = WorldVelocity2D.SquaredLength() > KINDA_SMALL_NUMBER;
+	
+	WorldVelocityDirectionAngle = UKismetAnimationLibrary::CalculateDirection(WorldVelocity2D, WorldRotation);
+	LocalVelocity2D = WorldRotation.UnrotateVector(WorldVelocity2D);
+	
+	if(bHasVelocity)
+	{
+		LocalVelocityDirectionAngle = UKismetAnimationLibrary::CalculateDirection(LocalVelocity2D, WorldRotation);
+	}
+	
 	const FVector WorldAcceleration2D = Owner->GetCharacterMovement()->GetCurrentAcceleration() * FVector(1.0f, 1.0f, 0.0f);
 	LocalAcceleration2D = WorldRotation.UnrotateVector(WorldAcceleration2D);
-	LocalAccelerationDirectionAngle = UKismetAnimationLibrary::CalculateDirection(WorldAcceleration2D, WorldRotation);
-	bHasAcceleration = !UKismetMathLibrary::NearlyEqual_FloatFloat(LocalAcceleration2D.SizeSquared2D(), 0.0);
-
+	bHasAcceleration = LocalAcceleration2D.SquaredLength() > KINDA_SMALL_NUMBER;
 	
+	if(bHasAcceleration)
+	{
+		LocalAccelerationDirectionAngle = UKismetAnimationLibrary::CalculateDirection(WorldAcceleration2D, WorldRotation);
+	}
 }
 
 void UKYAnimInstance::UpdateCharacterState()
 {
 	UCharacterMovementComponent* CharacterMovementComponent = Owner->GetCharacterMovement();
+	UAbilitySystemComponent* ASC = Owner->GetAbilitySystemComponent();
 	
 	bIsOnGround = CharacterMovementComponent->IsMovingOnGround();
-	bIsKnockDown = Owner->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISKNOCKDOWN);
 	bIsFalling = CharacterMovementComponent->IsFalling();
+	
 	bIsJumping = bIsFalling && WorldVelocity.Z > 0.f;
-	bIsGliding = Owner->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGLIDING);
+	bIsDoubleJump = Owner->JumpCurrentCount > 1 && bIsJumping;
+	bIsCombat = Owner->GetIsCombat();
 	TimeToJumpApex = bIsJumping ? -WorldVelocity.Z / CharacterMovementComponent->GetGravityZ() : 0.f;
 
-	bIsFocus = Owner->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFOCUS);
+	bIsFocus = ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsFocusing);
+	bIsGliding = ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsGliding);
+	bIsKnockDown = ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsKnockDown);
 	//bIsSprint = Get Sprint Logic
 }

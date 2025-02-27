@@ -86,6 +86,12 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	uint8 bIsKnockDown : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = State)
+	uint8 bIsCombat : 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = State)
+	uint8 bIsDoubleJump : 1;
 	
 	UPROPERTY(BlueprintReadOnly, Category = State)
 	float TimeToJumpApex;

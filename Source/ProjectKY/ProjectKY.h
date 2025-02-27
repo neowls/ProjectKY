@@ -60,3 +60,4 @@ static void InitializeClassFinder(TSubclassOf<T>& Ref, const FString& Path)
 	}
 }
 
+

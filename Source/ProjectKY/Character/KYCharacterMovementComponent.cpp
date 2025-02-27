@@ -19,27 +19,27 @@ void UKYCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const 
 	
 	if(CharacterBase)
 	{
-		if (IsFalling() && !CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
+		if (IsFalling() && !CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsFalling))
 		{
-			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(KYTAG_CHARACTER_ISFALLING);
+			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsFalling);
 		}
 		
-		else if (!IsFalling() && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISFALLING))
+		else if (!IsFalling() && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsFalling))
 		{
-			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISFALLING);
+			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsFalling);
 		}
 
-		if (Velocity.Z > 0.f && !CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISJUMPING))
+		if (Velocity.Z > 0.f && !CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
 		{
-			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(KYTAG_CHARACTER_ISJUMPING);
+			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
 		}
 
-		else if (Velocity.Z < 0.f && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISJUMPING))
+		else if (Velocity.Z < 0.f && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
 		{
-			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISJUMPING);
+			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
 		}
 		
-		if (CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGLIDING))
+		if (CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsGliding))
 		{
 			Velocity.Z = FMath::Clamp(Velocity.Z, -MaxFallingSpeed, 1200.0f);
 		}

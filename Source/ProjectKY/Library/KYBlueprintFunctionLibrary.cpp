@@ -3,6 +3,8 @@
 
 #include "Library/KYBlueprintFunctionLibrary.h"
 
+#include "Kismet/GameplayStatics.h"
+
 
 float UKYBlueprintFunctionLibrary::GetAngleFromTarget(const FVector& OriginLocation, const FVector& OriginForwardVector, const FVector& TargetLocation)
 {

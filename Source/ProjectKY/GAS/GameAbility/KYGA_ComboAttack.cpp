@@ -28,10 +28,10 @@ void UKYGA_ComboAttack::InputPressed(const FGameplayAbilitySpecHandle Handle, co
 {
 	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo_Checked();
-	if (SourceASC->GetOwnedGameplayTags().HasTagExact(KYTAG_EVENT_COMBO_AVAILABLE) && !HasNextComboInput)
+	if (SourceASC->GetOwnedGameplayTags().HasTagExact(UKYGameplayTags::Event.Combo_Available) && !HasNextComboInput)
 	{
 		HasNextComboInput = true;
-		UAbilityTask_WaitGameplayTagRemoved* ComboValidTask = UAbilityTask_WaitGameplayTagRemoved::WaitGameplayTagRemove(this, KYTAG_EVENT_COMBO_AVAILABLE);
+		UAbilityTask_WaitGameplayTagRemoved* ComboValidTask = UAbilityTask_WaitGameplayTagRemoved::WaitGameplayTagRemove(this, UKYGameplayTags::Event.Combo_Available);
 		ComboValidTask->Removed.AddDynamic(this, &UKYGA_ComboAttack::InputCallback);
 		ComboValidTask->ReadyForActivation();
 	}
@@ -56,6 +56,7 @@ void UKYGA_ComboAttack::StartNextCombo()
 	if (HasNextComboInput)
 	{
 		MontageJumpToSection(GetNextSection());
+		if (bIsCombatAbility) ApplyCombatEffect();
 		HasNextComboInput = false;
 	}
 }

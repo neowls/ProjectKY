@@ -55,8 +55,8 @@ void UKYAttributeSetBase::PostGameplayEffectExecute(const struct FGameplayEffect
 			
 			bool IsFrontAttack = UKYBlueprintFunctionLibrary::GetAngleFromTarget(GetActorInfo()->AvatarActor->GetActorLocation(), GetActorInfo()->AvatarActor->GetActorForwardVector(), Data.EffectSpec.GetEffectContext().GetEffectCauser()->GetActorLocation()) < 90.0f;
 			
-			bool IsParryState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISPARRY) && IsFrontAttack;
-			bool IsGuardState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGUARD) && IsFrontAttack;
+			bool IsParryState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsParry) && IsFrontAttack;
+			bool IsGuardState = GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsGuard) && IsFrontAttack;
 			
 			if (OnDamageTaken.IsBound())	// 만약 델리게이트 바인딩 된 게 있다면 실행
 			{

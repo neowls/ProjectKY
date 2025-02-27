@@ -5,8 +5,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
-#include "GAS/Tag/KYGameplayTag.h"
-#include "Kismet/GameplayStatics.h"
+#include "Character/KYCharacterBase.h"
 
 class UAbilityTask_WaitGameplayEvent;
 
@@ -14,20 +13,28 @@ UKYGA_Attack::UKYGA_Attack()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	CurrentAttackIndex = 0;
+	bIsCombatAbility = true;
+	bInputAbility = true;
 }
+
+bool UKYGA_Attack::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+{
+	bool Result = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
+
+	if (Cast<AKYCharacterBase>(ActorInfo->AvatarActor)->GetCurrentWeaponType() == EWeaponType::None) Result = false;
+	return Result;
+}
+
 
 void UKYGA_Attack::OnSimpleEventReceivedCallback_Implementation(FGameplayEventData Payload)
 {
 	Super::OnSimpleEventReceivedCallback_Implementation(Payload);
 
-	if(IsValid(AttackGameplayEffect[CurrentAttackIndex]))
+	if(IsValid(AttackGameplayEffect))
 	{
-		ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, AttackGameplayEffect[CurrentAttackIndex], CurrentAttackIndex + 1.0f);
-		
-		FTimerHandle SlowTimer;
-		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.1f);
-		GetWorld()->GetTimerManager().SetTimer(SlowTimer, [this]() { UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1); }, 0.005f, false);
-			
+		// ReSharper disable once CppExpressionWithoutSideEffects
+		ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, Payload.TargetData, AttackGameplayEffect, CurrentAttackIndex + 1.0f);
 	}
 	else
 	{

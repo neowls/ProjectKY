@@ -10,7 +10,8 @@
 
 UKYGA_SimpleDamageReaction::UKYGA_SimpleDamageReaction()
 {
-	
+	bIsCombatAbility = true;
+	bInputAbility = false;
 }
 
 void UKYGA_SimpleDamageReaction::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -20,15 +21,15 @@ void UKYGA_SimpleDamageReaction::ActivateAbility(const FGameplayAbilitySpecHandl
 	const FVector TargetLocation = TriggerEventData->Instigator->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation();
 	GetAvatarActorFromActorInfo()->SetActorRotation(TargetLocation.Rotation());
 
-	if(!TriggerEventData->EventTag.MatchesTag(KYTAG_CHARACTER_ATTACK_PARRY)) CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Character.Hit.Light"));
+	if(!TriggerEventData->EventTag.MatchesTag(UKYGameplayTags::CharacterState.IsParry)) CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Character.Hit.Light"));
 }
 
 void UKYGA_SimpleDamageReaction::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISSTAGGERED))
+	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsStaggered))
 	{
-		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(KYTAG_CHARACTER_ISSTAGGERED, 99);
+		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsStaggered, 99);
 	}
 }

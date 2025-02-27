@@ -1,51 +1,109 @@
 ﻿#pragma once
 
 #include "GameplayTagContainer.h"
+#include "KYGameplayTag.generated.h"
 
-#define KYTAG_DATA_DAMAGE FGameplayTag::RequestGameplayTag(FName("Data.Damage"))
-
-#define KYTAG_CHARACTER_ATTACK FGameplayTag::RequestGameplayTag(FName("Character.State.Attack"))
-#define KYTAG_CHARACTER_ATTACK_LIGHT FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Light"))
-#define KYTAG_CHARACTER_ATTACK_HEAVY FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Heavy"))
-#define KYTAG_CHARACTER_ATTACK_UPPER FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Upper"))
-#define KYTAG_CHARACTER_ATTACK_SLAM FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Slam"))
-#define KYTAG_CHARACTER_ATTACK_GRAB FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Grab"))
-#define KYTAG_CHARACTER_ATTACK_BLAST FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Blast"))
-#define KYTAG_CHARACTER_ATTACK_PARRY FGameplayTag::RequestGameplayTag(FName("Character.State.Attack.Parry"))
-
-#define KYTAG_CHARACTER_ATTACK_BLOCKED FGameplayTag::RequestGameplayTag(FName("Character.State.IsBlocked"))
-
-#define KYTAG_CHARACTER_UNMOVABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable"))
-#define KYTAG_CHARACTER_UNSTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable"))
-#define KYTAG_CHARACTER_EXECUTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Executable"))
-#define KYTAG_CHARACTER_ISDEAD FGameplayTag::RequestGameplayTag(FName("Character.State.IsDead"))
-#define KYTAG_CHARACTER_ISGLIDING FGameplayTag::RequestGameplayTag(FName("Character.State.IsGliding"))
-#define KYTAG_CHARACTER_ISFOCUS FGameplayTag::RequestGameplayTag(FName("Character.State.IsFocusing"))
-#define KYTAG_CHARACTER_ISSKILLING FGameplayTag::RequestGameplayTag(FName("Character.State.IsSkilling"))
-#define KYTAG_CHARACTER_UNSTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable"))
-#define KYTAG_CHARACTER_ISKNOCKDOWN FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsKnockDown"))
-#define KYTAG_CHARACTER_ISKNOCKOUT FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsKnockOut"))
-#define KYTAG_CHARACTER_ISSTAGGERED FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsStaggered"))
-#define KYTAG_CHARACTER_ISATTACKING FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsAttacking"))
-#define KYTAG_CHARACTER_ISDASH FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsDash"))
-#define KYTAG_CHARACTER_ISGUARD FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsGuard"))
-#define KYTAG_CHARACTER_ISPARRY FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsParry"))
-#define KYTAG_CHARACTER_INVINCIBLE FGameplayTag::RequestGameplayTag(FName("Character.State.Invincible"))
-#define KYTAG_CHARACTER_ROTABLE FGameplayTag::RequestGameplayTag(FName("Character.State.IsRotable"))
-#define KYTAG_CHARACTER_ISFALLING FGameplayTag::RequestGameplayTag(FName("Character.State.IsFalling"))
-#define KYTAG_CHARACTER_ISJUMPING FGameplayTag::RequestGameplayTag(FName("Character.State.IsJumping"))
-#define KYTAG_CHARACTER_ISGUARDEND FGameplayTag::RequestGameplayTag(FName("Character.State.IsGuardEnd"))
-#define KYTAG_CHARACTER_MOVEMONTAGEENABLED FGameplayTag::RequestGameplayTag(FName("Character.State.MoveMontageEnabled"))
-
-
-#define KYTAG_EVENT_COMBO_AVAILABLE FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.ComboAvailable"))
-#define KYTAG_EVENT_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.AttackHitCheck"))
-#define KYTAG_EVENT_SKILLHIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.SkillHitCheck"))
-#define KYTAG_EVENT_BOUNTY_EXPERIENCE FGameplayTag::RequestGameplayTag(FName("Event.Bounty.Experience"))
-
-#define KYTAG_EVENT_HIT FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit"))
-
-
-#define GAMEPLAYCUE_CHARACTER_ATTACKHIT FGameplayTag::RequestGameplayTag(FName("GameplayCue.Character.AttackHit"))
-
-#define KYTAG_DATA FGameplayTag::RequestGameplayTag(FName("Data"))
+UCLASS()
+class PROJECTKY_API UKYGameplayTags : public UObject
+{
+    GENERATED_BODY()
+    
+public:
+    // 초기화 함수 - 게임 시작 시 호출
+    static void InitializeTags();
+    
+    // 캐릭터 상태 태그
+    struct FCharacterStateTags
+    {
+        static const FGameplayTag Attack;
+        static const FGameplayTag Attack_Light;
+        static const FGameplayTag Attack_Heavy;
+        static const FGameplayTag Attack_Upper;
+        static const FGameplayTag Attack_Slam;
+        static const FGameplayTag Attack_Grab;
+        static const FGameplayTag Attack_Blast;
+        static const FGameplayTag Attack_Parry;
+        
+        static const FGameplayTag Attack_Blocked;
+        static const FGameplayTag Unmovable;
+        static const FGameplayTag Unstable;
+        static const FGameplayTag Executable;
+        static const FGameplayTag IsDead;
+        static const FGameplayTag IsGliding;
+        static const FGameplayTag IsFocusing;
+        static const FGameplayTag IsSkilling;
+        static const FGameplayTag IsKnockDown;
+        static const FGameplayTag IsKnockOut;
+        static const FGameplayTag IsStaggered;
+        static const FGameplayTag IsAttacking;
+        static const FGameplayTag IsDash;
+        static const FGameplayTag IsGuard;
+        static const FGameplayTag IsParry;
+        static const FGameplayTag Invincible;
+        static const FGameplayTag IsRotable;
+        static const FGameplayTag IsFalling;
+        static const FGameplayTag IsJumping;
+        static const FGameplayTag IsCombat;
+        static const FGameplayTag IsGuardEnd;
+        static const FGameplayTag MoveMontageEnabled;
+        
+        // 자주 사용되는 태그 컨테이너
+        static const FGameplayTagContainer CombatTags;
+        static const FGameplayTagContainer UnmovableTags;
+        static const FGameplayTagContainer UnstableTags;
+    };
+    
+    // 데이터 태그
+    struct FDataTags
+    {
+        static const FGameplayTag Ability;
+        
+        // 공통 어빌리티
+        static const FGameplayTag Ability_Common_Hit_KnockDown;
+        static const FGameplayTag Ability_Common_Hit_Staggered;
+        static const FGameplayTag Ability_Common_Jump;
+        
+        // 적 어빌리티
+        static const FGameplayTag Ability_Enemy_Attack;
+        static const FGameplayTag Ability_Enemy_Attack_Light;
+        
+        // 플레이어 어빌리티
+        static const FGameplayTag Ability_Player_Attack;
+        static const FGameplayTag Ability_Player_Attack_Light;
+        static const FGameplayTag Ability_Player_Attack_Heavy;
+        static const FGameplayTag Ability_Player_Attack_Air;
+        static const FGameplayTag Ability_Player_Attack_Range;
+        static const FGameplayTag Ability_Player_Attack_Upper;
+        static const FGameplayTag Ability_Player_Attack_Special;
+        static const FGameplayTag Ability_Player_Dash;
+        static const FGameplayTag Ability_Player_DoubleJump;
+        static const FGameplayTag Ability_Player_Execution;
+        static const FGameplayTag Ability_Player_Glide;
+        static const FGameplayTag Ability_Player_Guard;
+        static const FGameplayTag Ability_Player_Focus;
+        
+        static const FGameplayTag Data;
+    };
+    
+    // 이벤트 태그
+    struct FEventTags
+    {
+        static const FGameplayTag Combo_Available;
+        static const FGameplayTag AttackHit;
+        static const FGameplayTag SkillHit;
+        static const FGameplayTag Bounty_Experience;
+        static const FGameplayTag Hit;
+    };
+    
+    // 게임플레이 큐 태그
+    struct FGameplayCueTags
+    {
+        static const FGameplayTag Character_AttackHit;
+    };
+    
+    // 태그 접근용 정적 멤버
+    static FCharacterStateTags CharacterState;
+    static FDataTags Data;
+    static FEventTags Event;
+    static FGameplayCueTags GameplayCue;
+};

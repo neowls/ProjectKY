@@ -66,7 +66,7 @@ AActor* AKYTA_Execution::FindExecutableTarget()
 		if (AActor* HitActor = OverlapResult.GetActor())
 		{
 			UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitActor);
-			if (TargetASC && TargetASC->HasMatchingGameplayTag(KYTAG_CHARACTER_EXECUTABLE))
+			if (TargetASC && TargetASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.Executable))
 			{
 				float Distance = FVector::Dist(Location, HitActor->GetActorLocation());
 				if (Distance < MinDistance)

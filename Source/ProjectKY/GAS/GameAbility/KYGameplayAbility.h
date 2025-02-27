@@ -20,6 +20,9 @@ public:
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
 	void TryActivatePassiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec);
+
+	UFUNCTION()
+	bool GetIsInputAbility() const { return bInputAbility;}
 	
 	
 protected:
@@ -33,5 +36,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Activation")
 	bool bPassiveAbility = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Activation")
+	bool bInputAbility = false;
 	
 };

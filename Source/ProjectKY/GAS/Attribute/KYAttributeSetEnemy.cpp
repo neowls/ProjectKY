@@ -36,9 +36,9 @@ void UKYAttributeSetEnemy::PostAttributeChange(const FGameplayAttribute& Attribu
 	{
 		float InHealthRatio = GetHealth() / GetMaxHealth();
 		
-		if (InHealthRatio <= 0.2f && !GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(KYTAG_CHARACTER_EXECUTABLE))
+		if (InHealthRatio <= 0.2f && !GetOwningAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.Executable))
 		{
-			GetOwningAbilitySystemComponent()->AddLooseGameplayTag(KYTAG_CHARACTER_EXECUTABLE);
+			GetOwningAbilitySystemComponent()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.Executable);
 		}
 	}
 }

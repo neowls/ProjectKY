@@ -18,9 +18,7 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	AttributeSetEnemy = CreateDefaultSubobject<UKYAttributeSetEnemy>(TEXT("AttributeSetEnemy"));
 	AIControllerClass = AKYAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-
-	WeaponComp->SetupAttachment(GetMesh(), TEXT("weapon_r"));
-
+	
 	ExecuteMotionWarpPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ExecuteMotionWarpPoint"));
 	ExecuteMotionWarpPoint->SetupAttachment(RootComponent);
 	ExecuteMotionWarpPoint->SetRelativeLocation(FVector(350.0f, 0.0f, 0.0f));
@@ -67,10 +65,11 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	AttributeSetEnemy->InitDropGold(10.0f);
 	
 	
-	GiveStartAbilities();
+	GrantStartAbilities();
 
-	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_UNSTABLE).AddUObject(this, &ThisClass::OnHitTagChanged);
-	ASC->RegisterGameplayTagEvent(KYTAG_CHARACTER_EXECUTABLE).AddUObject(this, &ThisClass::OnExecuteTagChanged);
+	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.Unstable).AddUObject(this, &ThisClass::OnHitTagChanged);
+	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.Executable).AddUObject(this, &ThisClass::OnExecuteTagChanged);
+	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.IsCombat).AddUObject(this, &ThisClass::OnCombatState);
 }
 
 bool AKYCharacterNonPlayer::ExecuteGameplayAbilityFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)

@@ -9,7 +9,7 @@
 
 UKYGA_Glide::UKYGA_Glide()
 {
-	
+	bInputAbility = true;
 }
 
 bool UKYGA_Glide::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,

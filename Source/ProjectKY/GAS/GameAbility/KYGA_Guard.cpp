@@ -10,14 +10,14 @@
 
 UKYGA_Guard::UKYGA_Guard()
 {
-	
+	bIsCombatAbility = true;
 }
 
 void UKYGA_Guard::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
-	if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGUARDEND)) return;
+	if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsGuardEnd)) return;
 	
 	MontageJumpToSection(FName("GuardEnd"));
 }
@@ -26,16 +26,16 @@ void UKYGA_Guard::OnSimpleEventReceivedCallback_Implementation(FGameplayEventDat
 {
 	Super::OnSimpleEventReceivedCallback_Implementation(Payload);
 	
-	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISPARRY)) // 먼저 패링중인지 확인한다.
+	if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsParry)) // 먼저 패링중인지 확인한다.
 	{
 		MontageJumpToSection(FName("Parry"));
 		CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Character.Hit.Parry"));
 		
 		KY_LOG(LogKY, Log, TEXT("Parry Success"));
 	}
-	else if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISGUARD)) // 가드 중일 경우 타입에 따라 반응을 나눈다.
+	else if (GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsGuard)) // 가드 중일 경우 타입에 따라 반응을 나눈다.
 	{
-		if (Payload.EventTag == KYTAG_CHARACTER_ATTACK_HEAVY)
+		if (Payload.EventTag == UKYGameplayTags::CharacterState.Attack_Heavy)
 		{
 			MontageJumpToSection(FName("GuardBreak"));
 		}

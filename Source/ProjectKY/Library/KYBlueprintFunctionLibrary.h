@@ -15,15 +15,15 @@ class PROJECTKY_API UKYBlueprintFunctionLibrary : public UBlueprintFunctionLibra
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintPure, Category = "Math|Custom")
+	UFUNCTION(BlueprintPure, Category = "Math|Custom", meta=(NotBlueprintThreadSafe))
 	static float GetAngleFromTarget(const FVector& OriginLocation, const FVector& OriginForwardVector, const FVector& TargetLocation);
 	
-	UFUNCTION(BlueprintPure, Category = "Math|Custom")
+	UFUNCTION(BlueprintPure, Category = "Math|Custom", meta=(NotBlueprintThreadSafe))
 	static float GetAngleFromDirection(const FVector& TargetDirection, const FVector& OriginDirectionVector);
 
-	UFUNCTION(BlueprintPure, Category = "Math|Custom")
+	UFUNCTION(BlueprintPure, Category = "Math|Custom", meta=(NotBlueprintThreadSafe))
 	static float GetRadianFromDirection(const FVector& TargetDirection, const FVector& OriginDirectionVector);
 	
-	UFUNCTION(BlueprintPure, Category = "Math|Custom")
+	UFUNCTION(BlueprintPure, Category = "Math|Custom", meta=(NotBlueprintThreadSafe))
 	static FRotator GetRotationToTarget(const FVector& OriginLocation, const FVector& TargetLocation);
 };

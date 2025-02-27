@@ -4,6 +4,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
+#include "Character/KYCharacterPlayer.h"
 
 AKYItemObjectBase::AKYItemObjectBase()
 {
@@ -31,25 +32,49 @@ void AKYItemObjectBase::PostInitializeComponents()
 
 void AKYItemObjectBase::ApplyEffectToTarget(float Magnitude)
 {
+	if (ApplyEffects.IsEmpty())
+	{
+		KY_LOG(LogKY, Warning, TEXT("Effects To Apply Is Empty"));
+		return;
+	}
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	if (TargetASC)
 	{
 		FGameplayEffectContextHandle EffectContextHandle = TargetASC->MakeEffectContext();
 		EffectContextHandle.AddSourceObject(this);
-		 
-		FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(EffectToApply, Magnitude, EffectContextHandle);
-		if (EffectSpecHandle.IsValid())
+		for(auto& ApplyEffect : ApplyEffects)
 		{
-			TargetASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-		}
-		else
-		{
-			KY_LOG(LogKY, Log, TEXT("EffectSpecHandle Is Not Valid"));
+			FGameplayEffectSpecHandle EffectSpecHandle = TargetASC->MakeOutgoingSpec(ApplyEffect, Magnitude, EffectContextHandle);
+			if (EffectSpecHandle.IsValid())
+			{
+				TargetASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
+				EventEffectGranted();
+			}
+			else
+			{
+				KY_LOG(LogKY, Warning, TEXT("EffectSpecHandle Is Not Valid"));
+			}
 		}
 	}
 	else
 	{
-		KY_LOG(LogKY, Log, TEXT("Can't Find TargetActor"));
+		KY_LOG(LogKY, Warning, TEXT("Can't Find TargetActor"));
+	}
+}
+
+void AKYItemObjectBase::GrantAbilityToTarget()
+{
+	if (GrantAbilities.IsEmpty()) return;
+	
+	AKYCharacterPlayer* CharacterPlayer = Cast<AKYCharacterPlayer>(TargetActor);
+	if (CharacterPlayer)
+	{
+		for (auto& Ability : GrantAbilities)
+		{
+			CharacterPlayer->GrantAbility(Ability);
+			EventAbilityGranted();
+			KY_LOG(LogKY, Log, TEXT("Grant Ability"));
+		}
 	}
 }
 

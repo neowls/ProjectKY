@@ -30,7 +30,7 @@ void UKYGA_HitReaction::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 		return;
 	}
 	
-	UAbilityTask_WaitGameplayEvent* EventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, KYTAG_EVENT_HIT, nullptr, false,  false);
+	UAbilityTask_WaitGameplayEvent* EventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(this, UKYGameplayTags::Event.Hit, nullptr, false,  false);
 	EventTask->EventReceived.AddDynamic(this, &UKYGA_HitReaction::HitEventCallBack);
 	EventTask->ReadyForActivation();
 }
@@ -84,18 +84,18 @@ void UKYGA_HitReaction::ApplyHitReactionMomentum(ACharacter* InCharacter, const 
 {
 	FVector NewDirection;
 
-	if (InReactionTag.MatchesTagExact(KYTAG_CHARACTER_ATTACK_HEAVY))
+	if (InReactionTag.MatchesTagExact(UKYGameplayTags::CharacterState.Attack_Heavy))
 	{
 		NewDirection = -InCharacter->GetActorForwardVector();
 		NewDirection.Z = 0.2f;
 		InCharacter->LandedDelegate.AddDynamic(this, &ThisClass::OnLandedCallback);
 	}
-	else if(InReactionTag.MatchesTagExact(KYTAG_CHARACTER_ATTACK_UPPER))
+	else if(InReactionTag.MatchesTagExact(UKYGameplayTags::CharacterState.Attack_Upper))
 	{
 		NewDirection = FVector::UpVector;
 		InCharacter->LandedDelegate.AddDynamic(this, &ThisClass::OnLandedCallback);
 	}
-	else if(InReactionTag.MatchesTagExact(KYTAG_CHARACTER_ATTACK_SLAM))
+	else if(InReactionTag.MatchesTagExact(UKYGameplayTags::CharacterState.Attack_Slam))
 	{
 		NewDirection = FVector::DownVector;
 	}
@@ -113,11 +113,11 @@ void UKYGA_HitReaction::OnLandedCallback(const FHitResult& Result)
 	
 	AKYCharacterBase* Character = Cast<AKYCharacterBase>(GetAvatarActorFromActorInfo());
 	if (Character == nullptr) return;
-	if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISSTAGGERED) || GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(KYTAG_CHARACTER_ISKNOCKOUT) )
+	if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsStaggered) || GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsKnockOut) )
 	{
 		FGameplayTagContainer TempReactionTags;
-		TempReactionTags.AddTag(KYTAG_CHARACTER_ISSTAGGERED);
-		TempReactionTags.AddTag(KYTAG_CHARACTER_ISKNOCKOUT);
+		TempReactionTags.AddTag(UKYGameplayTags::CharacterState.IsStaggered);
+		TempReactionTags.AddTag(UKYGameplayTags::CharacterState.IsKnockOut);
 		UAbilitySystemBlueprintLibrary::RemoveLooseGameplayTags(Character, TempReactionTags);
 	}
 	Character->LandedDelegate.RemoveDynamic(this, &ThisClass::OnLandedCallback);
