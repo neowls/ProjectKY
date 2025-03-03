@@ -22,7 +22,13 @@ FEventAnimMontageData UKYCharacterWeaponAnimAsset::GetEventAnimMontageData(FGame
 		return *FoundData;
 	}
 
-	KY_LOG(LogKY, Warning, TEXT("Can't Find Event Montage Data"));
+	KY_LOG(LogKY, Warning, TEXT("Can't Find Event Montage Data With This Tag : %s"), *InGameplayTag.ToString());
 	return FEventAnimMontageData();
-	
 }
+
+bool UKYCharacterWeaponAnimAsset::CheckEventAnimMontageData(const FGameplayTag& InGameplayTag)
+{
+	return EventAnimMontageData.Contains(InGameplayTag);
+}
+
+

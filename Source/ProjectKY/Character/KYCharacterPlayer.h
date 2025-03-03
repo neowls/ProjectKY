@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayAbilitySpecHandle.h"
+#include "InputAction.h"
 #include "Character/KYCharacterBase.h"
 #include "InputActionValue.h"
+#include "MotionWarping/Public/MotionWarpingComponent.h"
 #include "KYCharacterPlayer.generated.h"
-
 
 class UKYGameplayAbility;
 class UInputAction;
@@ -24,7 +24,7 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 	virtual void SetupGASInputComponent();
 
-	virtual void GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass) override;
+	virtual void GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass, float Level = 1.0f, bool bAddToTagMap = false) override;
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void GlideShowWingStatus(bool InStatus);
@@ -35,10 +35,15 @@ public:
 	UFUNCTION(Category="Camera", meta=(BlueprintThreadSafe))
 	FORCEINLINE FRotator GetRotationOffset() const { return RotationOffset; }
 
-	
+	virtual void AddWeaponData(const FName& WeaponName, const FWeaponData& InWeaponData) override;
+
+	virtual void OnCombatState(const FGameplayTag GameplayTag, int32 Count) override;
+
 protected: 
 	void Move(const FInputActionValue& Value);
 	void Rotate(const FInputActionValue& Value);
+
+	void ChangeWeaponWithType(const FInputActionValue& Value);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void InteractObject();
@@ -50,14 +55,15 @@ protected:
 	void GASInputPressed(FGameplayTag InputTag);
 	void GASInputReleased(FGameplayTag InputTag);
 
-	virtual void SetDead() override;
+	virtual void SetDead_Implementation() override;
+
 
 protected:
-	UPROPERTY()
-	TMap<FGameplayTag, FGameplayAbilitySpecHandle> AbilitiesTagMap;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category=GAS)
 	TObjectPtr<class UCurveTable> PlayerLevelCurveTable;
+
+	UPROPERTY(VisibleAnywhere, Category=Weapon)
+	TArray<FName> EquippedWeapon;
 
 #pragma region INPUT
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
@@ -70,7 +76,7 @@ protected:
 	TObjectPtr<UInputAction> MoveAction;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> DashAction;
+	TObjectPtr<UInputAction> DodgeAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> GuardAction;
@@ -99,20 +105,29 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> RangeAttackAction;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ChangeWeaponAction;
+	
 
 #pragma endregion 
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Camera)
 	TObjectPtr<class UCameraComponent> CameraComp;
 
-	UPROPERTY(EditAnywhere, Category=Camera)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Camera)
 	TObjectPtr<class USpringArmComponent> SpringArmComp;
 
-	UPROPERTY(EditAnywhere, Category=Trigger)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Trigger)
 	TObjectPtr<class USphereComponent> ItemTriggerComp;
 
-	UPROPERTY(EditAnywhere, Category=Trigger)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Trigger)
 	TObjectPtr<class UBoxComponent> InteractTriggerComp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Mesh)
+	TObjectPtr<class UStaticMeshComponent> WingComp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=Animation)
+	TObjectPtr<UMotionWarpingComponent> MotionWarpingComp;
 	
 	UPROPERTY(EditAnywhere, Category=Debug)
 	bool bShowGASDebug = true;

@@ -31,11 +31,12 @@ void AKYItemDrop::Tick(float DeltaSeconds)
 		if (!bIsHoldPosition) SetActorLocation(FMath::VInterpTo(GetActorLocation(), TargetActor->GetActorLocation(), DeltaSeconds, InterpSpeed));
 
 
-		if(GetDistanceTo(TargetActor) <= ApplyDistance)
+		if(GetDistanceTo(TargetActor) <= ApplyDistance && !bIsApplied)
 		{
 			bIsApplied = true;
-			ApplyEffectToTarget(1.0f);
-			GrantAbilityToTarget();
+			if (!ApplyEffects.IsEmpty()) ApplyEffectToTarget(1.0f);
+			if (!GrantAbilities.IsEmpty()) GrantAbilityToTarget();
+			GetItem();
 			Destroy();
 		}
 	}

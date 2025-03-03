@@ -37,6 +37,7 @@ void AKYItemObjectBase::ApplyEffectToTarget(float Magnitude)
 		KY_LOG(LogKY, Warning, TEXT("Effects To Apply Is Empty"));
 		return;
 	}
+	
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
 	if (TargetASC)
 	{
@@ -48,7 +49,7 @@ void AKYItemObjectBase::ApplyEffectToTarget(float Magnitude)
 			if (EffectSpecHandle.IsValid())
 			{
 				TargetASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-				EventEffectGranted();
+				EffectGranted();
 			}
 			else
 			{
@@ -62,7 +63,7 @@ void AKYItemObjectBase::ApplyEffectToTarget(float Magnitude)
 	}
 }
 
-void AKYItemObjectBase::GrantAbilityToTarget()
+void AKYItemObjectBase::GrantAbilityToTarget(float Magnitude)
 {
 	if (GrantAbilities.IsEmpty()) return;
 	
@@ -71,8 +72,8 @@ void AKYItemObjectBase::GrantAbilityToTarget()
 	{
 		for (auto& Ability : GrantAbilities)
 		{
-			CharacterPlayer->GrantAbility(Ability);
-			EventAbilityGranted();
+			CharacterPlayer->GrantAbility(Ability, Magnitude);
+			AbilityGranted();
 			KY_LOG(LogKY, Log, TEXT("Grant Ability"));
 		}
 	}

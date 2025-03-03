@@ -19,15 +19,16 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	AIControllerClass = AKYAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	
-	ExecuteMotionWarpPoint = CreateDefaultSubobject<USceneComponent>(TEXT("ExecuteMotionWarpPoint"));
-	ExecuteMotionWarpPoint->SetupAttachment(RootComponent);
-	ExecuteMotionWarpPoint->SetRelativeLocation(FVector(350.0f, 0.0f, 0.0f));
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Enemy"));
 
 	HPBar = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Widget"));
 	TargetedWidget = CreateDefaultSubobject<UKYWidgetComponent>(TEXT("Targeted"));
 	
 	HPBar->SetupAttachment(GetMesh());
 	TargetedWidget->SetupAttachment(GetMesh(), TEXT("pelvis"));
+
+	HPBar->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	TargetedWidget->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
 	HPBar->SetRelativeLocation(FVector(0.0f, 0.0f, 200.0f));
 
@@ -44,32 +45,38 @@ AKYCharacterNonPlayer::AKYCharacterNonPlayer(const FObjectInitializer& ObjectIni
 	TargetedWidget->SetWidgetClass(TargetedWidgetClass);
 	TargetedWidget->SetDrawSize(FVector2D(50.0f, 50.0f));
 	TargetedWidget->SetVisibility(false);
+
+	WeaponCompLeft->SetCollisionProfileName(FName("EnemyWeapon"));
+	WeaponCompRight->SetCollisionProfileName(FName("EnemyWeapon"));
+
+	WeaponCompLeft->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponCompRight->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 }
 
-void AKYCharacterNonPlayer::OnExecuteTagChanged(FGameplayTag GameplayTag, int Count)
-{
-	OnExecutableState(Count > 0);
-}
 
 void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	
 	ASC->InitAbilityActorInfo(this, this);
+
+	CurrentWeaponType = OwnWeaponAnimAssets.begin().Key();
 	
 	AttributeSetEnemy->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);
 	AttributeSetEnemy->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
 	AttributeSetEnemy->DropBountyEffect = DropBountyEffect;
-	
-	InitializeStatEffect();
 	AttributeSetEnemy->InitDropGold(10.0f);
-	
-	
-	GrantStartAbilities();
+	InitializeAbilitySystemComponent();
 
+	OnWeaponAnimSetChanged.Broadcast();
+}
+
+void AKYCharacterNonPlayer::RegisterGameplayEvents()
+{
 	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.Unstable).AddUObject(this, &ThisClass::OnHitTagChanged);
-	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.Executable).AddUObject(this, &ThisClass::OnExecuteTagChanged);
-	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.IsCombat).AddUObject(this, &ThisClass::OnCombatState);
+	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.Executable).AddUObject(this, &ThisClass::OnExecutableTagChanged);
+	//ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.IsCombat).AddUObject(this, &ThisClass::OnCombatState);
+	bIsCombat = true;
 }
 
 bool AKYCharacterNonPlayer::ExecuteGameplayAbilityFromClass(TSubclassOf<UGameplayAbility> InAbilityClass)
@@ -78,10 +85,15 @@ bool AKYCharacterNonPlayer::ExecuteGameplayAbilityFromClass(TSubclassOf<UGamepla
 	return ASC->TryActivateAbility(Spec->Handle);
 }
 
-void AKYCharacterNonPlayer::PlayExecutedMontage(FName SectionName)
+void AKYCharacterNonPlayer::PlayExecutedMontage(FName SectionName, UAnimMontage* MontageToPlay)
 {
+	HPBar->Deactivate();
+	HPBar->SetHiddenInGame(true);
+	TargetedWidget->Deactivate();
+	TargetedWidget->SetHiddenInGame(true);
+	
 	GetMesh()->GetAnimInstance()->StopAllMontages(0.01f);
-	GetMesh()->GetAnimInstance()->Montage_Play(ExecutedMontage);
+	GetMesh()->GetAnimInstance()->Montage_Play(MontageToPlay);
 	if (SectionName != TEXT("0")) GetMesh()->GetAnimInstance()->Montage_JumpToSection(SectionName);
 	
 	GetCapsuleComponent()->SetCollisionProfileName("IgnoreOnlyPawn");
@@ -89,18 +101,52 @@ void AKYCharacterNonPlayer::PlayExecutedMontage(FName SectionName)
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+void AKYCharacterNonPlayer::OnExecutableTagChanged(FGameplayTag GameplayTag, int Count)
+{
+	OnExecutableState(Count > 0);
+}
+
 void AKYCharacterNonPlayer::OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted)
 {
 	SetDead();
 }
 
+void AKYCharacterNonPlayer::GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass, float Level, bool bAddToTagMap)
+{
+	return Super::GrantAbility(NewAbilityClass, Level, bAddToTagMap);
+}
+
+void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	AKYAIController* AIController = Cast<AKYAIController>(GetController());
+	if (AIController)
+	{
+		AIController->SetHitStatus(NewCount>0);
+	}
+}
+
+void AKYCharacterNonPlayer::UpdateTargetedStatus(bool InStatus)
+{
+	TargetedWidget->SetVisibility(InStatus);
+}
+
+void AKYCharacterNonPlayer::DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer,
+	float Damage)
+{
+	Super::DamageTaken(DamageInstigator, DamageCauser, GameplayTagContainer, Damage);
+	UpdateHitFlash();
+}
 
 void AKYCharacterNonPlayer::SetDead_Implementation()
 {
-	Super::SetDead();
+	Super::SetDead_Implementation();
 	
-	HPBar->SetVisibility(false);
+	HPBar->Deactivate();
+	HPBar->SetHiddenInGame(true);
+	TargetedWidget->Deactivate();
+	TargetedWidget->SetHiddenInGame(true);
 	
+
 	AKYAIController* AIController = Cast<AKYAIController>(GetController());
 	if (AIController)
 	{
@@ -131,24 +177,11 @@ void AKYCharacterNonPlayer::SetDead_Implementation()
 	), 2.0f, false);
 }
 
-
-void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
-{
-	AKYAIController* AIController = Cast<AKYAIController>(GetController());
-	if (AIController)
-	{
-		AIController->SetHitStatus(NewCount>0);
-	}
-}
-
-void AKYCharacterNonPlayer::UpdateTargetedStatus(bool InStatus)
-{
-	TargetedWidget->SetVisibility(InStatus);
-}
-
 void AKYCharacterNonPlayer::DropBountyItem()
 {
 	
 }
+
+
 
 

@@ -12,6 +12,8 @@ UKYGA_SimpleDamageReaction::UKYGA_SimpleDamageReaction()
 {
 	bIsCombatAbility = true;
 	bInputAbility = false;
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+	bRetriggerInstancedAbility = true;
 }
 
 void UKYGA_SimpleDamageReaction::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -19,7 +21,9 @@ void UKYGA_SimpleDamageReaction::ActivateAbility(const FGameplayAbilitySpecHandl
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	const FVector TargetLocation = TriggerEventData->Instigator->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation();
-	GetAvatarActorFromActorInfo()->SetActorRotation(TargetLocation.Rotation());
+	FRotator TargetRotation = TargetLocation.Rotation();
+	TargetRotation.Pitch = 0.0f;
+	GetAvatarActorFromActorInfo()->SetActorRotation(TargetRotation);
 
 	if(!TriggerEventData->EventTag.MatchesTag(UKYGameplayTags::CharacterState.IsParry)) CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(FGameplayTag::RequestGameplayTag("GameplayCue.Character.Hit.Light"));
 }

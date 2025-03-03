@@ -20,7 +20,7 @@ class PROJECTKY_API AKYCharacterNonPlayer : public AKYCharacterBase, public IKYT
 public:
 	AKYCharacterNonPlayer(const FObjectInitializer& ObjectInitializer);
 
-	void OnExecuteTagChanged(FGameplayTag GameplayTag, int Count);
+	void OnExecutableTagChanged(FGameplayTag GameplayTag, int Count);
 	
 	virtual void PossessedBy(AController* NewController) override;
 	
@@ -31,23 +31,28 @@ public:
 	FExecutedAbilityEndDelegate OnExecutedAbilityEnd;
 
 	UFUNCTION(BlueprintCallable)
-	void PlayExecutedMontage(FName SectionName);
+	void PlayExecutedMontage(FName SectionName, UAnimMontage* MontageToPlay);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnExecutableState(bool IsExecutable);
 
 	UFUNCTION()
 	void OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted);
+
+	virtual void GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass, float Level = 1.0f, bool bAddToTagMap = false) override;
 	
 protected:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void SetDead() override;
+	virtual void SetDead_Implementation() override;
 	
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
 	virtual void UpdateTargetedStatus(bool InStatus) override;
 
+	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage) override;
+
 	virtual void DropBountyItem();
+	
+	virtual void RegisterGameplayEvents() override;
 	
 protected:
 	UPROPERTY()
@@ -61,10 +66,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<class UKYWidgetComponent> TargetedWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<class USceneComponent> ExecuteMotionWarpPoint;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<class UAnimMontage> ExecutedMontage;
 };

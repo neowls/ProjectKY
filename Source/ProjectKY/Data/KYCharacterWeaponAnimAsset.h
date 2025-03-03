@@ -31,5 +31,8 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	FEventAnimMontageData GetEventAnimMontageData(FGameplayTag InGameplayTag);
+
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	bool CheckEventAnimMontageData(const FGameplayTag& InGameplayTag);
 	
 };

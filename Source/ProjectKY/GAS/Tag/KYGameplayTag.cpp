@@ -16,16 +16,16 @@ const FGameplayTag UKYGameplayTags::FCharacterStateTags::Executable = FGameplayT
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsDead = FGameplayTag::RequestGameplayTag(FName("Character.State.IsDead"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsGliding = FGameplayTag::RequestGameplayTag(FName("Character.State.IsGliding"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsFocusing = FGameplayTag::RequestGameplayTag(FName("Character.State.IsFocusing"));
-const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsSkilling = FGameplayTag::RequestGameplayTag(FName("Character.State.IsSkilling"));
+const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsSkill = FGameplayTag::RequestGameplayTag(FName("Character.State.IsSkill"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsKnockDown = FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsKnockDown"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsKnockOut = FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsKnockOut"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsStaggered = FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsStaggered"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsAttacking = FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsAttacking"));
-const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsDash = FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsDash"));
+const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsDodge = FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsDodge"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsGuard = FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsGuard"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsParry = FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsParry"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::Invincible = FGameplayTag::RequestGameplayTag(FName("Character.State.Invincible"));
-const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsRotable = FGameplayTag::RequestGameplayTag(FName("Character.State.IsRotable"));
+const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsRotatable = FGameplayTag::RequestGameplayTag(FName("Character.State.IsRotable"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsFalling = FGameplayTag::RequestGameplayTag(FName("Character.State.IsFalling"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsJumping = FGameplayTag::RequestGameplayTag(FName("Character.State.IsJumping"));
 const FGameplayTag UKYGameplayTags::FCharacterStateTags::IsCombat = FGameplayTag::RequestGameplayTag(FName("Character.State.IsCombat"));
@@ -44,7 +44,7 @@ const FGameplayTagContainer UKYGameplayTags::FCharacterStateTags::UnmovableTags 
     FGameplayTagContainer Tags;
     Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable")));
     Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsAttacking")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsDash")));
+    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsDodge")));
     Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsGuard")));
     Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsParry")));
     return Tags;
@@ -64,6 +64,8 @@ const FGameplayTag UKYGameplayTags::FDataTags::Ability = FGameplayTag::RequestGa
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Common_Hit_KnockDown = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Common.Hit.KnockDown"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Common_Hit_Staggered = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Common.Hit.Staggered"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Common_Jump = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Common.Jump"));
+const FGameplayTag UKYGameplayTags::FDataTags::Ability_Common_Combat = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Common.Combat"));
+const FGameplayTag UKYGameplayTags::FDataTags::Ability_Common_Dead = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Common.Dead"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Enemy_Attack = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Enemy.Attack"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Enemy_Attack_Light = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Enemy.Attack.Light"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Attack = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Attack"));
@@ -73,7 +75,7 @@ const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Attack_Air = FGame
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Attack_Range = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Attack.Range"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Attack_Upper = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Attack.Upper"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Attack_Special = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Attack.Special"));
-const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Dash = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Dash"));
+const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Dodge = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Dodge"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_DoubleJump = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.DoubleJump"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Execution = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Execution"));
 const FGameplayTag UKYGameplayTags::FDataTags::Ability_Player_Glide = FGameplayTag::RequestGameplayTag(FName("Data.Ability.Player.Glide"));

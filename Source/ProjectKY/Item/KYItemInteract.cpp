@@ -16,6 +16,7 @@ void AKYItemInteract::InteractEvent_Implementation(AActor* Causer, float Magnitu
 	SetTargetActor(Causer);
 	/* More Interact Function */
 	OnInteractEvent.AddDynamic(this, &ThisClass::ApplyEffectToTarget);
+	OnInteractEvent.AddDynamic(this, &ThisClass::GrantAbilityToTarget);
 }
 
 void AKYItemInteract::SetInteractableStatus_Implementation(bool InStatus)

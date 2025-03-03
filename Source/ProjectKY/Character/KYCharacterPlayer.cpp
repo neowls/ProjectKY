@@ -16,6 +16,7 @@
 #include "GAS/GameAbility/KYGameplayAbility.h"
 #include "Player/KYPlayerState.h"
 #include "ProjectKY.h"
+#include "Components/CapsuleComponent.h"
 
 
 AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializer)
@@ -23,7 +24,7 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 {
 	InitializeObjectFinder(LookAction, TEXT("/Game/_Dev/Input/IA_Look.IA_Look"));
 	InitializeObjectFinder(MoveAction, TEXT("/Game/_Dev/Input/IA_Move.IA_Move"));
-	InitializeObjectFinder(DashAction, TEXT("/Game/_Dev/Input/IA_Dash.IA_Dash"));
+	InitializeObjectFinder(DodgeAction, TEXT("/Game/_Dev/Input/IA_Dash.IA_Dash"));
 	InitializeObjectFinder(GuardAction, TEXT("/Game/_Dev/Input/IA_Guard.IA_Guard"));
 	InitializeObjectFinder(JumpAction, TEXT("/Game/_Dev/Input/IA_Jump.IA_Jump"));
 	InitializeObjectFinder(GlideAction, TEXT("/Game/_Dev/Input/IA_Glide.IA_Glide"));
@@ -33,29 +34,55 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	InitializeObjectFinder(SkillAttackAction, TEXT("/Game/_Dev/Input/IA_SkillAttack.IA_SkillAttack"));
 	InitializeObjectFinder(UpperAttackAction, TEXT("/Game/_Dev/Input/IA_UpperAttack.IA_UpperAttack"));
 	InitializeObjectFinder(RangeAttackAction, TEXT("/Game/_Dev/Input/IA_RangeAttack.IA_RangeAttack"));
+	InitializeObjectFinder(ChangeWeaponAction, TEXT("/Game/_Dev/Input/IA_ChangeWeapon.IA_ChangeWeapon"));
 	InitializeObjectFinder(DefaultContext, TEXT("/Game/_Dev/Input/IMC_Player.IMC_Player"));
+	
+	InitializeObjectFinder(PlayerLevelCurveTable, TEXT("/Game/_Dev/DataAsset/PlayerLevelStatTable.PlayerLevelStatTable"));
 	
 	GetCharacterMovement()->bOrientRotationToMovement = true;	// 이동 방향으로 캐릭터가 회전한다.
 
-	InitializeObjectFinder(PlayerLevelCurveTable, TEXT("/Game/_Dev/DataAsset/PlayerLevelStatTable.PlayerLevelStatTable"));
+	GetCapsuleComponent()->SetCollisionProfileName(TEXT("Player"));
 	
 	ItemTriggerComp = CreateDefaultSubobject<USphereComponent>(TEXT("DropCollectTrigger"));
 	InteractTriggerComp = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractTrigger"));
+	MotionWarpingComp = CreateDefaultSubobject<UMotionWarpingComponent>(TEXT("MotionWarping"));
+	WingComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Wing"));
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-
 	
 	ItemTriggerComp->SetupAttachment(RootComponent);
 	InteractTriggerComp->SetupAttachment(RootComponent);
+	WingComp->SetupAttachment(GetMesh(), TEXT("Wing"));
+
+	ItemTriggerComp->SetSphereRadius(250.0f);
+	ItemTriggerComp->SetCollisionProfileName(TEXT("ItemCollectTrigger"));
+	
+	InteractTriggerComp->SetBoxExtent(FVector(100.0f, 48.0f, 64.0f));
+	InteractTriggerComp->SetRelativeLocation(FVector(140.0f, 0.0f, 0.0f));
+	InteractTriggerComp->SetCollisionProfileName(TEXT("InteractTrigger"));
+
+	
+	WingComp->SetRelativeScale3D(FVector(1.5f, 1.3f, 1.3f));
+	WingComp->SetComponentTickEnabled(false);
+	WingComp->SetEnableGravity(false);
+	WingComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WingComp->SetGenerateOverlapEvents(false);
+	WingComp->SetVisibility(false);
+	
 	SpringArmComp->SetupAttachment(RootComponent);
-	CameraComp->SetupAttachment(SpringArmComp);
-	
-	
 	SpringArmComp->bInheritPitch = false;
 	SpringArmComp->bInheritYaw = false;
 	SpringArmComp->bInheritRoll = false;
-	SpringArmComp->TargetArmLength = 600;
-	SpringArmComp->SetRelativeRotation(FRotator(0.0f, -50.0f, RotationOffset.Yaw));
+	SpringArmComp->TargetArmLength = 500;
+	SpringArmComp->SetRelativeRotation(FRotator(-50.0f, RotationOffset.Yaw, 0.0f));
+	CameraComp->SetupAttachment(SpringArmComp);
+
+
+	WeaponCompLeft->SetCollisionProfileName(FName("PlayerWeapon"));
+	WeaponCompRight->SetCollisionProfileName(FName("PlayerWeapon"));
+
+	WeaponCompLeft->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponCompRight->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AKYCharacterPlayer::PossessedBy(AController* NewController)
@@ -73,9 +100,8 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 			
 			AttributeSetPlayer->PlayerLevelCurveTable = PlayerLevelCurveTable;
 		}
-		
-		InitializeStatEffect();
-		GrantStartAbilities();
+
+		InitializeAbilitySystemComponent();
 		SetupGASInputComponent();
 
 		ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.IsCombat).AddUObject(this, &ThisClass::OnCombatState);
@@ -104,6 +130,7 @@ void AKYCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Rotate);
 	EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ThisClass::InteractObject);
+	EnhancedInputComponent->BindAction(ChangeWeaponAction, ETriggerEvent::Triggered, this, &ThisClass::ChangeWeaponWithType);
 	
 	SetupGASInputComponent();
 }
@@ -127,10 +154,15 @@ void AKYCharacterPlayer::SetupGASInputComponent()
 		EnhancedInputComponent->BindAction(UpperAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Upper);
 		EnhancedInputComponent->BindAction(RangeAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Range);
 		EnhancedInputComponent->BindAction(SkillAttackAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Attack_Special);
-		EnhancedInputComponent->BindAction(DashAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Dash);
+		EnhancedInputComponent->BindAction(DodgeAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Dodge);
 		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Guard);
 		EnhancedInputComponent->BindAction(GuardAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, UKYGameplayTags::Data.Ability_Player_Guard);
 	}
+}
+
+void AKYCharacterPlayer::GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass, float Level, bool bAddToTagMap)
+{
+	return Super::GrantAbility(NewAbilityClass, Level,true);
 }
 
 FVector AKYCharacterPlayer::GetInputDirection() const
@@ -140,6 +172,25 @@ FVector AKYCharacterPlayer::GetInputDirection() const
 		return GetActorForwardVector();
 	}
 	return RotationOffset.RotateVector(GetCharacterMovement()->GetCurrentAcceleration().GetSafeNormal2D());
+}
+
+void AKYCharacterPlayer::AddWeaponData(const FName& WeaponName, const FWeaponData& InWeaponData)
+{
+	Super::AddWeaponData(WeaponName, InWeaponData);
+	KY_LOG(LogKY, Log, TEXT("Equipped Weapon Num : %d"), EquippedWeapon.Num());
+	if (EquippedWeapon.Num() < 3)
+	{
+		EquippedWeapon.Add(WeaponName);
+	}
+}
+
+void AKYCharacterPlayer::OnCombatState(const FGameplayTag GameplayTag, int32 Count)
+{
+	Super::OnCombatState(GameplayTag, Count);
+	if (Count < 1)
+	{
+		PlayAnimMontage(GetAnimMontageData(UKYGameplayTags::Data.Ability_Common_Combat).Montage, 1.0f, TEXT("NonCombat"));
+	}
 }
 
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
@@ -165,7 +216,7 @@ void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 	MoveDirection = RotationOffset.RotateVector(MoveDirection);
 
 	bool bIsPlayingMontage = GetMesh()->GetAnimInstance()->Montage_IsPlaying(nullptr);
-	if(bIsPlayingMontage && !ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.MoveMontageEnabled)) // 재생중인 몽타주가 있다면 중단한다.
+	if(bIsPlayingMontage && !ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.MoveMontageEnabled) && ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat)) // 재생중인 몽타주가 있다면 중단한다.
 	{
 		GetMesh()->GetAnimInstance()->Montage_Stop(0.2f);	
 	}
@@ -175,7 +226,7 @@ void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 
 void AKYCharacterPlayer::Rotate(const FInputActionValue& Value)		// 태그가 있는 동안 입력 방향으로 캐릭터가 회전한다.
 {
-	if(!ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsRotable)) return;
+	if(!ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsRotatable)) return;
 	FVector2D MovementVector = Value.Get<FVector2d>();
 
 	FVector Direction = FVector(MovementVector.X, MovementVector.Y, 0.0f);
@@ -187,6 +238,18 @@ void AKYCharacterPlayer::Rotate(const FInputActionValue& Value)		// 태그가 �
 		FRotator TargetRotation = Direction.Rotation();
 		FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetRotation, GetWorld()->GetDeltaSeconds(), 25.0f);
 		SetActorRotation(NewRotation);
+	}
+}
+
+void AKYCharacterPlayer::ChangeWeaponWithType(const FInputActionValue& Value)
+{
+	if(ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat)) return;
+	float AxisValue = Value.Get<float>();
+	int32 WeaponIndex = FMath::RoundToInt(AxisValue);
+	
+	if(EquippedWeapon.IsValidIndex(WeaponIndex - 1))
+	{
+		ChangeWeapon(EquippedWeapon[WeaponIndex - 1]);
 	}
 }
 
@@ -252,34 +315,14 @@ void AKYCharacterPlayer::GASInputReleased(FGameplayTag InputTag)
 	}
 }
 
-void AKYCharacterPlayer::GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass)
+
+void AKYCharacterPlayer::SetDead_Implementation()
 {
-	if (!IsValid(NewAbilityClass)) return;
-	if (ASC->FindAbilitySpecFromClass(NewAbilityClass)) return; // 이미 보유중인 어빌리티인 경우
-
-	UKYGameplayAbility* AbilityDefaultObject = NewAbilityClass.GetDefaultObject();
-	if (!AbilityDefaultObject) return;	// 어빌리티 클래스가 유효하지 않은 경우
-	
-	FGameplayAbilitySpec NewAbilitySpec(NewAbilityClass);
-
-	FGameplayAbilitySpecHandle Handle = ASC->GiveAbility(NewAbilitySpec);
-	
-	if (AbilityDefaultObject->AbilityTags.HasTag(UKYGameplayTags::Data.Data)) // 데이터 태그를 가지고 있는지 확인
+	Super::SetDead_Implementation();
+	UAnimMontage* MontageToPlay = GetAnimMontageData(UKYGameplayTags::Data.Ability_Common_Dead).Montage;
+	if (MontageToPlay) PlayAnimMontage(MontageToPlay);
+	else
 	{
-		for (const FGameplayTag& Tag : AbilityDefaultObject->AbilityTags)
-		{
-			if (Tag.MatchesTag(UKYGameplayTags::Data.Data)) // 가지고 있다면 태그-스펙핸들 맵에 추가
-			{
-				AbilitiesTagMap.Add(Tag, Handle);
-				break;
-			}
-		}
+		KY_LOG(LogKY, Warning, TEXT("Montage Data Is Empty!"));
 	}
-}
-
-
-void AKYCharacterPlayer::SetDead()
-{
-	Super::SetDead();
-	PlayAnimMontage(DeathMontage);
 }

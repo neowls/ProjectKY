@@ -16,25 +16,50 @@ UKYGA_AnimBase::UKYGA_AnimBase()
 	bInputAbility = true;
 }
 
+
+
+void UKYGA_AnimBase::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+{
+	Super::OnGiveAbility(ActorInfo, Spec);
+	
+	AbilityTags.Filter(FGameplayTagContainer(UKYGameplayTags::Data.Data));
+	DataTag = AbilityTags.First();
+
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(ActorInfo->AvatarActor.Get());
+	if (Character)
+	{
+		Character->OnWeaponAnimSetChanged.AddDynamic(this, &UKYGA_AnimBase::OnAnimSetChangeCallback);
+		KY_LOG(LogKY, Log, TEXT("Character Name : %s, Ability Name : %s"), *Character->GetName(), *this->GetName());
+	}
+}
+
+void UKYGA_AnimBase::OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+{
+	Super::OnRemoveAbility(ActorInfo, Spec);
+
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(ActorInfo->AvatarActor.Get());
+	if (Character)
+	{
+		Character->OnWeaponAnimSetChanged.RemoveDynamic(this, &UKYGA_AnimBase::OnAnimSetChangeCallback);
+	}
+}
+
+
 bool UKYGA_AnimBase::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
+                                        const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, FGameplayTagContainer* OptionalRelevantTags) const
 {
 	bool Result = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
-	AbilityTags.Filter(FGameplayTagContainer(UKYGameplayTags::Data.Data));
-	const FGameplayTag AbilityTag = AbilityTags.First();
 	
-	if (AbilityTag == FGameplayTag())
+	if (DataTag == FGameplayTag())
 	{
 		KY_LOG(LogKY, Warning, TEXT("%s Ability Does Not Have Data Tag."), *this->GetName());
 		Result = false;
 	}
-	
-	AnimMontageData = Cast<AKYCharacterBase>(CurrentActorInfo->AvatarActor)->GetAnimMontageData(AbilityTag);
-	
-	if (AnimMontageData.Montage == nullptr)
+
+	if(AnimMontageData.Montage == nullptr)
 	{
-		KY_LOG(LogKY, Warning, TEXT("%s Tag Has No Anim Montage."), *AbilityTag.GetTagName().ToString());
+		KY_LOG(LogKY, Warning, TEXT("%s Ability Does Not Have Montage Data"), *this->GetName());
 		Result = false;
 	}
 
@@ -52,21 +77,28 @@ void UKYGA_AnimBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 		return;
 	}
 
-	PlayAnimMontageTask();
+	UAnimInstance* AnimInstance = GetActorInfo().AnimInstance.Get();
+	if (AnimInstance && AnimInstance->Montage_IsPlaying(AnimMontageData.Montage))
+	{
+		AnimInstance->Montage_SetPosition(AnimMontageData.Montage, 0.0f);
+	}
+	else
+	{
+		PlayAnimMontageTask();
+	}
 	if (bIsCombatAbility) ApplyCombatEffect();
+}
+
+void UKYGA_AnimBase::OnAnimSetChangeCallback()
+{
+	if (GetCurrentActorInfo())
+	{
+		AnimMontageData = Cast<AKYCharacterBase>(GetAvatarActorFromActorInfo())->GetAnimMontageData(DataTag);
+	}
 }
 
 void UKYGA_AnimBase::PlayAnimMontageTask()
 {
-	AbilityTags.Filter(FGameplayTagContainer(UKYGameplayTags::Data.Data));
-	const FGameplayTag AbilityTag = AbilityTags.First();
-	
-	if (AbilityTag == FGameplayTag())
-	{
-		KY_LOG(LogKY, Warning, TEXT("%s Ability Does Not Have Data Tag."), *this->GetName());
-		return;
-	}
-	
 	UKYAT_PlayMontageAndWaitForEvent* PMT = UKYAT_PlayMontageAndWaitForEvent::PlayMontageAndWaitForEvent(this, AnimMontageData);
 
 	PMT->OnCompleted.AddDynamic(this, &ThisClass::OnSimpleCompleteEventCallback);
@@ -78,6 +110,7 @@ void UKYGA_AnimBase::PlayAnimMontageTask()
 
 void UKYGA_AnimBase::ApplyCombatEffect()
 {
+	if (CombatEffect == nullptr) return;
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	
 	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
@@ -95,6 +128,7 @@ void UKYGA_AnimBase::OnSimpleEventReceivedCallback_Implementation(FGameplayEvent
 {
 	
 }
+
 
 void UKYGA_AnimBase::OnSimpleCompleteEventCallback(FGameplayEventData Payload)
 {

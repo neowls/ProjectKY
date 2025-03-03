@@ -22,6 +22,8 @@ public:
 	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
+	virtual void InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
+
 	virtual void InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo) override;
 
 protected:
@@ -29,6 +31,9 @@ protected:
 	void OnLandedCallback(const FHitResult& Hit);
 
 	virtual void OnSimpleCompleteCallback_Implementation() override;
+
+	UPROPERTY()
+	float FallingSpeed = -40.0f;
 };
 
 

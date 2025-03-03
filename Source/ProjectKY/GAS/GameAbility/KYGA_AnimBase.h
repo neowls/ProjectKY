@@ -17,9 +17,14 @@ class PROJECTKY_API UKYGA_AnimBase : public UKYGameplayAbility
 
 public:
 	UKYGA_AnimBase();
+	
+	UFUNCTION()
+	virtual void OnAnimSetChangeCallback(); 
 
 protected:
-
+	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+	virtual void OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+	
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
 	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
@@ -32,10 +37,10 @@ protected:
 
 	UFUNCTION()
 	virtual void OnSimpleInterruptEventCallback(FGameplayEventData Payload);
-
+	
 	UFUNCTION()
 	virtual void PlayAnimMontageTask();
-
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat", meta=(AllowPrivateAccess=true))
 	bool bIsCombatAbility;
 
@@ -43,8 +48,13 @@ protected:
 	TSubclassOf<UGameplayEffect> CombatEffect;
 
 	UPROPERTY()
-	mutable FEventAnimMontageData AnimMontageData;
+	FEventAnimMontageData AnimMontageData;
+
+	UPROPERTY()
+	FGameplayTag DataTag;
 
 	void ApplyCombatEffect();
 	
 };
+
+

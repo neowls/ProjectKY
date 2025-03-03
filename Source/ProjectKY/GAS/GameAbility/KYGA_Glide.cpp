@@ -19,7 +19,8 @@ bool UKYGA_Glide::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(ActorInfo->AvatarActor);
 	if (Character)
 	{
-		Result = Character->GetCharacterMovement()->Velocity.Z < 0.0f;
+		Result = Character->GetVelocity().Z < 0.0f;
+		
 	}
 	return Result;
 }
@@ -37,8 +38,19 @@ void UKYGA_Glide::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const
 	}
 }
 
-void UKYGA_Glide::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+void UKYGA_Glide::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 	const FGameplayAbilityActivationInfo ActivationInfo)
+{
+	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
+	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(ActorInfo->AvatarActor);
+	if (Character)
+	{
+		Character->GetCharacterMovement()->Velocity.Z = FMath::Clamp(Character->GetVelocity().Z, FallingSpeed, Character->GetCharacterMovement()->JumpZVelocity);
+	}
+}
+
+void UKYGA_Glide::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+                                const FGameplayAbilityActivationInfo ActivationInfo)
 {
 	Super::InputReleased(Handle, ActorInfo, ActivationInfo);
 	OnSimpleCompleteCallback();
@@ -51,13 +63,13 @@ void UKYGA_Glide::OnLandedCallback(const FHitResult& Hit)
 
 void UKYGA_Glide::OnSimpleCompleteCallback_Implementation()
 {
+	Super::OnSimpleCompleteCallback_Implementation();
 	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(GetAvatarActorFromActorInfo());
 	Character->LandedDelegate.RemoveDynamic(this, &ThisClass::OnLandedCallback);
 	if (Character)
 	{
 		Character->GlideShowWingStatus(false);
 	}
-	Super::OnSimpleCompleteCallback_Implementation();
 }
 
 

@@ -18,7 +18,13 @@ class PROJECTKY_API AKYAIController : public AAIController
 public:
 	AKYAIController();
 	
+	UFUNCTION(BlueprintCallable)
+	void InitAI();
+
+	UFUNCTION(BlueprintCallable)
 	void RunAI();
+
+	UFUNCTION(BlueprintCallable)
 	void StopAI();
 	
 	void SetHitStatus(bool bIsHit);

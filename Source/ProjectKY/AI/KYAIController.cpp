@@ -24,7 +24,8 @@ void AKYAIController::OnPossess(APawn* InPawn)
 		KY_LOG(LogKY, Warning, TEXT("Pawn is Null"));
 		return;
 	}
-	RunAI();
+	InitAI();
+	StopAI();
 }
 
 void AKYAIController::OnUnPossess()
@@ -33,7 +34,7 @@ void AKYAIController::OnUnPossess()
 	StopAI();
 }
 
-void AKYAIController::RunAI()
+void AKYAIController::InitAI()
 {
 	KY_LOG(LogKY, Log, TEXT("Run AI"));
 	UBlackboardComponent* BBComponent = Blackboard.Get();
@@ -68,11 +69,24 @@ void AKYAIController::RunAI()
 	}
 }
 
+void AKYAIController::RunAI()
+{
+	KY_LOG(LogKY, Warning, TEXT("Run AI"));
+	UBehaviorTreeComponent* BTComponent = Cast<UBehaviorTreeComponent>(BrainComponent.Get());
+	if (BTComponent)
+	{
+		KY_LOG(LogKY, Warning, TEXT("Run AI"));
+		BTComponent->StartTree(*BTAsset);
+	}
+}
+
+
 void AKYAIController::StopAI()
 {
 	UBehaviorTreeComponent* BTComponent = Cast<UBehaviorTreeComponent>(BrainComponent.Get());
 	if(BTComponent)
 	{
+		KY_LOG(LogKY, Warning, TEXT("Stop AI"));
 		BTComponent->StopTree();
 	}
 	

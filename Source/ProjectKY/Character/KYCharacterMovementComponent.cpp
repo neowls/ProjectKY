@@ -28,20 +28,5 @@ void UKYCharacterMovementComponent::OnMovementUpdated(float DeltaSeconds, const 
 		{
 			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsFalling);
 		}
-
-		if (Velocity.Z > 0.f && !CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
-		{
-			CharacterBase->GetAbilitySystemComponent()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
-		}
-
-		else if (Velocity.Z < 0.f && CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
-		{
-			CharacterBase->GetAbilitySystemComponent()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
-		}
-		
-		if (CharacterBase->GetAbilitySystemComponent()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsGliding))
-		{
-			Velocity.Z = FMath::Clamp(Velocity.Z, -MaxFallingSpeed, 1200.0f);
-		}
 	}
 }

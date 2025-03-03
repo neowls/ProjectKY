@@ -31,16 +31,16 @@ public:
         static const FGameplayTag IsDead;
         static const FGameplayTag IsGliding;
         static const FGameplayTag IsFocusing;
-        static const FGameplayTag IsSkilling;
+        static const FGameplayTag IsSkill;
         static const FGameplayTag IsKnockDown;
         static const FGameplayTag IsKnockOut;
         static const FGameplayTag IsStaggered;
         static const FGameplayTag IsAttacking;
-        static const FGameplayTag IsDash;
+        static const FGameplayTag IsDodge;
         static const FGameplayTag IsGuard;
         static const FGameplayTag IsParry;
         static const FGameplayTag Invincible;
-        static const FGameplayTag IsRotable;
+        static const FGameplayTag IsRotatable;
         static const FGameplayTag IsFalling;
         static const FGameplayTag IsJumping;
         static const FGameplayTag IsCombat;
@@ -62,6 +62,8 @@ public:
         static const FGameplayTag Ability_Common_Hit_KnockDown;
         static const FGameplayTag Ability_Common_Hit_Staggered;
         static const FGameplayTag Ability_Common_Jump;
+        static const FGameplayTag Ability_Common_Combat;
+        static const FGameplayTag Ability_Common_Dead;
         
         // 적 어빌리티
         static const FGameplayTag Ability_Enemy_Attack;
@@ -75,7 +77,7 @@ public:
         static const FGameplayTag Ability_Player_Attack_Range;
         static const FGameplayTag Ability_Player_Attack_Upper;
         static const FGameplayTag Ability_Player_Attack_Special;
-        static const FGameplayTag Ability_Player_Dash;
+        static const FGameplayTag Ability_Player_Dodge;
         static const FGameplayTag Ability_Player_DoubleJump;
         static const FGameplayTag Ability_Player_Execution;
         static const FGameplayTag Ability_Player_Glide;

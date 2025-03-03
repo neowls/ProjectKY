@@ -3,10 +3,12 @@
 
 #include "GAS/GameAbility/KYGA_Jump.h"
 
+#include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "Character/KYCharacterBase.h"
 #include "GameFramework/Character.h"
 #include "GAS/AbilityTask/KYAT_PlayMontageAndWaitForEvent.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
 UKYGA_Jump::UKYGA_Jump()
 {
@@ -38,7 +40,9 @@ void UKYGA_Jump::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 	ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
 	Character->Jump();
+	GetAbilitySystemComponentFromActorInfo()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
 	Character->LandedDelegate.AddDynamic(this, &ThisClass::OnLandedCallback);
+	Character->OnReachedJumpApex.AddDynamic(this, &ThisClass::OnApexCallback);
 	KY_LOG(LogKY, Log, TEXT("Activate"));
 }
 
@@ -47,4 +51,11 @@ void UKYGA_Jump::OnLandedCallback(const FHitResult& Hit)
 	ACharacter* Character = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
 	Character->LandedDelegate.RemoveDynamic(this, &ThisClass::OnLandedCallback);
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+void UKYGA_Jump::OnApexCallback()
+{
+	ACharacter* Character = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
+	Character->OnReachedJumpApex.RemoveDynamic(this, &ThisClass::OnApexCallback);
+	GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
 }

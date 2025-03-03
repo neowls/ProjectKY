@@ -25,6 +25,9 @@ protected:
 	UFUNCTION()
 	void OnLandedCallback(const FHitResult& Hit);
 
+	UFUNCTION()
+	void OnApexCallback();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Jump", meta=(AllowPrivateAccess=true))
 	int32 JumpMaxCount = 1;
 };

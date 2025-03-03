@@ -20,6 +20,7 @@ protected:
 
 	TArray<FVector> GeneratePoissonDiskSamples(FVector Origin, float Radius, float MinDistance, float MinCenterOffSet, int MaxTries);
 
+	UFUNCTION(BlueprintCallable)
 	void SpawnCharacter();
 
 
