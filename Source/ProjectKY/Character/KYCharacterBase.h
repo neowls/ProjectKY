@@ -65,7 +65,7 @@ public:
 	UFUNCTION()
 	virtual void DamageTaken(AActor* DamageInstigator, AActor* DamageCauser, const FGameplayTagContainer& GameplayTagContainer, float Damage);
 	
-	UFUNCTION()
+	UFUNCTION(BlueprintCallable)
 	virtual void OutOfHealth();
 	
 	UFUNCTION(BlueprintCallable, Category = GAS)

@@ -95,6 +95,7 @@ public:
         static const FGameplayTag SkillHit;
         static const FGameplayTag Bounty_Experience;
         static const FGameplayTag Hit;
+        static const FGameplayTag LevelUp;
     };
     
     // 게임플레이 큐 태그

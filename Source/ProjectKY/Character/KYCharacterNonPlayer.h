@@ -36,15 +36,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnExecutableState(bool IsExecutable);
 
-	UFUNCTION()
-	void OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted);
-
 	virtual void GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass, float Level = 1.0f, bool bAddToTagMap = false) override;
 	
 protected:
 	virtual void SetDead_Implementation() override;
 	
 	virtual void OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	
+	virtual void OutOfHealth() override;
 
 	virtual void UpdateTargetedStatus(bool InStatus) override;
 

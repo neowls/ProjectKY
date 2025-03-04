@@ -2,7 +2,7 @@
 
 
 #include "GAS/Attribute/KYAttributeSetPlayer.h"
-
+#include "AbilitySystemBlueprintLibrary.h"
 #include "GameplayEffectExtension.h"
 #include "ProjectKY.h"
 
@@ -44,10 +44,6 @@ void UKYAttributeSetPlayer::PostGameplayEffectExecute(const struct FGameplayEffe
 		float InExperienceDone = GetInExperience();
 		float InLevel = GetLevel();
 		float NextLevelMaxExperience = GetMaxExperience();
-		float NewMaxHealth = GetMaxHealth();
-		float NewStrikingPower = GetStrikingPower();
-		float NewDefensivePower = GetDefensivePower();
-		float NewMaxRage = GetMaxRage();
 		float NewSkillPoint = GetSkillPoint();
 		
 		SetInExperience(0.0f);
@@ -67,18 +63,14 @@ void UKYAttributeSetPlayer::PostGameplayEffectExecute(const struct FGameplayEffe
 					SetMaxExperience(GetAttributeValueFromCurveTable(TEXT("MaxExperience"), NextLevelMaxExperience, InLevel));
 				}
 			}
-
-			KY_LOG(LogKY, Log, TEXT("Current Exp : %f, Max Exp : %f"), InExperienceDone, NextLevelMaxExperience);
+			
 			if (bLevelUp && PlayerLevelCurveTable)
 			{
-				SetMaxHealth(GetAttributeValueFromCurveTable(TEXT("MaxHealth"), NewMaxHealth, InLevel));
-				SetStrikingPower(GetAttributeValueFromCurveTable(TEXT("StrikingPower"), NewStrikingPower, InLevel));
-				SetDefensivePower(GetAttributeValueFromCurveTable(TEXT("DefensivePower"), NewDefensivePower, InLevel));
-				SetMaxRage(GetAttributeValueFromCurveTable(TEXT("MaxRage"), NewMaxRage, InLevel));
 				SetLevel(InLevel);
 				SetSkillPoint(NewSkillPoint);
 
 				OnLevelUp.Broadcast();
+				KY_LOG(LogKY, Log, TEXT("Level Up! Current Level : %f"), GetLevel());
 			}
 			
 			SetExperience(InExperienceDone);

@@ -97,6 +97,7 @@ void AKYCharacterPlayer::PossessedBy(AController* NewController)
 		{
 			AttributeSetPlayer->OnOutOfHealth.AddDynamic(this, &ThisClass::OutOfHealth);	// 사망 델리게이트 바인딩
 			AttributeSetPlayer->OnDamageTaken.AddDynamic(this, &ThisClass::DamageTaken);
+			AttributeSetPlayer->OnLevelUp.AddDynamic(this, &ThisClass::OnLevelUpApplyStat);
 			
 			AttributeSetPlayer->PlayerLevelCurveTable = PlayerLevelCurveTable;
 		}
@@ -250,6 +251,19 @@ void AKYCharacterPlayer::ChangeWeaponWithType(const FInputActionValue& Value)
 	if(EquippedWeapon.IsValidIndex(WeaponIndex - 1))
 	{
 		ChangeWeapon(EquippedWeapon[WeaponIndex - 1]);
+	}
+}
+
+void AKYCharacterPlayer::OnLevelUpApplyStat()
+{
+	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(this);
+		
+		
+	FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(LevelUpEffect, 1.0f, EffectContextHandle); // 이펙트 부여
+	if (EffectSpecHandle.IsValid())
+	{
+		ASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
 }
 

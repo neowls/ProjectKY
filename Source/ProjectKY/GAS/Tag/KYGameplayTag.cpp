@@ -89,6 +89,7 @@ const FGameplayTag UKYGameplayTags::FEventTags::AttackHit = FGameplayTag::Reques
 const FGameplayTag UKYGameplayTags::FEventTags::SkillHit = FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.SkillHitCheck"));
 const FGameplayTag UKYGameplayTags::FEventTags::Bounty_Experience = FGameplayTag::RequestGameplayTag(FName("Event.Bounty.Experience"));
 const FGameplayTag UKYGameplayTags::FEventTags::Hit = FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit"));
+const FGameplayTag UKYGameplayTags::FEventTags::LevelUp = FGameplayTag::RequestGameplayTag(FName("Event.Character.LevelUp"));
 
 // 게임플레이 큐 태그 정의
 const FGameplayTag UKYGameplayTags::FGameplayCueTags::Character_AttackHit = FGameplayTag::RequestGameplayTag(FName("GameplayCue.Character.AttackHit"));
@@ -101,6 +102,6 @@ UKYGameplayTags::FGameplayCueTags UKYGameplayTags::GameplayCue;
 
 void UKYGameplayTags::InitializeTags()
 {
-    // 이미 모든 태그가 정적 초기화되었으므로 추가 작업 필요 없음
-    // 필요한 경우 여기에 추가 초기화 로직 구현
+    // 이미 모든 태그가 정적 초기화되었음.
+    // 필요한 경우 추가 초기화 로직을 구현한다.
 } 

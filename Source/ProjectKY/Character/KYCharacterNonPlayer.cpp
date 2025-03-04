@@ -2,6 +2,8 @@
 
 
 #include "Character/KYCharacterNonPlayer.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
 #include "AI/KYAIController.h"
@@ -75,7 +77,6 @@ void AKYCharacterNonPlayer::RegisterGameplayEvents()
 {
 	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.Unstable).AddUObject(this, &ThisClass::OnHitTagChanged);
 	ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.Executable).AddUObject(this, &ThisClass::OnExecutableTagChanged);
-	//ASC->RegisterGameplayTagEvent(UKYGameplayTags::CharacterState.IsCombat).AddUObject(this, &ThisClass::OnCombatState);
 	bIsCombat = true;
 }
 
@@ -106,11 +107,6 @@ void AKYCharacterNonPlayer::OnExecutableTagChanged(FGameplayTag GameplayTag, int
 	OnExecutableState(Count > 0);
 }
 
-void AKYCharacterNonPlayer::OnExecutedMontageEndCallback(UAnimMontage* Montage, bool bInterrupted)
-{
-	SetDead();
-}
-
 void AKYCharacterNonPlayer::GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass, float Level, bool bAddToTagMap)
 {
 	return Super::GrantAbility(NewAbilityClass, Level, bAddToTagMap);
@@ -122,6 +118,22 @@ void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int3
 	if (AIController)
 	{
 		AIController->SetHitStatus(NewCount>0);
+		
+	}
+}
+
+void AKYCharacterNonPlayer::OutOfHealth()
+{
+	Super::OutOfHealth();
+	
+	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+	EffectContextHandle.AddSourceObject(this);
+		
+	FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(DropBountyEffect, AttributeSetEnemy->GetLevel(), EffectContextHandle); // 이펙트 부여
+	if (EffectSpecHandle.IsValid())
+	{
+		if (AActor* TargetActor = GetController<AKYAIController>()->GetTargetActor())
+		UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor)->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
 	}
 }
 

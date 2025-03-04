@@ -48,6 +48,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void InteractObject();
 
+	UFUNCTION()
+	void OnLevelUpApplyStat();
 	
 	void GASInputPressed(int32 InputId);
 	void GASInputReleased(int32 InputId);
@@ -134,6 +136,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FRotator RotationOffset = FRotator(0.0f, -45.0f, 0.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category=GAS)
+	TSubclassOf<UGameplayEffect> LevelUpEffect;
 
 private:
 	UPROPERTY()

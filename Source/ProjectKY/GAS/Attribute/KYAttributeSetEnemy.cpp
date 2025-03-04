@@ -42,26 +42,3 @@ void UKYAttributeSetEnemy::PostAttributeChange(const FGameplayAttribute& Attribu
 		}
 	}
 }
-
-void UKYAttributeSetEnemy::PostGameplayEffectExecute(const struct FGameplayEffectModCallbackData& Data)
-{
-	Super::PostGameplayEffectExecute(Data);
-	if (bOutOfHealth)
-	{
-		AActor* Causer = Data.EffectSpec.GetEffectContext().GetEffectCauser();
-		
-		FGameplayEffectContextHandle EffectContextHandle = GetOwningAbilitySystemComponent()->MakeEffectContext();
-		EffectContextHandle.AddSourceObject(GetOwningActor());
-		
-		FGameplayEffectSpecHandle EffectSpecHandle = GetOwningAbilitySystemComponent()->MakeOutgoingSpec(DropBountyEffect, GetLevel(), EffectContextHandle); // 이펙트 부여
-		if (EffectSpecHandle.IsValid())
-		{
-			UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Causer)->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-		}
-		
-		if (OnDropExperienceBounty.IsBound())
-		{
-			OnDropExperienceBounty.Broadcast();
-		}
-	}
-}
