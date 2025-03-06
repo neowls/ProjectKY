@@ -26,8 +26,8 @@ protected:
 	virtual void OnRemoveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags = nullptr, const FGameplayTagContainer* TargetTags = nullptr, FGameplayTagContainer* OptionalRelevantTags = nullptr) const override;
-	
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void OnSimpleEventReceivedCallback(FGameplayEventData Payload);
@@ -41,19 +41,11 @@ protected:
 	UFUNCTION()
 	virtual void PlayAnimMontageTask();
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat", meta=(AllowPrivateAccess=true))
-	bool bIsCombatAbility;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Combat", meta=(AllowPrivateAccess=true))
-	TSubclassOf<UGameplayEffect> CombatEffect;
-
 	UPROPERTY()
 	FEventAnimMontageData AnimMontageData;
 
 	UPROPERTY()
 	FGameplayTag DataTag;
-
-	void ApplyCombatEffect();
 	
 };
 

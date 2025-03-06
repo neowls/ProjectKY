@@ -12,7 +12,7 @@
 UKYGA_AnimBase::UKYGA_AnimBase()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
-	bIsCombatAbility = false;
+	bIsCombatAbility = true;
 	bInputAbility = true;
 }
 
@@ -86,7 +86,6 @@ void UKYGA_AnimBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, co
 	{
 		PlayAnimMontageTask();
 	}
-	if (bIsCombatAbility) ApplyCombatEffect();
 }
 
 void UKYGA_AnimBase::OnAnimSetChangeCallback()
@@ -107,22 +106,6 @@ void UKYGA_AnimBase::PlayAnimMontageTask()
 	if (AnimMontageData.IsUseEvent) PMT->EventReceived.AddDynamic(this, &ThisClass::OnSimpleEventReceivedCallback);
 	PMT->ReadyForActivation();
 }
-
-void UKYGA_AnimBase::ApplyCombatEffect()
-{
-	if (CombatEffect == nullptr) return;
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	
-	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(GetAvatarActorFromActorInfo());
-	
-	FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(CombatEffect, 1.0f, EffectContextHandle); // 이펙트 부여
-	if (EffectSpecHandle.IsValid())
-	{
-		ASC->BP_ApplyGameplayEffectSpecToSelf(EffectSpecHandle);
-	}
-}
-
 
 void UKYGA_AnimBase::OnSimpleEventReceivedCallback_Implementation(FGameplayEventData Payload)
 {

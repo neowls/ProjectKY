@@ -56,7 +56,6 @@ void UKYGA_ComboAttack::StartNextCombo()
 	if (HasNextComboInput)
 	{
 		MontageJumpToSection(GetNextSection());
-		if (bIsCombatAbility) ApplyCombatEffect();
 		HasNextComboInput = false;
 	}
 }

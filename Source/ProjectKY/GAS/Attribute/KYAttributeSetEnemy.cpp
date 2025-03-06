@@ -2,9 +2,7 @@
 
 
 #include "GAS/Attribute/KYAttributeSetEnemy.h"
-
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GameplayEffectExtension.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 UKYAttributeSetEnemy::UKYAttributeSetEnemy() :

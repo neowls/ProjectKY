@@ -4,6 +4,7 @@
 #include "GAS/GameAbility/KYGameplayAbility.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
+#include "GAS/Tag/KYGameplayTag.h"
 
 
 UKYGameplayAbility::UKYGameplayAbility()
@@ -43,6 +44,50 @@ void UKYGameplayAbility::TryActivatePassiveAbility(const FGameplayAbilityActorIn
 		}
 	}
 }
+
+void UKYGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+	
+	if (bIsCombatAbility)
+	{
+		if (ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat)) GetWorld()->GetTimerManager().ClearTimer(CombatTagTimerHandle);
+		else
+		{
+			ASC->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsCombat);
+		}
+	}
+}
+
+void UKYGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	if (bIsCombatAbility) UpdateCombatStateTag();
+}
+
+void UKYGameplayAbility::UpdateCombatStateTag()
+{
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC) return;
+	
+	if (ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat))
+	{
+		GetWorld()->GetTimerManager().SetTimer(CombatTagTimerHandle, [ASC]()
+		{
+			if (ASC)
+			{
+				ASC->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsCombat);
+			}
+		}, 5.0f, false);
+	}
+}
+
 
 void UKYGameplayAbility::OnSimpleInterruptedCallback_Implementation()
 {

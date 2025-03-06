@@ -16,10 +16,14 @@ class PROJECTKY_API UKYGameplayAbility : public UGameplayAbility
 
 public:
 	UKYGameplayAbility();
-
+	
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
 	void TryActivatePassiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec);
+
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 	UFUNCTION()
 	bool GetIsInputAbility() const { return bInputAbility;}
@@ -33,10 +37,19 @@ protected:
 	void OnSimpleInterruptedCallback();
 	
 
-	UPROPERTY(EditDefaultsOnly, Category = "Activation")
+	UPROPERTY(EditDefaultsOnly, Category ="Activation")
 	bool bPassiveAbility = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Activation")
+	UPROPERTY(EditDefaultsOnly, Category ="Activation")
 	bool bInputAbility = false;
+
+	UPROPERTY(EditDefaultsOnly, Category="Activation")
+	bool bIsCombatAbility = false;
+	
+	UPROPERTY()
+	FTimerHandle CombatTagTimerHandle;
+
+private:
+	void UpdateCombatStateTag();
 	
 };
