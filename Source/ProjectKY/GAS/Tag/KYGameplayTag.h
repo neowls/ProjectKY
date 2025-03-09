@@ -49,8 +49,7 @@ public:
         
         // 자주 사용되는 태그 컨테이너
         static const FGameplayTagContainer CombatTags;
-        static const FGameplayTagContainer UnmovableTags;
-        static const FGameplayTagContainer UnstableTags;
+        static const FGameplayTagContainer MovementBlockTags;
     };
     
     // 데이터 태그
@@ -96,6 +95,7 @@ public:
         static const FGameplayTag Bounty_Experience;
         static const FGameplayTag Hit;
         static const FGameplayTag LevelUp;
+        static const FGameplayTag Execution;
     };
     
     // 게임플레이 큐 태그

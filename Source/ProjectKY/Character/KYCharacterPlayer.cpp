@@ -1,22 +1,27 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+// ReSharper disable CppUnusedIncludeDirective
 #include "Character/KYCharacterPlayer.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
+#include "KYCharacterNonPlayer.h"
+#include "ProjectKY.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
-#include "EnhancedInputSubsystems.h"
-#include "InputMappingContext.h"
 #include "GAS/Attribute/KYAttributeSetPlayer.h"
-#include "GAS/Tag/KYGameplayTag.h"
 #include "GAS/GameAbility/KYGameplayAbility.h"
+#include "GAS/Tag/KYGameplayTag.h"
+#include "Interface/KYInteractableInterface.h"
 #include "Player/KYPlayerState.h"
-#include "ProjectKY.h"
-#include "Components/CapsuleComponent.h"
 
 
 AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializer)
@@ -60,6 +65,9 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	InteractTriggerComp->SetBoxExtent(FVector(100.0f, 48.0f, 64.0f));
 	InteractTriggerComp->SetRelativeLocation(FVector(140.0f, 0.0f, 0.0f));
 	InteractTriggerComp->SetCollisionProfileName(TEXT("InteractTrigger"));
+
+	InteractTriggerComp->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnInteractBeginOverlap);
+	InteractTriggerComp->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnInteractEndOverlap);
 
 	
 	WingComp->SetRelativeScale3D(FVector(1.5f, 1.3f, 1.3f));
@@ -125,7 +133,6 @@ void AKYCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		{
 			Subsystem->AddMappingContext(DefaultContext, 0);
 		}
-		
 	}
 	
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
@@ -144,7 +151,6 @@ void AKYCharacterPlayer::SetupGASInputComponent()
 		
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Common_Jump);
 		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, UKYGameplayTags::Data.Ability_Common_Jump);
-		EnhancedInputComponent->BindAction(JumpAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_DoubleJump);
 		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Glide);
 		EnhancedInputComponent->BindAction(GlideAction,ETriggerEvent::Completed, this, &ThisClass::GASInputReleased, UKYGameplayTags::Data.Ability_Player_Glide);
 		EnhancedInputComponent->BindAction(LookAction,ETriggerEvent::Triggered, this, &ThisClass::GASInputPressed, UKYGameplayTags::Data.Ability_Player_Focus);
@@ -188,7 +194,7 @@ void AKYCharacterPlayer::AddWeaponData(const FName& WeaponName, const FWeaponDat
 void AKYCharacterPlayer::OnCombatState(const FGameplayTag GameplayTag, int32 Count)
 {
 	Super::OnCombatState(GameplayTag, Count);
-	if (Count < 1)
+	if (!bIsCombat)
 	{
 		PlayAnimMontage(GetAnimMontageData(UKYGameplayTags::Data.Ability_Common_Combat).Montage, 1.0f, TEXT("NonCombat"));
 	}
@@ -196,7 +202,7 @@ void AKYCharacterPlayer::OnCombatState(const FGameplayTag GameplayTag, int32 Cou
 
 void AKYCharacterPlayer::Move(const FInputActionValue& Value)
 {
-	if(ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.Unmovable) || ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.Unstable)) return;	// 해당 태그 부착시 캐릭터 이동 제한
+	if(ASC->HasAnyMatchingGameplayTags(UKYGameplayTags::CharacterState.MovementBlockTags)) return;	// 해당 태그 부착시 캐릭터 이동 제한
 	
 	FVector2D MovementVector = Value.Get<FVector2d>(); // X, Y 입력 벡터 저장
 	
@@ -254,12 +260,121 @@ void AKYCharacterPlayer::ChangeWeaponWithType(const FInputActionValue& Value)
 	}
 }
 
+void AKYCharacterPlayer::OnInteractBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor && OtherActor->Implements<UKYInteractableInterface>() && IKYInteractableInterface::Execute_IsCanInteract(OtherActor))
+	{
+		OverlappedInteractableTargets.AddUnique(OtherActor); // 동일한 액터가 저장되지 않게 Unique 로 추가한다.
+		UpdateClosestInteractableTarget();
+	}
+}
+
+void AKYCharacterPlayer::OnInteractEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor && OtherActor->Implements<UKYInteractableInterface>())
+	{
+		if (OverlappedInteractableTargets.Contains(OtherActor))
+		{
+			OverlappedInteractableTargets.Remove(OtherActor);
+			UpdateClosestInteractableTarget();
+		}
+	}
+}
+
+void AKYCharacterPlayer::UpdateClosestInteractableTarget()
+{
+	if (OverlappedInteractableTargets.Num() == 0) // 오버랩된 액터들이 있는지 확인한다. 
+	{
+		if (CurrentInteractableTarget.IsValid()) // 타겟이된 액터가 Valid 한지 확인한다.
+		{
+			IKYInteractableInterface::Execute_SetInteractableStatus(CurrentInteractableTarget.Get(), false); // 타겟이 된 상호작용 액터의 UI 상태를 변경한다. 
+			CurrentInteractableTarget.Reset();
+		}
+		return;
+	}
+	
+	const FVector CurrentLocation = GetActorLocation(); 
+	float ClosestDistance = MAX_FLT;
+	TWeakObjectPtr<AActor> ClosestTarget = nullptr; // 캐릭터가 다른 요인에 의해 사망처리될 수 있으므로 약참조로 진행한다.
+
+	// 거리 비교
+	for (const TWeakObjectPtr<AActor>& InteractableTarget : OverlappedInteractableTargets)
+	{
+		if (!InteractableTarget.IsValid()) continue;
+		
+		float Distance = FVector::DistSquared(CurrentLocation, InteractableTarget.Get()->GetActorLocation());
+		if (Distance < ClosestDistance)
+		{
+			ClosestDistance = Distance;
+			ClosestTarget = InteractableTarget;
+		}
+	}
+
+	// 이전 타겟 액터, 현재 타겟 액터 상호작용 상태 변경
+	if (CurrentInteractableTarget  != ClosestTarget)
+	{
+		if (CurrentInteractableTarget.IsValid() &&
+			CurrentInteractableTarget.Get()->Implements<UKYInteractableInterface>())
+		{
+			IKYInteractableInterface::Execute_SetInteractableStatus(CurrentInteractableTarget.Get(), false);
+		}
+
+		CurrentInteractableTarget = ClosestTarget;
+		if (CurrentInteractableTarget.IsValid() &&
+			CurrentInteractableTarget.Get()->Implements<UKYInteractableInterface>())
+		{
+			IKYInteractableInterface::Execute_SetInteractableStatus(CurrentInteractableTarget.Get(), true);
+		}
+	}
+}
+
+void AKYCharacterPlayer::InteractObject_Implementation()
+{
+	if (CurrentInteractableTarget.IsValid() && CurrentInteractableTarget->Implements<UKYInteractableInterface>())
+	{
+		if (IKYInteractableInterface::Execute_IsCanInteract(CurrentInteractableTarget.Get()))
+		{
+			IKYInteractableInterface::Execute_InteractEvent(CurrentInteractableTarget.Get(), this, 1.0f); // 상호작용 이벤트 호출
+			if(Cast<AKYCharacterNonPlayer>(CurrentInteractableTarget.Get()))
+			{
+				ExecutionTargetedEnemy(); // 적 캐릭터일 경우 처형이므로 처형 로직 실행
+			}
+		}
+	}
+}
+
+void AKYCharacterPlayer::ExecutionTargetedEnemy()
+{
+	AKYCharacterNonPlayer* TargetEnemy = Cast<AKYCharacterNonPlayer>(CurrentInteractableTarget.Get());
+	if (TargetEnemy == nullptr) return;
+
+	// 처형 어빌리티 발동을 위한 트리거 이벤트 전달
+	FGameplayEventData ExecutionEvent;
+	ExecutionEvent.Instigator = this;
+	ExecutionEvent.EventMagnitude = 0.0f;
+	ExecutionEvent.Target = TargetEnemy;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UKYGameplayTags::Event.Execution, ExecutionEvent);
+
+	// 적 위치와 모션 워핑 위치 계산
+	FVector TargetLocation = TargetEnemy->GetActorLocation();
+	FVector TargetForward = TargetEnemy->GetActorForwardVector();
+	FVector InteractionPoint = TargetLocation + TargetForward * 200.0f;
+
+	// 적을 바라보는 회전 계산
+	FRotator LookAtRotation = (TargetLocation - GetActorLocation()).Rotation();
+
+	// 모션워핑 업데이트
+	MotionWarpingComp->AddOrUpdateWarpTargetFromLocationAndRotation(FName("Target"), InteractionPoint, LookAtRotation);
+}
+
 void AKYCharacterPlayer::OnLevelUpApplyStat()
 {
 	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
 	EffectContextHandle.AddSourceObject(this);
 		
-		
+	
 	FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(LevelUpEffect, 1.0f, EffectContextHandle); // 이펙트 부여
 	if (EffectSpecHandle.IsValid())
 	{

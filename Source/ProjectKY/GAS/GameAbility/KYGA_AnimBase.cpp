@@ -29,7 +29,6 @@ void UKYGA_AnimBase::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, c
 	if (Character)
 	{
 		Character->OnWeaponAnimSetChanged.AddDynamic(this, &UKYGA_AnimBase::OnAnimSetChangeCallback);
-		KY_LOG(LogKY, Log, TEXT("Character Name : %s, Ability Name : %s"), *Character->GetName(), *this->GetName());
 	}
 }
 

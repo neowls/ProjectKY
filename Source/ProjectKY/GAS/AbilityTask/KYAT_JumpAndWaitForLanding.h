@@ -7,6 +7,7 @@
 #include "KYAT_JumpAndWaitForLanding.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAndWaitForLandingDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FJumpAndWaitForApexDelegate);
 
 /**
  * 
@@ -29,7 +30,11 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FJumpAndWaitForLandingDelegate OnComplete;
 
+	UPROPERTY(BlueprintAssignable)
+	FJumpAndWaitForApexDelegate OnReachApex;
+
 protected:
 	UFUNCTION()
 	void OnLandedCallback(const FHitResult& Hit);
+	void OnReachApexCallback();
 };

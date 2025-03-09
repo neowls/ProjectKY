@@ -31,7 +31,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void EffectGranted();
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void GetItem();
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)

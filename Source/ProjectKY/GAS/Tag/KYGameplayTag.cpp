@@ -40,24 +40,13 @@ const FGameplayTagContainer UKYGameplayTags::FCharacterStateTags::CombatTags = [
     return Tags;
 }();
 
-const FGameplayTagContainer UKYGameplayTags::FCharacterStateTags::UnmovableTags = []() {
+const FGameplayTagContainer UKYGameplayTags::FCharacterStateTags::MovementBlockTags = []() {
     FGameplayTagContainer Tags;
+    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable")));
     Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsAttacking")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsDodge")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsGuard")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unmovable.IsParry")));
     return Tags;
 }();
 
-const FGameplayTagContainer UKYGameplayTags::FCharacterStateTags::UnstableTags = []() {
-    FGameplayTagContainer Tags;
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsKnockDown")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsKnockOut")));
-    Tags.AddTag(FGameplayTag::RequestGameplayTag(FName("Character.State.Unstable.IsStaggered")));
-    return Tags;
-}();
 
 // 데이터 태그 정의
 const FGameplayTag UKYGameplayTags::FDataTags::Ability = FGameplayTag::RequestGameplayTag(FName("Data.Ability"));
@@ -90,6 +79,7 @@ const FGameplayTag UKYGameplayTags::FEventTags::SkillHit = FGameplayTag::Request
 const FGameplayTag UKYGameplayTags::FEventTags::Bounty_Experience = FGameplayTag::RequestGameplayTag(FName("Event.Bounty.Experience"));
 const FGameplayTag UKYGameplayTags::FEventTags::Hit = FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Hit"));
 const FGameplayTag UKYGameplayTags::FEventTags::LevelUp = FGameplayTag::RequestGameplayTag(FName("Event.Character.LevelUp"));
+const FGameplayTag UKYGameplayTags::FEventTags::Execution = FGameplayTag::RequestGameplayTag(FName("Event.Character.Action.Execution"));
 
 // 게임플레이 큐 태그 정의
 const FGameplayTag UKYGameplayTags::FGameplayCueTags::Character_AttackHit = FGameplayTag::RequestGameplayTag(FName("GameplayCue.Character.AttackHit"));

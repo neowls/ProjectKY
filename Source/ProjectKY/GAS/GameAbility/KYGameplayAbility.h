@@ -9,6 +9,9 @@
 /**
  * 
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnAbilityLevelUp);
+
 UCLASS()
 class PROJECTKY_API UKYGameplayAbility : public UGameplayAbility
 {
@@ -27,7 +30,9 @@ public:
 
 	UFUNCTION()
 	bool GetIsInputAbility() const { return bInputAbility;}
-	
+
+	UPROPERTY(BlueprintAssignable)
+	FOnAbilityLevelUp OnAbilityLevelUp;
 	
 protected:
 	UFUNCTION(BlueprintNativeEvent)
@@ -35,6 +40,9 @@ protected:
 	
 	UFUNCTION(BlueprintNativeEvent)
 	void OnSimpleInterruptedCallback();
+
+	UFUNCTION()
+	virtual void OnAbilityLevelUpCallback(); 
 	
 
 	UPROPERTY(EditDefaultsOnly, Category ="Activation")
@@ -45,11 +53,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Activation")
 	bool bIsCombatAbility = false;
-	
-	UPROPERTY()
-	FTimerHandle CombatTagTimerHandle;
 
 private:
-	void UpdateCombatStateTag();
+	void UpdateCombatStateTag(const FGameplayAbilityActorInfo* ActorInfo);
 	
 };

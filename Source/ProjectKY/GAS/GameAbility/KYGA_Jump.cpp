@@ -2,24 +2,16 @@
 
 
 #include "GAS/GameAbility/KYGA_Jump.h"
-
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
-#include "Character/KYCharacterBase.h"
 #include "GameFramework/Character.h"
-#include "GAS/AbilityTask/KYAT_PlayMontageAndWaitForEvent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 UKYGA_Jump::UKYGA_Jump()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	bInputAbility = true;
-}
-
-void UKYGA_Jump::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
-{
-	Super::OnGiveAbility(ActorInfo, Spec);
-	Cast<ACharacter>(ActorInfo->AvatarActor)->JumpMaxCount = JumpMaxCount;
 }
 
 bool UKYGA_Jump::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
@@ -30,32 +22,95 @@ bool UKYGA_Jump::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	{
 		return false;
 	}
-
+	
 	const ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
+	
 	return Character->CanJump();
 }
 
 void UKYGA_Jump::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
 	ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
-	Character->Jump();
-	GetAbilitySystemComponentFromActorInfo()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
+	if (!Character)
+	{
+		OnSimpleInterruptedCallback();
+		return;
+	}
+	
 	Character->LandedDelegate.AddDynamic(this, &ThisClass::OnLandedCallback);
 	Character->OnReachedJumpApex.AddDynamic(this, &ThisClass::OnApexCallback);
-	KY_LOG(LogKY, Log, TEXT("Activate"));
+
+	for (auto* iter : Character->LandedDelegate.GetAllObjects())
+	{
+		KY_LOG(LogKY, Log, TEXT("Landed Delegate Object : %s"), *iter->GetName());
+	}
+	
+	Character->GetCharacterMovement()->bNotifyApex = true;
+
+	Character->Jump();
+	
+	if (!GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
+	{
+		GetAbilitySystemComponentFromActorInfo()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
+	}
+}
+
+void UKYGA_Jump::InputPressed(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
+	const FGameplayAbilityActivationInfo ActivationInfo)
+{
+	Super::InputPressed(Handle, ActorInfo, ActivationInfo);
+	ACharacter* Character = Cast<ACharacter>(ActorInfo->AvatarActor.Get());
+	if (!Character && !Character->CanJump()) return;
+	
+	Character->GetCharacterMovement()->bNotifyApex = true;
+	Character->Jump();
+	
+	if (!GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
+	{
+		GetAbilitySystemComponentFromActorInfo()->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
+	}
 }
 
 void UKYGA_Jump::OnLandedCallback(const FHitResult& Hit)
 {
-	ACharacter* Character = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
+	KY_LOG(LogKY, Log, TEXT("Land"));
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if (!Character)
+	{
+		OnSimpleInterruptedCallback();
+		return;
+	}
+
 	Character->LandedDelegate.RemoveDynamic(this, &ThisClass::OnLandedCallback);
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+	Character->OnReachedJumpApex.RemoveDynamic(this, &ThisClass::OnApexCallback);
+	if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
+	{
+		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
+	}
+	OnSimpleCompleteCallback();
 }
 
 void UKYGA_Jump::OnApexCallback()
 {
-	ACharacter* Character = Cast<ACharacter>(CurrentActorInfo->AvatarActor.Get());
-	Character->OnReachedJumpApex.RemoveDynamic(this, &ThisClass::OnApexCallback);
-	GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
+	KY_LOG(LogKY, Log, TEXT("Apex"));
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	if (!Character)
+	{
+		OnSimpleInterruptedCallback();
+		return;
+	}
+	
+	if(GetAbilitySystemComponentFromActorInfo()->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsJumping))
+	{
+		GetAbilitySystemComponentFromActorInfo()->RemoveLooseGameplayTag(UKYGameplayTags::CharacterState.IsJumping);
+	}
 }
+
+void UKYGA_Jump::OnAbilityLevelUpCallback()
+{
+	ACharacter* Character = Cast<ACharacter>(GetAvatarActorFromActorInfo());
+	Character->JumpMaxCount = GetAbilityLevel();
+}
+

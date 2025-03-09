@@ -58,6 +58,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Collision")
 	FORCEINLINE void ClearIgnoreActors() { HitIgnoreActors.Empty(); }
+
+	UFUNCTION(BlueprintCallable)
+	FORCEINLINE FTimerHandle& GetCurrentCombatTimerHandle() { return CombatTagTimerHandle; }
 	
 	UFUNCTION(BlueprintCallable, meta=(BlueprintThreadSafe))
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
@@ -106,6 +109,9 @@ protected:
 
 	UFUNCTION()
 	virtual void OnWeaponCompBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	virtual void UpgradeAbility(FGameplayTag& InGameplayTag);
 	
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
@@ -153,6 +159,8 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Material)
 	UMaterialInstanceDynamic* WeaponLeftDynamicMaterialInstance;
 
+	UPROPERTY()
+	FTimerHandle CombatTagTimerHandle;
 
 private:
 	UFUNCTION()

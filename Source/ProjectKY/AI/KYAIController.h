@@ -34,6 +34,7 @@ public:
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
+	void DelayedInitAI();
 	virtual void OnUnPossess() override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AI")

@@ -35,6 +35,9 @@ AKYCharacterBase::AKYCharacterBase(const FObjectInitializer& ObjectInitializer)
 
 	WeaponCompLeft = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponComp_L"));
 	WeaponCompLeft->SetupAttachment(GetMesh(), TEXT("Weapon_L"));
+
+	WeaponCompLeft->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnWeaponCompBeginOverlap);
+	WeaponCompRight->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnWeaponCompBeginOverlap);
 	
 	bIsCombat = false;
 
@@ -121,8 +124,7 @@ void AKYCharacterBase::BeginPlay()
 	Super::BeginPlay();
 	SetDynamicMaterialInstance();
 	AttackEventData.Instigator = this;
-	WeaponCompLeft->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnWeaponCompBeginOverlap);
-	WeaponCompRight->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnWeaponCompBeginOverlap);
+
 }
 
 void AKYCharacterBase::GrantStartAbilities()
@@ -185,9 +187,9 @@ void AKYCharacterBase::InitializeAbilitySystemComponent()
 	RegisterGameplayEvents();
 }
 
-void AKYCharacterBase::RegisterGameplayEvents() // Blank
+void AKYCharacterBase::RegisterGameplayEvents() 
 {
-	
+	// Blank
 }
 
 void AKYCharacterBase::OnCombatState(const FGameplayTag GameplayTag, int32 Count)
@@ -214,16 +216,36 @@ void AKYCharacterBase::ChangeWeapon(FName WeaponName)
 }
 
 
-void AKYCharacterBase::OnWeaponCompBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AKYCharacterBase::OnWeaponCompBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(HitIgnoreActors.Contains(OtherActor) && !Cast<AKYCharacterBase>(OtherActor)->GetAbilitySystemComponent()) return;
+	if (HitIgnoreActors.Contains(OtherActor)) return;
+
+	UAbilitySystemComponent* OtherASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor); 
+	if (!OtherASC) return;
 	
 	AttackEventData.Target = OtherActor;
 	AttackEventData.TargetData = UAbilitySystemBlueprintLibrary::AbilityTargetDataFromActor(OtherActor);
 	
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UKYGameplayTags::Event.AttackHit, AttackEventData);
 	HitIgnoreActors.Add(OtherActor);
+}
+
+void AKYCharacterBase::UpgradeAbility(FGameplayTag& InGameplayTag)
+{
+	if (AbilitiesTagMap.Contains(InGameplayTag))
+	{
+		FGameplayAbilitySpec* Spec = ASC->FindAbilitySpecFromHandle(AbilitiesTagMap.FindRef(InGameplayTag));
+		if (Spec)
+		{
+			if (UKYGameplayAbility* UpgradedAbility = Cast<UKYGameplayAbility>(Spec->Ability))
+			{
+				Spec->Level += 1.0f;
+				UpgradedAbility->OnAbilityLevelUp.Broadcast();
+			}
+			KY_LOG(LogKY, Log, TEXT("%s Ability is Upgraded."), *Spec->Ability.GetName());
+		}
+	}
 }
 
 void AKYCharacterBase::UpdateWeaponData_Implementation(FWeaponData NewWeapon)

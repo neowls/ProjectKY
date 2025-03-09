@@ -69,6 +69,7 @@ void AKYCharacterNonPlayer::PossessedBy(AController* NewController)
 	AttributeSetEnemy->DropBountyEffect = DropBountyEffect;
 	AttributeSetEnemy->InitDropGold(10.0f);
 	InitializeAbilitySystemComponent();
+	RegisterGameplayEvents();
 
 	OnWeaponAnimSetChanged.Broadcast();
 }
@@ -92,10 +93,16 @@ void AKYCharacterNonPlayer::PlayExecutedMontage(FName SectionName, UAnimMontage*
 	HPBar->SetHiddenInGame(true);
 	TargetedWidget->Deactivate();
 	TargetedWidget->SetHiddenInGame(true);
+
+	if (MontageToPlay == nullptr)
+	{
+		KY_LOG(LogKY, Warning, TEXT("Executed Montage Is nullptr"));
+		return;
+	}
 	
 	GetMesh()->GetAnimInstance()->StopAllMontages(0.01f);
 	GetMesh()->GetAnimInstance()->Montage_Play(MontageToPlay);
-	if (SectionName != TEXT("0")) GetMesh()->GetAnimInstance()->Montage_JumpToSection(SectionName);
+	if (SectionName != NAME_None) GetMesh()->GetAnimInstance()->Montage_JumpToSection(SectionName);
 	
 	GetCapsuleComponent()->SetCollisionProfileName("IgnoreOnlyPawn");
 	
@@ -105,6 +112,7 @@ void AKYCharacterNonPlayer::PlayExecutedMontage(FName SectionName, UAnimMontage*
 void AKYCharacterNonPlayer::OnExecutableTagChanged(FGameplayTag GameplayTag, int Count)
 {
 	OnExecutableState(Count > 0);
+	KY_LOG(LogKY, Log, TEXT("OnExecutableTagChanged: %d"), Count);
 }
 
 void AKYCharacterNonPlayer::GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbilityClass, float Level, bool bAddToTagMap)
@@ -114,11 +122,9 @@ void AKYCharacterNonPlayer::GrantAbility(TSubclassOf<UKYGameplayAbility> NewAbil
 
 void AKYCharacterNonPlayer::OnHitTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
 {
-	AKYAIController* AIController = Cast<AKYAIController>(GetController());
-	if (AIController)
+	if (AKYAIController* AIController = Cast<AKYAIController>(GetController()))
 	{
-		AIController->SetHitStatus(NewCount>0);
-		
+		AIController->SetHitStatus(NewCount > 0);
 	}
 }
 
@@ -157,10 +163,9 @@ void AKYCharacterNonPlayer::SetDead_Implementation()
 	HPBar->SetHiddenInGame(true);
 	TargetedWidget->Deactivate();
 	TargetedWidget->SetHiddenInGame(true);
-	
 
-	AKYAIController* AIController = Cast<AKYAIController>(GetController());
-	if (AIController)
+
+	if (AKYAIController* AIController = Cast<AKYAIController>(GetController()))
 	{
 		AIController->StopAI();
 		KY_LOG(LogKY, Log, TEXT("Stop AI"));

@@ -4,12 +4,13 @@
 #include "GAS/GameAbility/KYGameplayAbility.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
+#include "Character/KYCharacterBase.h"
 #include "GAS/Tag/KYGameplayTag.h"
 
 
 UKYGameplayAbility::UKYGameplayAbility()
 {
-	
+	OnAbilityLevelUp.AddDynamic(this, &ThisClass::OnAbilityLevelUpCallback);
 }
 
 void UKYGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
@@ -51,12 +52,13 @@ void UKYGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(ActorInfo->AvatarActor);
+	UAbilitySystemComponent* ASC = Character->GetAbilitySystemComponent();
 	if (!ASC) return;
 	
 	if (bIsCombatAbility)
 	{
-		if (ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat)) GetWorld()->GetTimerManager().ClearTimer(CombatTagTimerHandle);
+		if (ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat)) GetWorld()->GetTimerManager().ClearTimer(Character->GetCurrentCombatTimerHandle());
 		else
 		{
 			ASC->AddLooseGameplayTag(UKYGameplayTags::CharacterState.IsCombat);
@@ -68,17 +70,23 @@ void UKYGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-	if (bIsCombatAbility) UpdateCombatStateTag();
+	if (bIsCombatAbility) UpdateCombatStateTag(ActorInfo);
 }
 
-void UKYGameplayAbility::UpdateCombatStateTag()
+void UKYGameplayAbility::OnAbilityLevelUpCallback()
 {
-	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	// 레벨 업 콜백 처리
+}
+
+void UKYGameplayAbility::UpdateCombatStateTag(const FGameplayAbilityActorInfo* ActorInfo)
+{
+	AKYCharacterBase* Character = Cast<AKYCharacterBase>(ActorInfo->AvatarActor);
+	UAbilitySystemComponent* ASC = Character->GetAbilitySystemComponent();
 	if (!ASC) return;
 	
 	if (ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat))
 	{
-		GetWorld()->GetTimerManager().SetTimer(CombatTagTimerHandle, [ASC]()
+		GetWorld()->GetTimerManager().SetTimer(Character->GetCurrentCombatTimerHandle(), [ASC]()
 		{
 			if (ASC)
 			{

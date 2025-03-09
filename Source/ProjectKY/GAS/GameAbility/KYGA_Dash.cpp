@@ -20,22 +20,22 @@ void UKYGA_Dash::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const 
 	AKYCharacterPlayer* Character = Cast<AKYCharacterPlayer>(ActorInfo->AvatarActor);
 	if (Character)
 	{
-		PrepareDash(Character);
+		PrepareDash(Character); // 캐릭터 충돌 무시 
 		
 		float ForwardAngle = UKYBlueprintFunctionLibrary::GetAngleFromDirection(Character->GetInputDirection(), Character->GetRotationOffset().RotateVector(Character->GetActorForwardVector()));
 		
-		if (ForwardAngle <= 45.0f)
+		if (ForwardAngle <= 45.0f) // 전방 회피
 		{
-			
+			return;
 		}
-		else if (ForwardAngle >= 125.0f)
+		if (ForwardAngle >= 125.0f) // 후방 회피
 		{
 			MontageJumpToSection(TEXT("Backward"));
 		}
-		else
+		else // 이후 좌,우로 구분
 		{
 			float RightAngle = UKYBlueprintFunctionLibrary::GetAngleFromDirection(Character->GetInputDirection(), Character->GetRotationOffset().RotateVector(Character->GetActorRightVector()));
-			RightAngle -= 90.0f;
+			RightAngle -= 90.0f; 
 			if (RightAngle < 0.0f)
 			{
 				MontageJumpToSection(TEXT("Right"));

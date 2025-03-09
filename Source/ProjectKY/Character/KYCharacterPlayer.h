@@ -33,11 +33,11 @@ public:
 	FORCEINLINE FVector GetInputDirection() const;
 
 	UFUNCTION(Category="Camera", meta=(BlueprintThreadSafe))
-	FORCEINLINE FRotator GetRotationOffset() const { return RotationOffset; }
+	FORCEINLINE FRotator GetRotationOffset() const { return RotationOffset; } 
 
-	virtual void AddWeaponData(const FName& WeaponName, const FWeaponData& InWeaponData) override;
+	virtual void AddWeaponData(const FName& WeaponName, const FWeaponData& InWeaponData) override; // 무기 데이터 추가
 
-	virtual void OnCombatState(const FGameplayTag GameplayTag, int32 Count) override;
+	virtual void OnCombatState(const FGameplayTag GameplayTag, int32 Count) override; // 전투 상태 태그 업데이트 이벤트
 
 protected: 
 	void Move(const FInputActionValue& Value);
@@ -45,7 +45,7 @@ protected:
 
 	void ChangeWeaponWithType(const FInputActionValue& Value);
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void InteractObject();
 
 	UFUNCTION()
@@ -85,7 +85,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> JumpAction;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> GlideAction;
 	
@@ -143,5 +143,21 @@ protected:
 private:
 	UPROPERTY()
 	TSet<int32> OwnAbilityId;
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> OverlappedInteractableTargets;
+    
+	UPROPERTY()
+	TWeakObjectPtr<AActor> CurrentInteractableTarget;
 
+	UFUNCTION()
+	void OnInteractBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+    
+	UFUNCTION()
+	void OnInteractEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	void UpdateClosestInteractableTarget(); // 상호작용 가능한 가장 가까운 액터 지정   
+
+	void ExecutionTargetedEnemy(); // 처형 어빌리티 실행 및 모션 워핑 업데이트
 };
+
+

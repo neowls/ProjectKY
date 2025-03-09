@@ -31,7 +31,7 @@ public:
 	FExecutedAbilityEndDelegate OnExecutedAbilityEnd;
 
 	UFUNCTION(BlueprintCallable)
-	void PlayExecutedMontage(FName SectionName, UAnimMontage* MontageToPlay);
+	void PlayExecutedMontage(FName SectionName = NAME_None, UAnimMontage* MontageToPlay = nullptr);
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnExecutableState(bool IsExecutable);

@@ -2,7 +2,10 @@
 
 
 #include "GAS/AbilityTask/KYAT_JumpAndWaitForLanding.h"
+
+#include "ProjectKY.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UKYAT_JumpAndWaitForLanding::UKYAT_JumpAndWaitForLanding()
 {
@@ -20,18 +23,22 @@ void UKYAT_JumpAndWaitForLanding::Activate()
 	Super::Activate();
 	
 	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActor());
+	if (Character)
 	Character->LandedDelegate.AddDynamic(this, &UKYAT_JumpAndWaitForLanding::OnLandedCallback);
-	Character->Jump();
-	
 
+	if(!Character->OnReachedJumpApex.IsAlreadyBound(this, &UKYAT_JumpAndWaitForLanding::OnReachApexCallback))
+	Character->OnReachedJumpApex.AddDynamic(this, &UKYAT_JumpAndWaitForLanding::OnReachApexCallback);
+	
+	Character->Jump();
 	SetWaitingOnAvatar();
 }
 
 void UKYAT_JumpAndWaitForLanding::OnDestroy(bool bInOwnerFinished)
 {
+	Super::OnDestroy(bInOwnerFinished);
 	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActor());
 	Character->LandedDelegate.RemoveDynamic(this, &UKYAT_JumpAndWaitForLanding::OnLandedCallback);
-	Super::OnDestroy(bInOwnerFinished);
+	Character->OnReachedJumpApex.RemoveDynamic(this, &UKYAT_JumpAndWaitForLanding::OnReachApexCallback);
 }
 
 void UKYAT_JumpAndWaitForLanding::OnLandedCallback(const FHitResult& Hit)
@@ -39,5 +46,15 @@ void UKYAT_JumpAndWaitForLanding::OnLandedCallback(const FHitResult& Hit)
 	if(ShouldBroadcastAbilityTaskDelegates())
 	{
 		OnComplete.Broadcast();
+	}
+}
+
+void UKYAT_JumpAndWaitForLanding::OnReachApexCallback()
+{
+	KY_LOG(LogKY, Log, TEXT("APEX"));
+	OnReachApex.Broadcast();
+	if(ShouldBroadcastAbilityTaskDelegates())
+	{
+		OnReachApex.Broadcast();
 	}
 }
