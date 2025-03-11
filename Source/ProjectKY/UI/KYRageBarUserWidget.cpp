@@ -68,33 +68,44 @@ void UKYRageBarUserWidget::OnMaxRageChanged(const FOnAttributeChangeData& Change
 
 void UKYRageBarUserWidget::UpdateRageBar()
 {
+	// 이전 상태 저장
+	int32 PreviousCell = CurrentCell;
+    
 	// 현재 채워져야 하는 칸 수 계산
 	CurrentCell = FMath::FloorToInt(CurrentRage / RagePerCell);
 	float Remainder = CurrentRage - (CurrentCell * RagePerCell);
-	
-	// 모든 칸 업데이트
+    
+	// 변경된 셀만 업데이트
 	for (int32 i = 0; i < MaxCell; i++)
 	{
-		if (i < CurrentCell)
+		// 이전과 현재 상태가 같으면 업데이트 건너뛰기
+		bool bWasFilled = (i < PreviousCell);
+		bool bIsFilled = (i < CurrentCell);
+		bool bWasPartial = (i == PreviousCell);
+		bool bIsPartial = (i == CurrentCell);
+        
+		// 상태가 변경된 경우만 업데이트
+		if (bWasFilled != bIsFilled || bWasPartial != bIsPartial || bIsPartial)
 		{
-			// 완전히 채워진 칸
-			ImageBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Visible);
-			ProgressBarBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Visible);
-		}
-		else if (i == CurrentCell)
-		{
-			// 현재 채워지고 있는 칸
-			ImageBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Hidden);
-			ProgressBarBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Visible);
-			KY_LOG(LogKY, Log, TEXT("Rage Percentage : %f"), Remainder / RagePerCell);
-			Cast<UProgressBar>(ProgressBarBox->GetChildAt(i))->SetPercent(Remainder / RagePerCell);
-		}
-		else
-		{
-			// 아직 채워지지 않은 칸
-			ImageBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Hidden);
-			Cast<UProgressBar>(ProgressBarBox->GetChildAt(i))->SetPercent(0.0f);
-			
+			if (i < CurrentCell)
+			{
+				// 완전히 채워진 칸
+				ImageBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Visible);
+				ProgressBarBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Visible);
+			}
+			else if (i == CurrentCell)
+			{
+				// 현재 채워지고 있는 칸
+				ImageBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Hidden);
+				ProgressBarBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Visible);
+				Cast<UProgressBar>(ProgressBarBox->GetChildAt(i))->SetPercent(Remainder / RagePerCell);
+			}
+			else
+			{
+				// 아직 채워지지 않은 칸
+				ImageBox->GetChildAt(i)->SetVisibility(ESlateVisibility::Hidden);
+				Cast<UProgressBar>(ProgressBarBox->GetChildAt(i))->SetPercent(0.0f);
+			}
 		}
 	}
 }
@@ -107,28 +118,54 @@ void UKYRageBarUserWidget::CreateWidgets()
 		return;
 	}
 	
-	ProgressBarBox->ClearChildren();
-	ImageBox->ClearChildren();
-
-	KY_LOG(LogKY, Log, TEXT("MaxCell : %d"), MaxCell);
-
-	for (int32 i = 0; i < MaxCell; i++)
+	// 기존 위젯 수와 필요한 위젯 수 비교
+	int32 CurrentImageCount = ImageBox->GetChildrenCount();
+	int32 CurrentProgressCount = ProgressBarBox->GetChildrenCount();
+    
+	// 필요한 만큼만 위젯 생성/제거
+	if (CurrentImageCount > MaxCell)
 	{
-		UImage* ImageWidget = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
-		if (ImageWidget)
+		// 초과 위젯 제거
+		for (int32 i = CurrentImageCount - 1; i >= MaxCell; --i)
 		{
-			ImageWidget->SetBrush(ImageBrush);
-			ImageWidget->SetVisibility(ESlateVisibility::Hidden);
-			ImageBox->AddChildToHorizontalBox(ImageWidget);
+			ImageBox->RemoveChildAt(i);
 		}
-
-		UProgressBar* ProgressBarWidget = WidgetTree->ConstructWidget<UProgressBar>(UProgressBar::StaticClass());
-		if (ProgressBarWidget)
+	}
+	else if (CurrentImageCount < MaxCell)
+	{
+		// 부족한 위젯 추가
+		for (int32 i = CurrentImageCount; i < MaxCell; ++i)
 		{
-			ProgressBarWidget->SetWidgetStyle(ProgressBarStyle);
-			ProgressBarWidget->SetVisibility(ESlateVisibility::Visible);
-			ProgressBarWidget->SetPercent(0.0f);
-			ProgressBarBox->AddChildToHorizontalBox(ProgressBarWidget);
+			UImage* ImageWidget = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass());
+			if (ImageWidget)
+			{
+				ImageWidget->SetBrush(ImageBrush);
+				ImageWidget->SetVisibility(ESlateVisibility::Hidden);
+				ImageBox->AddChildToHorizontalBox(ImageWidget);
+			}
+		}
+	}
+    
+	// ProgressBar도 동일한 방식으로 처리
+	if (CurrentProgressCount > MaxCell)
+	{
+		for (int32 i = CurrentProgressCount - 1; i >= MaxCell; --i)
+		{
+			ProgressBarBox->RemoveChildAt(i);
+		}
+	}
+	else if (CurrentProgressCount < MaxCell)
+	{
+		for (int32 i = CurrentProgressCount; i < MaxCell; ++i)
+		{
+			UProgressBar* ProgressBarWidget = WidgetTree->ConstructWidget<UProgressBar>(UProgressBar::StaticClass());
+			if (ProgressBarWidget)
+			{
+				ProgressBarWidget->SetWidgetStyle(ProgressBarStyle);
+				ProgressBarWidget->SetVisibility(ESlateVisibility::Visible);
+				ProgressBarWidget->SetPercent(0.0f);
+				ProgressBarBox->AddChildToHorizontalBox(ProgressBarWidget);
+			}
 		}
 	}
 }

@@ -20,10 +20,11 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void K2_SetAbilitySystemComponent(AActor* InOwner);
-	
+
+	UFUNCTION(BlueprintPure)
 	virtual class UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GAS)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = GAS)
 	TObjectPtr<class UAbilitySystemComponent> ASC;
 };

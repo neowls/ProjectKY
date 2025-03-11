@@ -28,6 +28,10 @@ protected:
 	
 	float CurrentHealth = 0.0f;
 	float CurrentMaxHealth = 0.1f;
+
+private:
+	FDelegateHandle OnHealthChangedDelegateHandle;
+	FDelegateHandle OnMaxHealthChangedDelegateHandle;
 	
 };
 

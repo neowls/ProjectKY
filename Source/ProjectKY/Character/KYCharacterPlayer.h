@@ -67,6 +67,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category=Weapon)
 	TArray<FName> EquippedWeapon;
 
+	UPROPERTY(VisibleAnywhere, Category=Weapon)
+	uint8 CurrentWeaponIndex;
+
 #pragma region INPUT
 	UPROPERTY(VisibleAnywhere, Category = Input, Meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputMappingContext> DefaultContext;
@@ -148,6 +151,7 @@ private:
     
 	UPROPERTY()
 	TWeakObjectPtr<AActor> CurrentInteractableTarget;
+	
 
 	UFUNCTION()
 	void OnInteractBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

@@ -40,7 +40,7 @@ AKYCharacterPlayer::AKYCharacterPlayer(const FObjectInitializer& ObjectInitializ
 	InitializeObjectFinder(UpperAttackAction, TEXT("/Game/_Dev/Input/IA_UpperAttack.IA_UpperAttack"));
 	InitializeObjectFinder(RangeAttackAction, TEXT("/Game/_Dev/Input/IA_RangeAttack.IA_RangeAttack"));
 	InitializeObjectFinder(ChangeWeaponAction, TEXT("/Game/_Dev/Input/IA_ChangeWeapon.IA_ChangeWeapon"));
-	InitializeObjectFinder(DefaultContext, TEXT("/Game/_Dev/Input/IMC_Player.IMC_Player"));
+	InitializeObjectFinder(DefaultContext, TEXT("/Script/EnhancedInput.InputMappingContext'/Game/_Dev/Input/IMC_Player.IMC_Player'"));
 	
 	InitializeObjectFinder(PlayerLevelCurveTable, TEXT("/Game/_Dev/DataAsset/PlayerLevelStatTable.PlayerLevelStatTable"));
 	
@@ -125,15 +125,6 @@ void AKYCharacterPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
-	
-	if(UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(CastChecked<APlayerController>(GetController())->GetLocalPlayer()))
-	{
-		Subsystem->ClearAllMappings();
-		if(DefaultContext)
-		{
-			Subsystem->AddMappingContext(DefaultContext, 0);
-		}
-	}
 	
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Move);
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ThisClass::Rotate);
@@ -251,12 +242,16 @@ void AKYCharacterPlayer::Rotate(const FInputActionValue& Value)		// 태그가 �
 void AKYCharacterPlayer::ChangeWeaponWithType(const FInputActionValue& Value)
 {
 	if(ASC->HasMatchingGameplayTag(UKYGameplayTags::CharacterState.IsCombat)) return;
+	
 	float AxisValue = Value.Get<float>();
 	int32 WeaponIndex = FMath::RoundToInt(AxisValue);
+
+	if (CurrentWeaponIndex == WeaponIndex) return; // 동일한 무기 슬롯 입력일 경우
 	
 	if(EquippedWeapon.IsValidIndex(WeaponIndex - 1))
 	{
 		ChangeWeapon(EquippedWeapon[WeaponIndex - 1]);
+		CurrentWeaponIndex = WeaponIndex;
 	}
 }
 

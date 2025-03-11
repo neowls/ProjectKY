@@ -8,12 +8,24 @@
 
 void UKYHPBarUserWidget::SetAbilitySystemComponent(AActor* InOwner)
 {
+	if (ASC)
+	{
+		if (OnHealthChangedDelegateHandle.IsValid())
+		{
+			ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetHealthAttribute()).Remove(OnHealthChangedDelegateHandle);
+		}
+		if (OnMaxHealthChangedDelegateHandle.IsValid())
+		{
+			ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetMaxHealthAttribute()).Remove(OnMaxHealthChangedDelegateHandle);
+		}
+	}
+
 	Super::SetAbilitySystemComponent(InOwner);
 
 	if (ASC)
 	{
-		ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnHealthChanged);
-		ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetMaxHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnMaxHealthChanged);
+		OnHealthChangedDelegateHandle = ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnHealthChanged);
+		OnMaxHealthChangedDelegateHandle = ASC->GetGameplayAttributeValueChangeDelegate(UKYAttributeSetBase::GetMaxHealthAttribute()).AddUObject(this, &UKYHPBarUserWidget::OnMaxHealthChanged);
 
 		const UKYAttributeSetBase* CurrentAttributeSetBase = ASC->GetSet<UKYAttributeSetBase>();
 		if (CurrentAttributeSetBase)

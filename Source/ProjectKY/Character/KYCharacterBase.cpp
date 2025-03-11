@@ -212,6 +212,7 @@ void AKYCharacterBase::ChangeWeapon(FName WeaponName)
 		KY_LOG(LogKY, Warning, TEXT("Can't find %s Weapon"), *WeaponName.ToString());
 		return;
 	}
+	
 	UpdateWeaponData(OwnWeaponData.FindRef(WeaponName));
 }
 

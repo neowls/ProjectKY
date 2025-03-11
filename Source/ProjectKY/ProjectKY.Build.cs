@@ -19,6 +19,7 @@ public class ProjectKY : ModuleRules
 			"EnhancedInput",
 			"AnimGraphRuntime",
 			"UMG",
+			"CommonUI",
 			"Slate",
 			"SlateCore",
 			"NavigationSystem",
