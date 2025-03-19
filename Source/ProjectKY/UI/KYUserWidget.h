@@ -17,6 +17,7 @@ class PROJECTKY_API UKYUserWidget : public UUserWidget, public IAbilitySystemInt
 
 public:
 	virtual void SetAbilitySystemComponent(AActor* InOwner);
+	virtual void SetAbilitySystemComponent(UAbilitySystemComponent& InASC);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void K2_SetAbilitySystemComponent(AActor* InOwner);

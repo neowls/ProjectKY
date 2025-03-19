@@ -2,7 +2,6 @@
 
 
 #include "UI/KYAttributeTextWidget.h"
-
 #include "Components/TextBlock.h"
 #include "AbilitySystemComponent.h"
 
@@ -14,9 +13,9 @@ void UKYAttributeTextWidget::NativeConstruct()
 void UKYAttributeTextWidget::NativeDestruct()
 {
     // 델리게이트 핸들 제거
-    if (GetAbilitySystemComponent() && AttributeChangedHandle.IsValid())
+    if (ASC && AttributeChangedHandle.IsValid())
     {
-        GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(Attribute).Remove(AttributeChangedHandle);
+        ASC->GetGameplayAttributeValueChangeDelegate(Attribute).Remove(AttributeChangedHandle);
         AttributeChangedHandle.Reset();
     }
     
@@ -26,9 +25,9 @@ void UKYAttributeTextWidget::NativeDestruct()
 void UKYAttributeTextWidget::SetAttribute(const FGameplayAttribute& InAttribute, EAttributeValueType InValueType)
 {
     // 기존 델리게이트 핸들 제거
-    if (GetAbilitySystemComponent() && AttributeChangedHandle.IsValid())
+    if (ASC && AttributeChangedHandle.IsValid())
     {
-        GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(Attribute).Remove(AttributeChangedHandle);
+        ASC->GetGameplayAttributeValueChangeDelegate(Attribute).Remove(AttributeChangedHandle);
         AttributeChangedHandle.Reset();
     }
     
@@ -46,13 +45,13 @@ void UKYAttributeTextWidget::SetAttribute(const FGameplayAttribute& InAttribute,
         FormatAttributeName(AttributeName);
         
         // 텍스트 설정
-        AttributeNameText->SetText(FText::FromString(AttributeName));
+        SetAttributeName(FText::FromString(AttributeName));
     }
     
     // 새 델리게이트 핸들 추가
-    if (GetAbilitySystemComponent() && Attribute.IsValid())
+    if (ASC && Attribute.IsValid())
     {
-        AttributeChangedHandle = GetAbilitySystemComponent()->GetGameplayAttributeValueChangeDelegate(Attribute).AddUObject(this, &UKYAttributeTextWidget::OnAttributeChanged);
+        AttributeChangedHandle = ASC->GetGameplayAttributeValueChangeDelegate(Attribute).AddUObject(this, &UKYAttributeTextWidget::OnAttributeChanged);
         
         // 초기 값 업데이트
         UpdateAttributeValue();
@@ -68,9 +67,9 @@ void UKYAttributeTextWidget::SetAttributeName(const FText& InName)
 
 void UKYAttributeTextWidget::UpdateAttributeValue()
 {
-    if (!GetAbilitySystemComponent() || !Attribute.IsValid() || !AttributeValueText) return;
+    if (!ASC || !Attribute.IsValid() || !AttributeValueText) return;
     
-    float Value = GetAbilitySystemComponent()->GetNumericAttribute(Attribute);
+    float Value = ASC->GetNumericAttribute(Attribute);
     
     // 값 타입에 따라 포맷 적용
     switch (ValueType)
@@ -96,7 +95,7 @@ void UKYAttributeTextWidget::UpdateAttributeValue()
             FNumberFormattingOptions Options = FNumberFormattingOptions::DefaultNoGrouping();
             Options.SetMinimumFractionalDigits(0);
             Options.SetMaximumFractionalDigits(0);
-            AttributeValueText->SetText(FText::AsNumber(Value * 100.0f, &Options) + FText::FromString(TEXT("%")));
+            AttributeValueText->SetText(FText::Format(NSLOCTEXT("Namespace", "Key", "{0}%"), FText::AsNumber(Value * 100.0f, &Options)));
         }
         break;
     }
@@ -130,7 +129,7 @@ void UKYAttributeTextWidget::FormatAttributeName(FString& AttributeName)
     // 메타 어트리뷰트는 표시하지 않음 (InDamage, InRage, InExperience, IncomingStance)
     if (AttributeName.StartsWith("In") && !AttributeName.Contains("Intelligence"))
     {
-        FormattedName = ""; // 메타 어트리뷰트는 빈 문자열로 설정
+        FormattedName = "META"; // 메타 어트리뷰트 표시
     }
     
     AttributeName = FormattedName;

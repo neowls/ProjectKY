@@ -2,21 +2,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonActivatableWidget.h"
-#include "AbilitySystemComponent.h"
-#include "KYAttributeTextWidget.h"
+#include "Interface/KYInputHandlerInterface.h"
+#include "UI/KYAttributeTextWidget.h"
+#include "UI/KYUserWidget.h"
 #include "KYStatsTabWidget.generated.h"
 
 class UTextBlock;
 
 UCLASS()
-class PROJECTKY_API UKYStatsTabWidget : public UCommonActivatableWidget
+class PROJECTKY_API UKYStatsTabWidget : public UKYUserWidget, public IKYInputHandlerInterface
 {
 	GENERATED_BODY()
 
+public:
+	// 어트리뷰트 위젯 생성 및 설정
+	UFUNCTION(BlueprintCallable)
+	void SetupAttributeWidgets();
+
 protected:
-	virtual void NativeOnActivated() override;
-	virtual void NativeOnDeactivated() override;
+	virtual void NativeConstruct() override;
     
 	// 어트리뷰트 위젯 컨테이너
 	UPROPERTY(meta = (BindWidget))
@@ -26,14 +30,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class UKYAttributeTextWidget> AttributeTextWidgetClass;
     
-	// 어트리뷰트 위젯 생성 및 설정
-	void SetupAttributeWidgets();
-    
 	// 카테고리 헤더 추가 함수
-	void AddCategoryHeader(const FString& CategoryName);
+	void AddCategoryHeader(const FString& InCategoryName);
     
 	// 어트리뷰트 위젯 추가 함수
-	void AddAttributeWidget(FGameplayAttribute Attribute, UAbilitySystemComponent* ASC, EAttributeValueType ValueType = EAttributeValueType::Integer);
+	void AddAttributeWidget(const FGameplayAttribute& Attribute, EAttributeValueType ValueType = EAttributeValueType::Integer);
     
 	// 어트리뷰트 위젯 인스턴스
 	UPROPERTY()

@@ -44,8 +44,8 @@ void UKYGA_Aiming::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 	{
 		TargetedActor = Cast<AKYTA_Trace>(GetWorld()->SpawnActorDeferred<AGameplayAbilityTargetActor>(TargetActorClass, FTransform::Identity, nullptr, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn));
 		const FTransform SpawnTransform = GetAbilitySystemComponentFromActorInfo()->GetAvatarActor()->GetTransform();
+		TargetedActor->SetShowDebug(bShowDebug);
 		TargetedActor->FinishSpawning(SpawnTransform);
-
 		TargetedActor->TargetDataReadyDelegate.AddUObject(this, &UKYGA_Aiming::OnTargetCompleteCallback);
 		GetAbilitySystemComponentFromActorInfo()->SpawnedTargetActors.Push(TargetedActor);
 	}

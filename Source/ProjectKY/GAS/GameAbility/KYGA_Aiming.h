@@ -39,9 +39,11 @@ protected:
 	UPROPERTY(EditAnywhere, Category="GAS")
 	float TargetingRadius;
 
-
 	UPROPERTY(EditAnywhere, Category="GAS")
 	float TargetingAngleThreshold;
+
+	UPROPERTY(EditAnywhere, Category="Debug")
+	bool bShowDebug = false;
 
 	UFUNCTION()
 	void AimAtCursor(const FGameplayAbilityActorInfo& ActorInfo);
@@ -54,6 +56,8 @@ protected:
 
 	UFUNCTION()
 	void CheckCurrentTarget();
+
+	
 	
 private:
 	bool bIsTargeting;

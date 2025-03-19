@@ -33,8 +33,11 @@ protected:
 	// 상태 창 토글 함수
 	void ToggleStatusWindow();
     
-	// 상태 창 탭 이동 함수
-	void MoveStatusWindowTab(const FInputActionValue& InputActionValue);
+	// 상태 창 탭 전환 함수
+	void SwitchStatusWindowTab(const FInputActionValue& InputActionValue);
+
+	// 상태 창 탭 내부 이동 함수
+	void NavigateStatusWindowTab(const FInputActionValue& InputActionValue);
     
 	// 상태 창 선택 함수
 	void SelectStatusWindow(const FInputActionValue& InputActionValue);
@@ -72,7 +75,10 @@ protected:
 	TObjectPtr<UInputAction> WindowBackAction;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category=UI)
-	TObjectPtr<UInputAction> WindowMoveAction;
+	TObjectPtr<UInputAction> WindowNavigateAction;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category=UI)
+	TObjectPtr<UInputAction> WindowTabSwitchAction;
 };
 
 

@@ -1,0 +1,4 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1602ed6e_002Db402_002D48bd_002D945f_002Df93b76e52af5/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="KYStatusWindowWidget.h의 모든 테스트" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;ProjectFile&gt;8E4EAF3E-8749-161D-0369-19EA33CD8632/d:UI/d:Window/f:KYStatusWindowWidget.h&lt;/ProjectFile&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

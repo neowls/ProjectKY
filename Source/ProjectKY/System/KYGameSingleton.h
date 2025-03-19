@@ -27,10 +27,14 @@ public:
 	UFUNCTION(BlueprintCallable,  Category = "Ability System")
 	FWeaponData GetWeaponDataByRowName(const FName& InName) const;
 
+	TArray<FKYAbilityData*> AbilityDataRows();
+
 private:
 	UPROPERTY()
 	TObjectPtr<UDataTable> WeaponDataTable;
 
+	UPROPERTY()
+	TObjectPtr<UDataTable> AbilityDataTable;
 };
 
 

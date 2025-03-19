@@ -18,12 +18,4 @@ public:
 	UKYCharacterMovementComponent();
 	
 	virtual void OnMovementUpdated(float DeltaSeconds, const FVector& OldLocation, const FVector& OldVelocity) override;
-
-protected:
-	
-	UPROPERTY(EditAnywhere, Category="Custom Movement")
-	float GeneralGravityScale;
-
-	UPROPERTY(EditAnywhere, Category="Custom Movement")
-	float MaxFallingSpeed;
 };

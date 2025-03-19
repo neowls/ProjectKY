@@ -14,6 +14,13 @@ UKYGameSingleton::UKYGameSingleton()
 		WeaponDataTable = WeaponDataTableRef.Object;
 		check(WeaponDataTable->GetRowMap().Num() > 0);
 	}
+
+	static ConstructorHelpers::FObjectFinder<UDataTable> AbilityDataTableRef(TEXT("/Game/_Dev/DataTable/DT_AllAbility.DT_AllAbility"));
+	if (AbilityDataTableRef.Object != nullptr)
+	{
+		AbilityDataTable = AbilityDataTableRef.Object;
+		check(AbilityDataTable->GetRowMap().Num() > 0);
+	}
 }
 
 UKYGameSingleton& UKYGameSingleton::Get()
@@ -50,4 +57,15 @@ FWeaponData UKYGameSingleton::GetWeaponDataByRowName(const FName& InName) const
 		return FWeaponData();
 	}
 	return *RowData;
+}
+
+TArray<FKYAbilityData*> UKYGameSingleton::AbilityDataRows()
+{
+	TArray<FKYAbilityData*> AllAbilityDataRow;
+	static const FString ContextString(TEXT("Ability Data Table Context"));
+	if (AbilityDataTable)
+	{
+		AbilityDataTable->GetAllRows(ContextString, AllAbilityDataRow);
+	}
+	return AllAbilityDataRow;
 }

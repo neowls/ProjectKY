@@ -6,22 +6,23 @@
 #include "ProjectKY.h"
 #include "GameFramework/PlayerState.h"
 #include "UI/KYHUDUserWidget.h"
-#include "UI/KYStatusWindowWidget.h"
+#include "UI/Window/KYStatusWindowWidget.h"
 
 
 
 
 AKYPlayerController::AKYPlayerController()
 {
-	SetShowMouseCursor(true);
 	InitializeClassFinder(HUDWidgetClass, TEXT("/Game/_Dev/UI/WBP/WBP_HUD.WBP_HUD_C"));
 	InitializeObjectFinder(WindowAction, TEXT("/Script/EnhancedInput.InputAction'/Game/_Dev/Input/IA_Window.IA_Window'"));
 	InitializeObjectFinder(WindowSelectAction, TEXT("/Script/EnhancedInput.InputAction'/Game/_Dev/Input/IA_WindowSelect.IA_WindowSelect'"));
 	InitializeObjectFinder(WindowBackAction, TEXT("/Script/EnhancedInput.InputAction'/Game/_Dev/Input/IA_WindowBack.IA_WindowBack'"));
-	InitializeObjectFinder(WindowMoveAction, TEXT("/Script/EnhancedInput.InputAction'/Game/_Dev/Input/IA_WindowMove.IA_WindowMove'"));
-	
+	InitializeObjectFinder(WindowNavigateAction, TEXT("/Script/EnhancedInput.InputAction'/Game/_Dev/Input/IA_WindowNavigate.IA_WindowNavigate'"));
+	InitializeObjectFinder(WindowTabSwitchAction, TEXT("/Script/EnhancedInput.InputAction'/Game/_Dev/Input/IA_WindowTabSwitch.IA_WindowTabSwitch'"));
 	InitializeObjectFinder(WindowContext, TEXT("/Game/_Dev/Input/IMC_PlayerWindow.IMC_PlayerWindow"));
 	InitializeObjectFinder(GameplayContext, TEXT("/Script/EnhancedInput.InputMappingContext'/Game/_Dev/Input/IMC_Player.IMC_Player'"));
+	
+	SetShowMouseCursor(true);
 }
 
 
@@ -41,29 +42,21 @@ void AKYPlayerController::SetupWidget()
        	HUDWidget->AddToViewport();
 	}
 
-	// Status 위젯 생성
+	// Status 위젯 생성 및 부착
 	if (StatusWindowWidgetClass)
 	{
 		StatusWindowWidget = CreateWidget<UKYStatusWindowWidget>(this, StatusWindowWidgetClass);
+		StatusWindowWidget->SetAbilitySystemComponent(PlayerState);
+		StatusWindowWidget->AddToViewport();
+		StatusWindowWidget->DeactivateWindow();
 	}
 }
 
 void AKYPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-	
-	// 입력 매핑 컨텍스트 추가
-	if(UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
-	{
-		Subsystem->ClearAllMappings();
-        
-		// 기본 게임플레이 컨텍스트 추가
-		if(GameplayContext)
-		{
-			Subsystem->AddMappingContext(GameplayContext, 1);
-		}
-	}
-    
+
+	SetWindowInputContext(GameplayContext);
     
 	// 입력 액션 바인딩
 	if (UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent))
@@ -71,8 +64,11 @@ void AKYPlayerController::SetupInputComponent()
 		// 상태 창 토글
 		EnhancedInput->BindAction(WindowAction, ETriggerEvent::Started, this, &ThisClass::ToggleStatusWindow);
         
-		// 상태 창 탭 이동 (Q, R 키 또는 WASD)
-		EnhancedInput->BindAction(WindowMoveAction, ETriggerEvent::Triggered, this, &ThisClass::MoveStatusWindowTab);
+		// 상태 창 탭 전환 (Q, R 키)
+		EnhancedInput->BindAction(WindowTabSwitchAction, ETriggerEvent::Triggered, this, &ThisClass::SwitchStatusWindowTab);
+
+		// 상태 창 내부 이동 (WASD 키)
+		EnhancedInput->BindAction(WindowNavigateAction, ETriggerEvent::Triggered, this, &ThisClass::NavigateStatusWindowTab);
         
 		// 상태 창 선택
 		EnhancedInput->BindAction(WindowSelectAction, ETriggerEvent::Started, this, &ThisClass::SelectStatusWindow);
@@ -84,53 +80,73 @@ void AKYPlayerController::SetupInputComponent()
 
 void AKYPlayerController::ToggleStatusWindow()
 {
-	if (!StatusWindowWidget) return;
-    
-	if (StatusWindowWidget->IsInViewport())
+	if (!StatusWindowWidget) 
 	{
-		// 상태 창 닫기
-		StatusWindowWidget->DeactivateWidget();
-		StatusWindowWidget->RemoveFromParent();
+		KY_LOG(LogKY, Warning, TEXT("StatusWindowWidget이 null입니다."));
+		return;
+	}
+	
+	if(IsPaused())
+	{
+		KY_LOG(LogKY, Log, TEXT("상태 창 닫기 시도"));
+		SetPause(false);
+		StatusWindowWidget->DeactivateWindow();
 		SetWindowInputContext(GameplayContext);
+		KY_LOG(LogKY, Log, TEXT("상태 창 닫기 완료"));
 	}
 	else
 	{
-		// 상태 창 열기
-		StatusWindowWidget->AddToViewport();
-		StatusWindowWidget->ActivateWidget();
+		KY_LOG(LogKY, Log, TEXT("상태 창 열기 시도"));
+		SetPause(true);
+		StatusWindowWidget->ActivateWindow();
 		SetWindowInputContext(WindowContext);
+		KY_LOG(LogKY, Log, TEXT("상태 창 열기 완료"));
 	}
 }
 
-void AKYPlayerController::MoveStatusWindowTab(const FInputActionValue& InputActionValue)
+void AKYPlayerController::SwitchStatusWindowTab(const FInputActionValue& InputActionValue)
 {
 	if (!StatusWindowWidget || !StatusWindowWidget->IsInViewport()) return;
+
+	//	키 입력 처리
+	float MoveValue = InputActionValue.Get<float>();
 	
-	if (InputActionValue.GetValueType() == EInputActionValueType::Axis2D)
+	if (MoveValue > 0.0f)
 	{
-		// WASD 키 입력 처리
-		FVector2D MoveValue = InputActionValue.Get<FVector2D>();
-        
-		// 좌우 이동만 처리
-		if (MoveValue.X > 0.0f)
-		{
-			// 오른쪽 이동 (R 키와 동일)
-			StatusWindowWidget->SwitchToNextTab();
-		}
-		else if (MoveValue.X < 0.0f)
-		{
-			// 왼쪽 이동 (Q 키와 동일)
-			StatusWindowWidget->SwitchToPreviousTab();
-		}
+		//	오른쪽 이동 (R 키)
+		StatusWindowWidget->SwitchToNextTab();
+		KY_LOG(LogKY, Log, TEXT("Right"));
+	}
+	else if (MoveValue < 0.0f)
+	{
+		//	왼쪽 이동 (Q 키)
+		StatusWindowWidget->SwitchToPreviousTab();
+		KY_LOG(LogKY, Log, TEXT("Left"));
+	} 
+}
+
+void AKYPlayerController::NavigateStatusWindowTab(const FInputActionValue& InputActionValue)
+{
+	if (!StatusWindowWidget || !StatusWindowWidget->IsInViewport()) return;
+
+	FVector2d NavigateValue = InputActionValue.Get<FVector2D>();
+	if(IKYInputHandlerInterface::Execute_HandleNavigationInput(StatusWindowWidget, NavigateValue.X, NavigateValue.Y))
+	{
+		KY_LOG(LogKY, Log, TEXT("Navigate %s"), *NavigateValue.ToString());
+		return;
 	}
 }
 
 void AKYPlayerController::SelectStatusWindow(const FInputActionValue& InputActionValue)
 {
 	if (!StatusWindowWidget || !StatusWindowWidget->IsInViewport()) return;
-    
+
 	// 현재 활성화된 탭의 아이템 선택 처리
-	// 필요에 따라 StatusWindowWidget에 선택 처리 함수 추가
+	if(IKYInputHandlerInterface::Execute_HandleConfirmInput(StatusWindowWidget))
+	{
+		KY_LOG(LogKY, Log, TEXT("Select"));
+		return;
+	}
 }
 
 void AKYPlayerController::BackStatusWindow(const FInputActionValue& InputActionValue)
@@ -138,11 +154,19 @@ void AKYPlayerController::BackStatusWindow(const FInputActionValue& InputActionV
 	if (!StatusWindowWidget || !StatusWindowWidget->IsInViewport()) return;
 
 	// 현재 활성화된 탭 내부의 탭에서 되돌아가기 선택 처리 (아이템 사용, 장비 적용 등)
-
-	/*// 그저 활성화된 탭이라면 상태 창 닫기
-	StatusWindowWidget->DeactivateWidget();
-	StatusWindowWidget->RemoveFromParent();
-	SetWindowInputContext(GameplayContext);*/
+	if(IKYInputHandlerInterface::Execute_HandleConfirmInput(StatusWindowWidget))
+	{
+		KY_LOG(LogKY, Log, TEXT("Cancel"));
+		return;
+	}
+	
+	// 그저 활성화된 탭이라면 상태 창 닫기
+	if (IsPaused())
+	{
+		SetPause(false);
+		StatusWindowWidget->DeactivateWindow();
+		SetWindowInputContext(GameplayContext);
+	}
 }
 
 
@@ -151,6 +175,8 @@ void AKYPlayerController::SetWindowInputContext(const TObjectPtr<UInputMappingCo
 	if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer()))
 	{
 		Subsystem->ClearAllMappings();
-		Subsystem->AddMappingContext(Context, 0);
+		Subsystem->AddMappingContext(Context, 1);
+		
+		KY_LOG(LogKY, Log, TEXT("Context : %s"), *Context.GetName());
 	}
 }

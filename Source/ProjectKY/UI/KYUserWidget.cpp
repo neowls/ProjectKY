@@ -18,6 +18,11 @@ void UKYUserWidget::SetAbilitySystemComponent(AActor* InOwner)
 	}
 }
 
+void UKYUserWidget::SetAbilitySystemComponent(UAbilitySystemComponent& InASC)
+{
+	ASC = InASC;
+}
+
 void UKYUserWidget::K2_SetAbilitySystemComponent_Implementation(AActor* InOwner)
 {
 	ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InOwner);

@@ -15,7 +15,7 @@ UKYAttributeSetBase::UKYAttributeSetBase()  :
 	MaxHealth(200.0f),
 	Shield(0.0f),
 	MaxShield(100.0f),
-	MoveSpeed(300.0f),
+	MoveSpeed(600.0f),
 	MaxMoveSpeed(1000.0f),
 	AttackSpeed(1.0f),
 	MaxAttackSpeed(2.5f),
