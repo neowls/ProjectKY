@@ -29,12 +29,21 @@ public:
 
 	TArray<FKYAbilityData*> AbilityDataRows();
 
+	UFUNCTION(BlueprintPure,  Category = "Ability System")
+	UDataTable* GetItemDataTable() const { return ItemDataTable; }
+	
+	FKYItemData* GetItemDataByRowName(const FName& ItemID) const; 
+	
+
 private:
 	UPROPERTY()
 	TObjectPtr<UDataTable> WeaponDataTable;
 
 	UPROPERTY()
 	TObjectPtr<UDataTable> AbilityDataTable;
+
+	UPROPERTY()
+	TObjectPtr<UDataTable> ItemDataTable;
 };
 
 

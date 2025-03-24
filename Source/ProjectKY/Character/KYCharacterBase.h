@@ -49,7 +49,7 @@ public:
 	FORCEINLINE UStaticMeshComponent* GetWeaponComponent(bool bIsRight) const { return bIsRight ? WeaponCompRight : WeaponCompLeft; }
 	
 	UFUNCTION(BlueprintCallable, Category="Weapon", meta=(BlueprintThreadSafe))
-	FORCEINLINE EWeaponType GetCurrentWeaponType() const { return CurrentWeaponType; }
+	FORCEINLINE EKYWeaponType GetCurrentWeaponType() const { return CurrentWeaponType; }
 	
 	UFUNCTION(BlueprintCallable, Category="Animation")
 	FORCEINLINE FEventAnimMontageData GetAnimMontageData(FGameplayTag InGameplayTag);
@@ -127,10 +127,10 @@ protected:
 	TMap<FGameplayTag, FGameplayAbilitySpecHandle> AbilitiesTagMap;
 
 	UPROPERTY(EditDefaultsOnly, Category=Weapon)
-	TMap<EWeaponType, TObjectPtr<UKYCharacterWeaponAnimAsset>> OwnWeaponAnimAssets;
+	TMap<EKYWeaponType, TObjectPtr<UKYCharacterWeaponAnimAsset>> OwnWeaponAnimAssets;
 	
 	UPROPERTY(VisibleAnywhere, Category=Weapon)
-	EWeaponType CurrentWeaponType = EWeaponType::None;
+	EKYWeaponType CurrentWeaponType = EKYWeaponType::None;
 
 	UPROPERTY(VisibleAnywhere, Category=Weapon)
 	TMap<FName, FWeaponData> OwnWeaponData;

@@ -69,3 +69,16 @@ TArray<FKYAbilityData*> UKYGameSingleton::AbilityDataRows()
 	}
 	return AllAbilityDataRow;
 }
+
+
+FKYItemData* UKYGameSingleton::GetItemDataByRowName(const FName& ItemID) const
+{
+	static const FString ContextString(TEXT("Item Data Table Context"));
+	FKYItemData* ItemData = ItemDataTable->FindRow<FKYItemData>(ItemID, ContextString);
+	if (!ItemData)
+	{
+		KY_LOG(LogKY, Warning, TEXT("Not Valid Item ID : %s"), *ItemID.ToString());
+		return nullptr;
+	}
+	return ItemData;
+}

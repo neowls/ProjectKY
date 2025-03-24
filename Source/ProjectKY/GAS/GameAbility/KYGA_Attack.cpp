@@ -22,7 +22,7 @@ bool UKYGA_Attack::CanActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 {
 	bool Result = Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 
-	if (Cast<AKYCharacterBase>(ActorInfo->AvatarActor)->GetCurrentWeaponType() == EWeaponType::None) Result = false;
+	if (Cast<AKYCharacterBase>(ActorInfo->AvatarActor)->GetCurrentWeaponType() == EKYWeaponType::None) Result = false;
 	return Result;
 }
 

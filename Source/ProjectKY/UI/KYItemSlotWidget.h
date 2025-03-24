@@ -7,8 +7,10 @@
 #include "UI/KYUserWidget.h"
 #include "KYItemSlotWidget.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotEventSignature, class UKYItemSlotWidget*, Slot);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotClicked, class UKYItemSlotWidget*, Slot);
 
+class UTextBlock;
+class UBorder;
 class UButton;
 class UImage;
 
@@ -18,43 +20,58 @@ class PROJECTKY_API UKYItemSlotWidget : public UKYUserWidget
 	GENERATED_BODY()
 	
 public:
-	virtual void NativeConstruct() override;
-
-	void SetItemData(const FKYItemData& NewItemData, EKYSlotType InType, int32 InIndex = -1); 
+	// 슬롯 초기화
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void InitializeSlot();
+    
+	// 아이템 데이터로 슬롯 업데이트
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void UpdateSlot(const FName& InInstanceID, const FKYItemData& ItemData);
+    
+	// 슬롯 비우기
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void ClearSlot();
-	void SetIsSelected(bool NewSelect);
+    
+	// 선택 상태 설정
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SetIsSelected(bool bSelected);
 	
-	UFUNCTION(BlueprintPure, Category = "Button")
-	bool GetIsSelected() const { return bIsSelected; }
+	// 인스턴스 ID 접근자
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	FName GetInstanceID() const { return InstanceID; }
+    
+	// 아이템 존재 여부
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	bool HasItem() const { return !InstanceID.IsNone(); }
 
-	UFUNCTION(BlueprintPure, Category = "Item")
-	FKYItemData GetItemData() const { return ItemData; }
-
-	int32 GetIndex() const { return SlotIndex; }
-
-	bool IsEmpty() const { return ItemData.ItemID.IsNone(); }
-	
 	// 이벤트
 	UPROPERTY(BlueprintAssignable)
-	FOnSlotEventSignature OnClicked;
+	FOnSlotClicked OnSlotClicked;
 
 protected:
+	virtual void NativeConstruct() override;
+	
+	UFUNCTION()
+	void OnSlotButtonClicked();
+	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> ItemIcon;
     
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UButton> ItemButton;
-    
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UTextBlock> ItemCount;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UBorder> SelectionBorder;
+	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UBorder> EquippedBorder;
+
 private:
+	// 인스턴스 ID
 	UPROPERTY()
-	FKYItemData ItemData;
-    
-	EKYSlotType SlotType;
-	int32 SlotIndex;
+	FName InstanceID;
 	bool bIsSelected;
-    
-	UFUNCTION()
-	void HandleButtonClicked();
-    
-	void UpdateVisuals();
 };

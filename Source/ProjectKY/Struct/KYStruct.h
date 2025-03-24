@@ -5,52 +5,48 @@
 #include "MediaSource.h"
 #include "KYStruct.generated.h"
 
-// 장비 슬롯 타입
-UENUM(BlueprintType)
-enum class EKYEquipmentSlot : uint8
-{
-	Head,
-	Chest,
-	Pants,
-	Gloves,
-	Shoes
-};
-
-// 무기 슬롯 타입
-UENUM(BlueprintType)
-enum class EKYWeaponSlot : uint8
-{
-	Primary,
-	Secondary,
-	Tertiary
-};
-
 // 아이템 카테고리
 UENUM(BlueprintType)
-enum class EKYItemCategory : uint8
+enum class EKYItemType : uint8
 {
-	Weapon,
-	Ammo,
-	Equipment,
-	Consumable
+	None        UMETA(DisplayName = "None"),
+	Usable      UMETA(DisplayName = "Usable Item"),
+	Equipment   UMETA(DisplayName = "Equipment"),
+	Misc        UMETA(DisplayName = "Misc")
 };
 
 UENUM(BlueprintType)
 enum class EKYSlotType : uint8
 {
-	None,
-	// 인벤토리
-	Inventory,
-	// 장비
-	Head,
-	Chest,
-	Pants,
-	Gloves,
-	Shoes,
-	// 무기
-	Primary,
-	Secondary,
-	Tertiary
+	None        UMETA(DisplayName = "None"),
+	Inventory   UMETA(DisplayName = "Inventory"),
+	Equipment   UMETA(DisplayName = "Equipment")
+};
+
+// 장비 타입
+UENUM(BlueprintType)
+enum class EKYEquipmentType : uint8
+{
+	None        UMETA(DisplayName = "None"),
+	Head        UMETA(DisplayName = "Head"),
+	Chest       UMETA(DisplayName = "Chest"),
+	Legs		UMETA(DisplayName = "Legs"),
+	Gloves      UMETA(DisplayName = "Gloves"),
+	Feet        UMETA(DisplayName = "Feet"),
+	Weapon		UMETA(DisplayName = "Weapon")
+};
+
+// 무기 타입
+UENUM(BlueprintType)
+enum class EKYWeaponType : uint8
+{
+	None        UMETA(DisplayName = "None"),
+	Sword       UMETA(DisplayName = "Sword"),
+	GreatSword  UMETA(DisplayName = "GreatSword"),
+	DualBlade   UMETA(DisplayName = "DualBlade"),
+	Scythe      UMETA(DisplayName = "Scythe"),
+	Spear       UMETA(DisplayName = "Spear"),
+	Hammer      UMETA(DisplayName = "Hammer")
 };
 
 // 아이템 데이터 구조체
@@ -58,49 +54,52 @@ USTRUCT(BlueprintType)
 struct FKYItemData
 {
 	GENERATED_BODY()
-    
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	
+	// 아이템 데이터 테이블 참조용
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
 	FName ItemID;
-    
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText ItemName;
-    
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FText ItemDescription;
-    
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTexture2D* ItemIcon;
-    
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EKYItemCategory Category;
-    
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	EKYSlotType EquipSlotType;
+	
+	
+	// 기본 정보
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
+	FText Name;
 
-	// 기본 생성자
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
+	FText Description;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
+	EKYItemType ItemType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
+	TSoftObjectPtr<UTexture2D> Icon;
+
+	// 수량 (중첩 가능한 아이템의 경우)
+	UPROPERTY(BlueprintReadOnly, Category = "Basic")
+	int32 Count;
+
+	// 아이템 속성
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
+	bool bIsStackable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic", meta = (EditConditionHides = "bIsStackable"))
+	int32 MaxStackCount;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Basic")
+	TSubclassOf<class UGameplayEffect> EffectClass;
+
+	// 상세 정보 Asset 참조
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<class UKYItem> SubData;
+
 	FKYItemData()
-		: ItemID(NAME_None)
-		, ItemName(FText::GetEmpty())
-		, ItemDescription(FText::GetEmpty())
-		, ItemIcon(nullptr)
-		, Category(EKYItemCategory::Equipment)
-		, EquipSlotType(EKYSlotType::None)
-	{
-	}
+		: ItemType(EKYItemType::None)
+		, Count(1)
+		, bIsStackable(false)
+		, MaxStackCount(1)
+	{}
 };
 
-// 무기 타입
-UENUM(BlueprintType)
-enum class EWeaponType : uint8
-{
-	None,
-	Sword,
-	GreatSword,
-	DualBlade,
-	Scythe,
-	Hammer,
-	Spear
-};
+
 
 // 어빌리티 카테고리 Enum
 UENUM(BlueprintType)
@@ -123,7 +122,7 @@ public:
 		: Mesh(nullptr)
 		, AttackSpeed(1.0f)
 		, Damage(0.0f)
-		, Type(EWeaponType::None) {}
+		, Type(EKYWeaponType::None) {}
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon Info")
 	TObjectPtr<class UStaticMesh> Mesh;
@@ -135,7 +134,7 @@ public:
 	float Damage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon Info")
-	EWeaponType Type;
+	EKYWeaponType Type;
 };
 
 // 어빌리티 데이터 구조체
