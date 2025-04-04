@@ -26,27 +26,45 @@ public:
     
 	// 아이템 데이터로 슬롯 업데이트
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void UpdateSlot(const FName& InInstanceID, const FKYItemData& ItemData);
+	void UpdateSlot(const FKYInventoryWidgetData NewSlotData);
     
 	// 슬롯 비우기
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void ClearSlot();
-    
-	// 선택 상태 설정
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void SetIsSelected(bool bSelected);
 	
 	// 인스턴스 ID 접근자
 	UFUNCTION(BlueprintPure, Category = "Inventory")
-	FName GetInstanceID() const { return InstanceID; }
+	FName GetInstanceID() const { return SlotData.InstanceID; }
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	bool GetIsSelected() const { return bIsSelected; }
+
+	// 선택 상태 설정
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SetIsSelected(bool bSelected);
     
 	// 아이템 존재 여부
 	UFUNCTION(BlueprintPure, Category = "Inventory")
-	bool HasItem() const { return !InstanceID.IsNone(); }
+	bool HasItem() const { return !SlotData.InstanceID.IsNone(); }
 
 	// 이벤트
 	UPROPERTY(BlueprintAssignable)
 	FOnSlotClicked OnSlotClicked;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	FText GetItemCountText() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	FSlateBrush GetItemIconBrush() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	ESlateVisibility GetItemCountVisibility() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	ESlateVisibility GetSelectionBorderVisibility() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
+	ESlateVisibility GetEquippedBorderVisibility() const;
 
 protected:
 	virtual void NativeConstruct() override;
@@ -72,6 +90,7 @@ protected:
 private:
 	// 인스턴스 ID
 	UPROPERTY()
-	FName InstanceID;
+	FKYInventoryWidgetData SlotData;
+	
 	bool bIsSelected;
 };

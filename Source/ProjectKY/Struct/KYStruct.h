@@ -11,8 +11,25 @@ enum class EKYItemType : uint8
 {
 	None        UMETA(DisplayName = "None"),
 	Usable      UMETA(DisplayName = "Usable Item"),
-	Equipment   UMETA(DisplayName = "Equipment"),
-	Misc        UMETA(DisplayName = "Misc")
+	Misc        UMETA(DisplayName = "Misc"),
+	Head        UMETA(DisplayName = "Head"),
+	Chest       UMETA(DisplayName = "Chest"),
+	Legs		UMETA(DisplayName = "Legs"),
+	Gloves      UMETA(DisplayName = "Gloves"),
+	Feet        UMETA(DisplayName = "Feet"),
+	Weapon      UMETA(DisplayName = "Weapon")
+};
+
+UENUM(BlueprintType)
+enum class EKYWeaponType : uint8
+{
+	None        UMETA(DisplayName = "None"),
+	Sword       UMETA(DisplayName = "Sword"),
+	DualBlade   UMETA(DisplayName = "Dual Blade"),
+	GreatSword  UMETA(DisplayName = "Great Sword"),
+	Scythe      UMETA(DisplayName = "Scythe"),
+	Hammer		UMETA(DisplayName = "Hammer"),
+	Spear		UMETA(DisplayName = "Spear")
 };
 
 UENUM(BlueprintType)
@@ -23,43 +40,24 @@ enum class EKYSlotType : uint8
 	Equipment   UMETA(DisplayName = "Equipment")
 };
 
-// 장비 타입
+// 어빌리티 카테고리 Enum
 UENUM(BlueprintType)
-enum class EKYEquipmentType : uint8
+enum class EKYAbilityCategory : uint8
 {
-	None        UMETA(DisplayName = "None"),
-	Head        UMETA(DisplayName = "Head"),
-	Chest       UMETA(DisplayName = "Chest"),
-	Legs		UMETA(DisplayName = "Legs"),
-	Gloves      UMETA(DisplayName = "Gloves"),
-	Feet        UMETA(DisplayName = "Feet"),
-	Weapon		UMETA(DisplayName = "Weapon")
+	Common      UMETA(DisplayName = "Common"),
+	OneSword    UMETA(DisplayName = "One Sword"),
+	DualBlade   UMETA(DisplayName = "Dual Blade"),
+	GreatSword  UMETA(DisplayName = "Great Sword")
 };
 
-// 무기 타입
-UENUM(BlueprintType)
-enum class EKYWeaponType : uint8
-{
-	None        UMETA(DisplayName = "None"),
-	Sword       UMETA(DisplayName = "Sword"),
-	GreatSword  UMETA(DisplayName = "GreatSword"),
-	DualBlade   UMETA(DisplayName = "DualBlade"),
-	Scythe      UMETA(DisplayName = "Scythe"),
-	Spear       UMETA(DisplayName = "Spear"),
-	Hammer      UMETA(DisplayName = "Hammer")
-};
 
 // 아이템 데이터 구조체
 USTRUCT(BlueprintType)
-struct FKYItemData
+struct FKYItemData : public FTableRowBase
 {
 	GENERATED_BODY()
-	
-	// 아이템 데이터 테이블 참조용
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
-	FName ItemID;
-	
-	
+
+public:
 	// 기본 정보
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
 	FText Name;
@@ -70,45 +68,148 @@ struct FKYItemData
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
 	EKYItemType ItemType;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta=(EditConditionHides="ItemType == EKYItemType::Weapon"))
+	EKYWeaponType WeaponType;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
-	TSoftObjectPtr<UTexture2D> Icon;
+	TObjectPtr<UTexture2D> Icon;
 
-	// 수량 (중첩 가능한 아이템의 경우)
-	UPROPERTY(BlueprintReadOnly, Category = "Basic")
-	int32 Count;
-
-	// 아이템 속성
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
-	bool bIsStackable;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic", meta = (EditConditionHides = "bIsStackable"))
-	int32 MaxStackCount;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Basic")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Basic")
 	TSubclassOf<class UGameplayEffect> EffectClass;
 
-	// 상세 정보 Asset 참조
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<class UKYItem> SubData;
+	// 인스턴스 데이터
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<class UKYItem> InstanceData;
 
 	FKYItemData()
-		: ItemType(EKYItemType::None)
-		, Count(1)
-		, bIsStackable(false)
-		, MaxStackCount(1)
+	: ItemType(EKYItemType::None)
+	, WeaponType(EKYWeaponType::None)
+	, Icon(nullptr)
+	, InstanceData(nullptr)
+	{}
+
+	FKYItemData(EKYItemType InType)
+	: ItemType(InType)
+	, WeaponType(EKYWeaponType::None)
+	, Icon(nullptr)
+	, InstanceData(nullptr)
 	{}
 };
 
-
-
-// 어빌리티 카테고리 Enum
 UENUM(BlueprintType)
-enum class EKYAbilityCategory : uint8
+enum class EKYEquipmentState : uint8
 {
-	Common      UMETA(DisplayName = "Common"),
-	OneSword    UMETA(DisplayName = "One Sword"),
-	DualBlade   UMETA(DisplayName = "Dual Blade"),
-	GreatSword  UMETA(DisplayName = "Great Sword")
+	Inventory,
+	Equipped,
+	InHand
+};
+
+UCLASS(Abstract, BlueprintType)
+class PROJECTKY_API UKYItem : public UPrimaryDataAsset
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	FName BaseID = NAME_None;
+
+	UPROPERTY()
+	uint8 Count = 0;
+
+	UPROPERTY()
+	int8 AdditionalSlotIndex = -1;
+
+	UPROPERTY()
+	EKYEquipmentState EquipState = EKYEquipmentState::Inventory;
+};
+
+USTRUCT(BlueprintType)
+struct FKYInventoryWidgetData
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	FName InstanceID;
+
+	UPROPERTY()
+	FText Name;
+
+	UPROPERTY()
+	FText Description;
+
+	UPROPERTY()
+	EKYItemType Type;
+
+	UPROPERTY()
+	int8 AdditionalSlotIndex;
+
+	UPROPERTY()
+	uint8 Count;
+
+	UPROPERTY()
+	EKYEquipmentState EquipState;
+
+	UPROPERTY()
+	UTexture2D* Icon;
+
+	void ClearData()
+	{
+		InstanceID = NAME_None;
+		Name = FText::GetEmpty();
+		Description = FText::GetEmpty();
+		Type = EKYItemType::None;
+		AdditionalSlotIndex = -1;
+		Count = 0;
+		EquipState = EKYEquipmentState::Inventory;
+		Icon = nullptr;
+	}
+
+	FKYInventoryWidgetData() :
+	InstanceID(NAME_None),
+	Name(FText::GetEmpty()),
+	Description(FText::GetEmpty()),
+	Type(EKYItemType::None),
+	AdditionalSlotIndex(-1),
+	Count(0),
+	EquipState(EKYEquipmentState::Inventory),
+	Icon(nullptr) {}
+
+	// 변환 생성자 추가
+	FKYInventoryWidgetData(const FKYItemData& ItemData)
+		: InstanceID(NAME_None)
+		, Name(ItemData.Name)
+		, Description(ItemData.Description)
+		, Type(ItemData.ItemType)
+		, AdditionalSlotIndex(-1)
+		, Count(0)
+		, EquipState(EKYEquipmentState::Inventory)
+		, Icon(ItemData.Icon)
+	{
+		if (ItemData.InstanceData)
+		{
+			InstanceID = ItemData.InstanceData->GetFName();
+			Count = ItemData.InstanceData->Count;
+			AdditionalSlotIndex = ItemData.InstanceData->AdditionalSlotIndex;
+			EquipState = ItemData.InstanceData->EquipState;
+		}
+	}
+
+	void operator=(const FKYItemData& ItemData)
+	{
+		Name = ItemData.Name;
+		Description = ItemData.Description;
+		Type = ItemData.ItemType;
+		Icon = ItemData.Icon;
+
+		if (ItemData.InstanceData)
+		{
+			InstanceID = ItemData.InstanceData->GetFName();
+			Count = ItemData.InstanceData->Count;
+			AdditionalSlotIndex = ItemData.InstanceData->AdditionalSlotIndex;
+			EquipState = ItemData.InstanceData->EquipState;
+		}
+	}
 };
 
 // 무기 데이터

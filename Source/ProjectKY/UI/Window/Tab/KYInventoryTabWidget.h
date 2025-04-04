@@ -26,21 +26,12 @@ public:
 	UKYInventoryTabWidget();
 	
 	virtual void NativeConstruct() override;
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	virtual bool HandleNavigationInput_Implementation(float AxisX, float AxisY) override;
 	virtual bool HandleConfirmInput_Implementation() override;
 	virtual bool HandleCancelInput_Implementation() override;
 	
 protected:
-	// 캐릭터 프리뷰
-	UPROPERTY(EditDefaultsOnly, Category = "Preview")
-	TObjectPtr<UTextureRenderTarget2D> RenderTarget;
-    
-	UPROPERTY(EditDefaultsOnly, Category = "Preview")
-	TObjectPtr<USceneCaptureComponent2D> CaptureComponent;
-    
-	UPROPERTY(EditDefaultsOnly, Category = "Preview")
-	TObjectPtr<USkeletalMeshComponent> PreviewMeshComponent;
-
 	// 인벤토리 각 패널
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UUniformGridPanel> InventoryGrid;
@@ -53,7 +44,8 @@ protected:
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> CharacterModelImage;
-	
+
+
 	// 아이템 세부 정보
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> ItemNameText;
@@ -64,6 +56,9 @@ protected:
 	// 위젯 클래스
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UKYItemSlotWidget> ItemSlotWidgetClass;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<UKYItemSlotWidget> EquipmentSlotWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<UKYItemSlotWidget> WeaponSlotWidgetClass;
@@ -74,53 +69,57 @@ protected:
 	
 	UPROPERTY()
 	TObjectPtr<AKYPlayerState> OwningPlayerState;
-	
-	
-private:
-	// 현재 포커스된 컨테이너 타입
-	enum class EFocusContainer
-	{
-		Inventory,
-		Equipment,
-		Weapon
-	};
-    
+
 	// 그리드 설정
-	static constexpr int32 GridColumns = 4;
-	static constexpr int32 GridRows = 6;
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	int32 GridColumns = 10;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	int32 GridRows = 5;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TObjectPtr<class UAnimationAsset> PreviewAnimSequence;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	USkeletalMesh* SkeletalMeshAsset;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	UMaterial* PreviewMaterial;
+
+
+private:
 	
 	// 인벤토리 슬롯 관리
 	UPROPERTY()
 	TArray<UKYItemSlotWidget*> InventorySlots;
 	
-	// 장비 슬롯 관리 - 장비 타입별로 슬롯 매핑
 	UPROPERTY()
-	TMap<EKYEquipmentType, UKYItemSlotWidget*> EquipmentSlots;
-	
-	// 무기 슬롯 관리 - 무기 슬롯 인덱스별로 슬롯 매핑
-	UPROPERTY()
-	TMap<int32, UKYItemSlotWidget*> WeaponSlots;
+	TMap<uint8, UKYItemSlotWidget*> EquipmentSlots;
 	
 	// 선택된 아이템 인스턴스 ID
+	UPROPERTY()
 	TObjectPtr<UKYItemSlotWidget> SelectedSlot;
 
-	FName SelectedInstanceID;
+	uint8 SelectedSlotIndex;
 
-	// 현재 포커스된 컨테이너
-	EFocusContainer CurrentFocusContainer;
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> PreviewMaterialInstance;
+	
+	FName SelectedInstanceID;
+	
 	
 	// 이벤트 핸들러
 	UFUNCTION()
 	void OnSlotClicked(UKYItemSlotWidget* ClickedSlot);
 	
 	UFUNCTION()
-	void OnInventoryChanged(FName InstanceID, bool bAdded);
+	void OnInventoryChanged(const FName& InstanceID, bool bAdded);
 	
 	UFUNCTION()
-	void OnEquipmentChanged(EKYEquipmentType EquipmentType, bool bEquipped);
+	void OnEquipmentChanged(const FName& InstanceID, bool bEquipped);
 	
 	UFUNCTION()
-	void OnWeaponStateChanged(int32 SlotIndex, bool bInHand);
+	void OnWeaponStateChanged(uint8 SlotIndex, bool bInHand);
 	
 	// UI 업데이트
 	void ClearDetailPanel();
@@ -131,19 +130,18 @@ private:
 	
 	void UpdateInventory();
 	void UpdateEquipmentSlots();
-	void UpdateWeaponSlots();
+
+	void SortInventory();
+
+	void UpdateSelectedSlot();
 	
 	// 초기화
 	void InitializeInventorySlots();
 	void InitializeEquipmentSlots();
-	void InitializeWeaponSlots();
 	void BindPlayerStateEvents();
 	
 	// 아이템 액션
 	void UseItem(FName InstanceID);
-	void EquipItem(FName InstanceID);
-	void UnequipItem(FName InstanceID);
-	void ToggleWeapon(FName InstanceID);
 	void ShowUseItemDialog(FName InstanceID);
 };
 

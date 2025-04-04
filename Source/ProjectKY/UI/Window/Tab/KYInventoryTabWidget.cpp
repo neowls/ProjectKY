@@ -2,37 +2,22 @@
 
 
 #include "UI/Window/Tab/KYInventoryTabWidget.h"
+#include "ProjectKY.h"
 #include "UI/KYItemSlotWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
-#include "Components/SceneCaptureComponent2D.h"
 #include "Components/UniformGridPanel.h"
 #include "Components/VerticalBox.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "Item/KYItem.h"
 #include "Player/KYPlayerState.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "System/KYCharacterPreviewSubsystem.h"
 
 UKYInventoryTabWidget::UKYInventoryTabWidget()
 {
-	CaptureComponent = CreateDefaultSubobject<USceneCaptureComponent2D>("CaptureComponent2D");
-	if (CaptureComponent)
-	{
-		CaptureComponent->FOVAngle = 45.0f;
-		CaptureComponent->bCaptureEveryFrame = true;
-		CaptureComponent->CaptureSource = SCS_SceneColorHDR;
-	}
-
-	PreviewMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>("PreviewMeshComponent");
-	if (PreviewMeshComponent)
-	{
-		PreviewMeshComponent->SetVisibility(true);
-		PreviewMeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		//	Character Mesh Section
-		static ConstructorHelpers::FObjectFinder<USkeletalMesh> SkeletalMeshRef(TEXT("/Game/NO_Cooking/Animation/AnimBaseCharacters/Mannequin_UE4/Meshes/SK_Mannequin_Base.SK_Mannequin_Base"));
-		PreviewMeshComponent->SetSkeletalMeshAsset(SkeletalMeshRef.Object);
-		static ConstructorHelpers::FObjectFinder<USkeleton> SkeletonRef(TEXT("/Game/NO_Cooking/Animation/AnimBaseCharacters/Mannequin_UE4/Meshes/SK_Mannequin_Skeleton_Base.SK_Mannequin_Skeleton_Base"));
-		PreviewMeshComponent->GetSkeletalMeshAsset()->SetSkeleton(SkeletonRef.Object);
-	}
+	SelectedSlotIndex = 0;
+	
+	SkeletalMeshAsset = nullptr;
+	PreviewMaterial = nullptr;
 }
 
 void UKYInventoryTabWidget::NativeConstruct()
@@ -49,16 +34,24 @@ void UKYInventoryTabWidget::NativeConstruct()
 	
 	InitializeInventorySlots();
 	InitializeEquipmentSlots();
-	InitializeWeaponSlots();
 
 	BindPlayerStateEvents();
 
 	UpdateInventory();
 	UpdateEquipmentSlots();
-	UpdateWeaponSlots();
 
 	ClearDetailPanel();
 }
+
+void UKYInventoryTabWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	if (UKYCharacterPreviewSubsystem* Subsystem = GetGameInstance()->GetSubsystem<UKYCharacterPreviewSubsystem>())
+	{
+		if (OwningPlayerState)	Subsystem->UpdateScene(InDeltaTime); // 프리뷰 캐릭터 메쉬와 렌더 타겟 텍스쳐를 업데이트 한다.
+	}
+}
+
 
 void UKYInventoryTabWidget::InitializeInventorySlots()
 {
@@ -69,8 +62,7 @@ void UKYInventoryTabWidget::InitializeInventorySlots()
 	{
 		UKYItemSlotWidget* NewSlot = CreateWidget<UKYItemSlotWidget>(this, ItemSlotWidgetClass);
 		if (!NewSlot) continue;
-        
-		// 슬롯 초기화 - InstanceID는 아직 없으므로 NAME_None으로 설정
+		
 		NewSlot->InitializeSlot();
 		NewSlot->OnSlotClicked.AddDynamic(this, &UKYInventoryTabWidget::OnSlotClicked);
         
@@ -82,48 +74,73 @@ void UKYInventoryTabWidget::InitializeInventorySlots()
 	}
 }
 
+void UKYInventoryTabWidget::SortInventory()
+{
+	if (!OwningPlayerState) return;
+
+	TArray AllItems = OwningPlayerState->GetInventoryWidgetArrayData();
+	AllItems.Sort([] (const FKYInventoryWidgetData& A, const FKYInventoryWidgetData& B)
+	{
+		if (A.EquipState != B.EquipState)
+   	 	{
+   	 	    return A.EquipState > B.EquipState;
+   	 	}
+		
+   	 	if (A.Type != B.Type)
+   	 	{
+   	 	    return A.Type > B.Type;
+   	 	}
+		
+   	 	return A.Name.ToString() < B.Name.ToString();
+	});
+}
+
+void UKYInventoryTabWidget::UpdateSelectedSlot()
+{
+	
+}
+
+
 void UKYInventoryTabWidget::InitializeEquipmentSlots()
 {
 	if (!EquipmentBox || !ItemSlotWidgetClass) return;
 	
-	TArray EquipmentTypes = {
-		EKYEquipmentType::Head,
-		EKYEquipmentType::Chest,
-		EKYEquipmentType::Legs,
-		EKYEquipmentType::Gloves,
-		EKYEquipmentType::Feet
-	};
+	uint8 StartIndex = static_cast<uint8>(EKYItemType::Head);
+	uint8 SlotNum = 8;
+	TArray<uint8> EquipmentIndex;
+	EquipmentIndex.Reserve(SlotNum);
+
+	for (uint8 i = 0; i < SlotNum; ++i)
+	{
+		EquipmentIndex.Add(StartIndex + i);
+	}
 	
 	
 	// 각 장비 슬롯 생성
-	for (auto& Equipment : EquipmentTypes)
+	for (auto& Index : EquipmentIndex)
 	{
-		UKYItemSlotWidget* NewSlot = CreateWidget<UKYItemSlotWidget>(this, ItemSlotWidgetClass);
-		if (!NewSlot) continue;
+		if (Index < static_cast<uint8>(EKYItemType::Weapon))
+		{
+			UKYItemSlotWidget* NewSlot = CreateWidget<UKYItemSlotWidget>(this, EquipmentSlotWidgetClass);
+			if (!NewSlot) continue;
         
-		NewSlot->InitializeSlot();
-		NewSlot->OnSlotClicked.AddDynamic(this, &UKYInventoryTabWidget::OnSlotClicked);
+			NewSlot->InitializeSlot();
+			NewSlot->OnSlotClicked.AddDynamic(this, &UKYInventoryTabWidget::OnSlotClicked);
         
-		EquipmentBox->AddChild(NewSlot);
-		EquipmentSlots.Add(Equipment, NewSlot);
-	}
-}
-
-void UKYInventoryTabWidget::InitializeWeaponSlots()
-{
-	if (!WeaponBox || !WeaponSlotWidgetClass) return;
-	
-    
-	for (int32 i = 0; i < 3; ++i)
-	{
-		UKYItemSlotWidget* NewSlot = CreateWidget<UKYItemSlotWidget>(this, WeaponSlotWidgetClass);
-		if (!NewSlot) continue;
+			EquipmentBox->AddChild(NewSlot);
+			EquipmentSlots.Add(Index, NewSlot);
+		}
+		else
+		{
+			UKYItemSlotWidget* NewSlot = CreateWidget<UKYItemSlotWidget>(this, WeaponSlotWidgetClass);
+			if (!NewSlot) continue;
         
-		NewSlot->InitializeSlot();
-		NewSlot->OnSlotClicked.AddDynamic(this, &UKYInventoryTabWidget::OnSlotClicked);
+			NewSlot->InitializeSlot();
+			NewSlot->OnSlotClicked.AddDynamic(this, &UKYInventoryTabWidget::OnSlotClicked);
         
-		WeaponBox->AddChild(NewSlot);
-		WeaponSlots.Add(i, NewSlot);
+			WeaponBox->AddChild(NewSlot);
+			EquipmentSlots.Add(Index, NewSlot);
+		}
 	}
 }
 
@@ -146,40 +163,20 @@ void UKYInventoryTabWidget::UpdateInventory()
 		ItemSlotWidget->ClearSlot();
 	}
 	
-	// 인벤토리 아이템 목록 가져오기
-	TArray<FName> InventoryItems = OwningPlayerState->GetInventoryItems();
-	
-	// 장착된 아이템 목록 제외 (장비슬롯에 표시될 것이므로)
-	TArray<FName> EquippedItems = OwningPlayerState->GetEquippedItems();
-	
-	// 실제 인벤토리에 표시할 아이템들
-	TArray<FName> ItemsToShow;
-	
-	for (const FName& ItemID : InventoryItems)
-	{
-		if (!EquippedItems.Contains(ItemID))
-		{
-			ItemsToShow.Add(ItemID);
-		}
-	}
-	
 	// 인벤토리 슬롯에 아이템 할당
 	int32 SlotIndex = 0;
-	for (const FName& InstanceID : ItemsToShow)
+	
+	for (const auto& Data : OwningPlayerState->GetInventoryWidgetArrayData())
 	{
 		if (SlotIndex >= InventorySlots.Num()) break;
-		
-		const FKYItemData* ItemData = OwningPlayerState->GetItemData(InstanceID);
-		if (!ItemData) continue;
-		
-		InventorySlots[SlotIndex]->UpdateSlot(InstanceID, *ItemData);
-		
-		// 현재 선택된 아이템이면 선택 상태 표시
-		if (InstanceID == SelectedInstanceID)
+		if(Data.Type == EKYItemType::None) continue;
+
+		InventorySlots[SlotIndex]->UpdateSlot(Data);
+
+		if (SelectedInstanceID == Data.InstanceID)
 		{
 			InventorySlots[SlotIndex]->SetIsSelected(true);
 		}
-		
 		SlotIndex++;
 	}
 }
@@ -187,78 +184,19 @@ void UKYInventoryTabWidget::UpdateInventory()
 void UKYInventoryTabWidget::UpdateEquipmentSlots()
 {
 	if (!OwningPlayerState) return;
-	
-	// 모든 장비 슬롯 초기화
-	for (auto& Pair : EquipmentSlots)
-	{
-		Pair.Value->ClearSlot();
-	}
-	
-	// 장착된 아이템 목록 가져오기
-	TArray<FName> EquippedItems = OwningPlayerState->GetEquippedItems();
-	
-	for (const FName& InstanceID : EquippedItems)
-	{
-		const FKYItemData* ItemData = OwningPlayerState->GetItemData(InstanceID);
-		if (!ItemData || ItemData->ItemType != EKYItemType::Equipment) continue;
-		
-		// 장비 타입 확인
-		UKYEquipmentItem* EquipItem = Cast<UKYEquipmentItem>(ItemData->SubData);
-		if (!EquipItem) continue;
-		
-		// 무기가 아닌 일반 장비만 처리 (무기는 별도 처리)
-		if (EquipItem->EquipmentType == EKYEquipmentType::Weapon) continue;
-		
-		// 해당 장비 슬롯에 아이템 표시
-		if (UKYItemSlotWidget* NewSlot = EquipmentSlots.FindRef(EquipItem->EquipmentType))
-		{
-			NewSlot->UpdateSlot(InstanceID, *ItemData);
-			
-			// 현재 선택된 아이템이면 선택 상태 표시
-			if (InstanceID == SelectedInstanceID)
-			{
-				NewSlot->SetIsSelected(true);
-			}
-		}
-	}
-}
 
-void UKYInventoryTabWidget::UpdateWeaponSlots()
-{
-	if (!OwningPlayerState) return;
-	
-	// 모든 무기 슬롯 초기화
-	for (auto& Pair : WeaponSlots)
+	// 모든 장비 슬롯 초기화
+	for (auto& InSlot : EquipmentSlots)
 	{
-		Pair.Value->ClearSlot();
+		InSlot.Value->ClearSlot();
 	}
-	
-	// 장착된 아이템 목록 가져오기
-	TArray<FName> EquippedItems = OwningPlayerState->GetEquippedItems();
-	
-	for (const FName& InstanceID : EquippedItems)
+
+	// 장착된 아이템 목록만 업데이트 한다.
+	for (const auto& InData : OwningPlayerState->GetEquippedItemsWidgetData())
 	{
-		const FKYItemData* ItemData = OwningPlayerState->GetItemData(InstanceID);
-		if (!ItemData || ItemData->ItemType != EKYItemType::Equipment) continue;
-		
-		// 장비 타입 확인
-		UKYEquipmentItem* EquipItem = Cast<UKYEquipmentItem>(ItemData->SubData);
-		if (!EquipItem || EquipItem->EquipmentType != EKYEquipmentType::Weapon) continue;
-		
-		// 무기 정보 확인
-		UKYWeaponItem* WeaponItem = Cast<UKYWeaponItem>(EquipItem);
-		if (!WeaponItem) continue;
-		
-		// 해당 무기 슬롯에 아이템 표시
-		if (UKYItemSlotWidget* WeaponSlot = WeaponSlots.FindRef(WeaponItem->WeaponSlotIndex))
+		if (EquipmentSlots.Contains(InData.Key))
 		{
-			WeaponSlot->UpdateSlot(InstanceID, *ItemData);
-			
-			// 현재 선택된 아이템이면 선택 상태 표시
-			if (InstanceID == SelectedInstanceID)
-			{
-				WeaponSlot->SetIsSelected(true);
-			}
+			EquipmentSlots[InData.Key]->UpdateSlot(InData.Value);
 		}
 	}
 }
@@ -268,59 +206,54 @@ void UKYInventoryTabWidget::OnSlotClicked(UKYItemSlotWidget* ClickedSlot)
 	if (!ClickedSlot) return;
 	
 	FName InstanceID = ClickedSlot->GetInstanceID();
-    
-	// 이전 선택 해제 (효율적으로!)
-	if (SelectedSlot && SelectedSlot != ClickedSlot)
-	{
-		SelectedSlot->SetIsSelected(false);
-	}
-	
+
 	// 새 선택 처리
 	bool bIsSameItem = (SelectedSlot == ClickedSlot);
-	SelectedInstanceID = InstanceID;
-	SelectedSlot = ClickedSlot;
-	SelectedSlot->SetIsSelected(true);
 	
-	// 세부 정보 업데이트
-	UpdateDetailPanel(InstanceID);
-	
-	// 캐릭터 프리뷰 업데이트
-	UpdateCharacterPreview(InstanceID);
-	
-	// 같은 아이템을 다시 클릭했다면 액션 실행
-	if (bIsSameItem && OwningPlayerState)
+	// 같지 않다면 이전 선택 해제
+	if (!bIsSameItem)
 	{
-		const FKYItemData* ItemData = OwningPlayerState->GetItemData(InstanceID);
-		if (!ItemData) return;
+		SelectedSlot->SetIsSelected(false);
+		SelectedSlot = ClickedSlot;
+		SelectedInstanceID = InstanceID;
+		SelectedSlot->SetIsSelected(true);
+
+		// 세부 정보 업데이트
+		UpdateDetailPanel(InstanceID);
+	}
+	// 같은 아이템을 다시 클릭했다면 액션 실행
+	else if (bIsSameItem && OwningPlayerState)
+	{
+		FKYInventoryWidgetData ItemData = OwningPlayerState->GetInventoryWidgetData(InstanceID);
 		
 		// 아이템 타입에 따른 동작
-		switch (ItemData->ItemType)
+		switch (ItemData.Type)
 		{
-			case EKYItemType::Equipment:
-				{
-					UKYEquipmentItem* EquipmentItem = Cast<UKYEquipmentItem>(ItemData->SubData);
-					if (!EquipmentItem) return;
-					
-					// 장비 상태에 따른 동작
-					if (EquipmentItem->bIsEquipped)
-					{
-						// 이미 장착 중이면 해제
-						UnequipItem(InstanceID);
-					}
-					else
-					{
-						// 새로 장착
-						EquipItem(InstanceID);
-					}
-				}
+			case EKYItemType::None:
 				break;
-				
+			
+			case EKYItemType::Misc:
+				break;
+			
 			case EKYItemType::Usable:
 				// 소비 아이템 사용
 				ShowUseItemDialog(InstanceID);
 				break;
-				
+			
 			default:
+				{
+					// 장비 상태에 따른 동작
+					if (ItemData.EquipState == EKYEquipmentState::Equipped)
+					{
+						// 이미 장착 중이면 해제
+						OwningPlayerState->UnequipItem(InstanceID);
+					}
+					else
+					{
+						// 새로 장착
+						OwningPlayerState->EquipItem(InstanceID);
+					}
+				}
 				break;
 		}
 	}
@@ -338,43 +271,6 @@ void UKYInventoryTabWidget::UseItem(FName InstanceID)
 		// UI 업데이트
 		UpdateInventory();
 		ClearDetailPanel();
-	}
-}
-
-void UKYInventoryTabWidget::EquipItem(FName InstanceID)
-{
-	if (!OwningPlayerState) return;
-	
-	if (OwningPlayerState->EquipItem(InstanceID))
-	{
-		// UI 업데이트
-		UpdateInventory();
-		UpdateEquipmentSlots();
-		UpdateWeaponSlots();
-	}
-}
-
-void UKYInventoryTabWidget::UnequipItem(FName InstanceID)
-{
-	if (!OwningPlayerState) return;
-	
-	if (OwningPlayerState->UnequipItem(InstanceID))
-	{
-		// UI 업데이트
-		UpdateInventory();
-		UpdateEquipmentSlots();
-		UpdateWeaponSlots();
-	}
-}
-
-void UKYInventoryTabWidget::ToggleWeapon(FName InstanceID)
-{
-	if (!OwningPlayerState) return;
-	
-	if (OwningPlayerState->ToggleWeaponInHand(InstanceID))
-	{
-		// UI 업데이트 - 무기 슬롯만 업데이트
-		UpdateWeaponSlots();
 	}
 }
 
@@ -409,21 +305,16 @@ void UKYInventoryTabWidget::UpdateDetailPanel(FName InstanceID)
 		return;
 	}
 	
-	const FKYItemData* ItemData = OwningPlayerState->GetItemData(InstanceID);
-	if (!ItemData)
-	{
-		ClearDetailPanel();
-		return;
-	}
+	FKYInventoryWidgetData ItemData = OwningPlayerState->GetInventoryWidgetData(InstanceID);
 	
 	if (ItemNameText)
 	{
-		ItemNameText->SetText(ItemData->Name);
+		ItemNameText->SetText(ItemData.Name);
 	}
 	
 	if (ItemDescriptionText)
 	{
-		ItemDescriptionText->SetText(ItemData->Description);
+		ItemDescriptionText->SetText(ItemData.Description);
 	}
 }
 
@@ -442,32 +333,38 @@ void UKYInventoryTabWidget::ClearDetailPanel()
 
 void UKYInventoryTabWidget::SetupPreviewCharacter()
 {
-	if (!CharacterModelImage || !RenderTarget || !CaptureComponent) return;
-	
-	// 렌더 타겟 설정
-	CaptureComponent->TextureTarget = RenderTarget;
-	
-	// 이미지 위젯에 렌더 타겟 설정
-	FSlateBrush Brush;
-	Brush.SetResourceObject(RenderTarget);
-	CharacterModelImage->SetBrush(Brush);
+	auto Subsystem = GetGameInstance()->GetSubsystem<UKYCharacterPreviewSubsystem>();
+	if (Subsystem)
+	{
+		PreviewMaterialInstance = UMaterialInstanceDynamic::Create(PreviewMaterial, this); // 렌더 타겟을 실시간으로 받아야 하기에 다이나믹 머터리얼로 설정하였다.
+		Subsystem->SetPreviewMesh(SkeletalMeshAsset, PreviewAnimSequence);
+		UTextureRenderTarget2D* RT = Subsystem->GetPreviewRenderTarget();
+		PreviewMaterialInstance->SetTextureParameterValue("PreviewTexture", RT);
+		if (RT && CharacterModelImage)
+		{
+			// 이미지 위젯에 렌더 타겟 머터리얼 설정
+			FSlateBrush Brush;
+			Brush.SetImageSize(FVector2D(RT->SizeX,RT->SizeY));
+			CharacterModelImage->SetBrush(Brush);
+			CharacterModelImage->SetBrushFromMaterial(PreviewMaterialInstance);
+		}
+	}
 }
 
 void UKYInventoryTabWidget::UpdateCharacterPreview(FName InstanceID)
 {
-	if (!OwningPlayerState || !PreviewMeshComponent || InstanceID.IsNone()) return;
+	if (!OwningPlayerState || InstanceID.IsNone()) return;
 	
-	const FKYItemData* ItemData = OwningPlayerState->GetItemData(InstanceID);
-	if (!ItemData || ItemData->ItemType != EKYItemType::Equipment) return;
+	const FKYInventoryWidgetData ItemData = OwningPlayerState->GetInventoryWidgetData(InstanceID);
+	if (ItemData.Type < EKYItemType::Head) return;
+
 	
-	UKYEquipmentItem* EquipItem = Cast<UKYEquipmentItem>(ItemData->SubData);
-	if (!EquipItem) return;
 	
 	// 장비 메시 로드 및 적용 로직 추가
 	// 실제 구현은 프로젝트 상황에 따라 다를 수 있음
 }
 
-void UKYInventoryTabWidget::OnInventoryChanged(FName InstanceID, bool bAdded)
+void UKYInventoryTabWidget::OnInventoryChanged(const FName& InstanceID, bool bAdded)
 {
 	UpdateInventory();
 	
@@ -487,59 +384,52 @@ void UKYInventoryTabWidget::OnInventoryChanged(FName InstanceID, bool bAdded)
 	}
 }
 
-void UKYInventoryTabWidget::OnEquipmentChanged(EKYEquipmentType EquipmentType, bool bEquipped)
+void UKYInventoryTabWidget::OnEquipmentChanged(const FName& InstanceID, bool bEquipped)
 {
-	UpdateEquipmentSlots();
-	UpdateInventory();
+	//UpdateEquipmentSlots();
+	// 캐릭터 프리뷰 업데이트
+	UpdateCharacterPreview(InstanceID);
+	// 해당 아이템의 Equipment 슬롯 및 인벤토리 슬롯 상태 변경.
 }
 
-void UKYInventoryTabWidget::OnWeaponStateChanged(int32 SlotIndex, bool bInHand)
+void UKYInventoryTabWidget::OnWeaponStateChanged(uint8 SlotIndex, bool bInHand)
 {
-	UpdateWeaponSlots();
+	//UpdateWeaponSlots();
+
+	// 해당 아이템의 WeaponSlot 슬롯 및 인벤토리 슬롯 상태 변경.
 }
 
 bool UKYInventoryTabWidget::HandleNavigationInput_Implementation(float AxisX, float AxisY)
 {
-	// 네비게이션 로직 - InstanceID 기반으로 구현
-	// 실제 구현은 프로젝트 요구사항에 따라 조정
-	return false;
+	// 네비게이션 로직
+	SelectedSlotIndex = FMath::Clamp(SelectedSlotIndex + FMath::RoundToInt(AxisX) + FMath::RoundToInt(AxisY)*GridRows , 0, InventorySlots.Num()-1);
+	return true;
 }
 
 bool UKYInventoryTabWidget::HandleConfirmInput_Implementation()
 {
+	
 	// 확인 입력 처리 - 현재 선택된 아이템 액션 실행
 	if (SelectedInstanceID != NAME_None && OwningPlayerState)
 	{
-		const FKYItemData* ItemData = OwningPlayerState->GetItemData(SelectedInstanceID);
-		if (!ItemData) return false;
-		
-		switch (ItemData->ItemType)
+		const FKYInventoryWidgetData ItemData = OwningPlayerState->GetInventoryWidgetData(SelectedInstanceID);
+		if (ItemData.Type < EKYItemType::Head)
 		{
-			case EKYItemType::Equipment:
-				{
-					UKYEquipmentItem* EquipmentItem = Cast<UKYEquipmentItem>(ItemData->SubData);
-					if (!EquipmentItem) return false;
-					
-					if (EquipmentItem->bIsEquipped)
-					{
-						UnequipItem(SelectedInstanceID);
-					}
-					else
-					{
-						EquipItem(SelectedInstanceID);
-					}
-				}
-				return true;
-				
-			case EKYItemType::Usable:
-				ShowUseItemDialog(SelectedInstanceID);
-				return true;
-				
-			default:
-				break;
+			ShowUseItemDialog(SelectedInstanceID);
+			return true;
 		}
+		
+		if (ItemData.EquipState == EKYEquipmentState::Equipped)
+		{
+			OwningPlayerState->UnequipItem(SelectedInstanceID);
+		}
+		else
+		{
+			OwningPlayerState->EquipItem(SelectedInstanceID);
+		}
+		return true;
 	}
-	
+
 	return false;
 }
 
@@ -565,6 +455,7 @@ bool UKYInventoryTabWidget::HandleCancelInput_Implementation()
 			}
 		}
 		
+		/*
 		for (auto& Pair : WeaponSlots)
 		{
 			if (Pair.Value->GetInstanceID() == SelectedInstanceID)
@@ -572,6 +463,7 @@ bool UKYInventoryTabWidget::HandleCancelInput_Implementation()
 				Pair.Value->SetIsSelected(false);
 			}
 		}
+		*/
 		
 		SelectedInstanceID = NAME_None;
 		ClearDetailPanel();

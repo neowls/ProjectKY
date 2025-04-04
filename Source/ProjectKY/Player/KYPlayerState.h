@@ -13,9 +13,9 @@ class UKYItem;
 class UKYEquipmentItem;
 class UKYWeaponItem;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryChanged, FName, InstanceID, bool, bAdded);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, EKYEquipmentType, EquipmentType, bool, bEquipped);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponStateChanged, int32, SlotIndex, bool, bInHand);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnInventoryChanged, const FName&, InstanceID, bool, bAdded);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, const FName&, InstanceID, bool, bEquipped);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWeaponStateChanged, uint8, SlotIndex, bool, bInHand);
 
 UCLASS()
 class PROJECTKY_API AKYPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -29,7 +29,7 @@ public:
 
 	// 인벤토리
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool AddItem(const FName& ItemID, int32 Count = 1);
+	bool AddItem(const FName& BaseItemID, int32 Count = 1);
     
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool RemoveItem(const FName& InstanceID, int32 Count = 1);
@@ -45,26 +45,51 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Inventory")
 	TArray<FName> GetItemsByType(EKYItemType ItemType) const;
+
+	FKYInventoryWidgetData GetInventoryWidgetData(const FName& InstanceID);
+
+	UFUNCTION(Blueprintable, Category = "Inventory")
+	TArray<FKYInventoryWidgetData> GetInventoryWidgetArrayData();
+
 	
 	// 장비 관리
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	bool EquipItem(const FName& InstanceID);
-    
+	bool EquipItem(const FName& InstanceID, uint8 TargetSlotIndex = 3);
+
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	bool UnequipItem(const FName& InstanceID);
+	bool UnequipItem(const FName& InstanceID, uint8 TargetSlotIndex = 3);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool SwapWeaponSlot(uint8 FromSlotIndex, uint8 ToSlotIndex);
+
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool EquipWeapon(const FName& InstanceID, uint8 NewSlotIndex = 7);
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool EquipArmor(const FName& InstanceID);
+	
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool UnequipWeapon(uint8 TargetSlotIndex = 7);
+
+	UFUNCTION(BlueprintCallable, Category = "Equipment")
+	bool UnequipArmor(EKYItemType TargetType);
+	
 
 	UFUNCTION(BlueprintPure, Category = "Equipment")
-	TArray<FName> GetEquippedItems() const;
-    
-	UFUNCTION(BlueprintPure, Category = "Equipment")
-	FName GetEquippedItemByType(EKYEquipmentType EquipmentType) const;
+	TArray<uint8> GetEquippedItemIndex() const;
+
+	FKYInventoryWidgetData GetEquippedItemWidgetData(const uint8 Index);
+
+	TMap<uint8, FKYInventoryWidgetData> GetEquippedItemsWidgetData();
 	
 	// 무기 관리
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	bool ToggleWeaponInHand(const FName& InstanceID);
 	
-	UFUNCTION(BlueprintPure, Category = "Weapon")
-	FName GetCurrentInHandWeapon() const;
+	TSharedPtr<FKYItemData> GetCurrentInHandWeapon() const { return InHandWeapon; }
+
+	void SetCurrentInHandWeapon(TSharedPtr<FKYItemData> NewWeapon) { InHandWeapon = NewWeapon; };
 
 	// 이벤트
 	UPROPERTY(BlueprintAssignable)
@@ -75,6 +100,10 @@ public:
     
 	UPROPERTY(BlueprintAssignable)
 	FOnWeaponStateChanged OnWeaponStateChanged;
+
+	UPROPERTY(EditAnywhere, Category = "Debug")
+	FTransform PreviewModelCamTransform;
+	
 	
 protected:
 	UPROPERTY(EditAnywhere, Category=GAS)
@@ -82,12 +111,23 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<class UKYAttributeSetPlayer> AttributeSetPlayer;
+
+
 	
 
 private:
 	// 인벤토리 아이템 인스턴스
-	UPROPERTY()
-	TMap<FName, FKYItemData> InventoryItems;
+	TMap<FName, TSharedPtr<FKYItemData>> InventoryItems;
+
+	TArray<TWeakPtr<FKYItemData>> InventoryWidgetDataArray;
+
+	TMap<uint8, TSharedPtr<FKYItemData>> EquippedItems;
+
+	TMap<EKYItemType, TSharedPtr<FKYItemData>> EquippedArmors;
+
+	TMap<uint8, TSharedPtr<FKYItemData>> EquippedWeapons;
+
+	TSharedPtr<FKYItemData> InHandWeapon;
 
 	// 마지막으로 생성된 인스턴스 ID 추적
 	UPROPERTY()

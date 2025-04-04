@@ -6,7 +6,6 @@
 #include "Components/Button.h"
 #include "Components/Border.h"
 #include "Components/TextBlock.h"
-#include "Item/KYItem.h"
 
 void UKYItemSlotWidget::NativeConstruct()
 {
@@ -21,27 +20,27 @@ void UKYItemSlotWidget::NativeConstruct()
 
 void UKYItemSlotWidget::InitializeSlot()
 {
-	InstanceID = NAME_None;
 	ClearSlot();
 }
 
-void UKYItemSlotWidget::UpdateSlot(const FName& InInstanceID, const FKYItemData& ItemData)
+void UKYItemSlotWidget::UpdateSlot(const FKYInventoryWidgetData NewSlotData)
 {
-	InstanceID = InInstanceID;
+	SlotData = NewSlotData;
     
 	// 아이템 아이콘 설정
-	if (ItemIcon && ItemData.Icon.IsValid())
+	if (ItemIcon && NewSlotData.Icon)
 	{
-		ItemIcon->SetBrushFromTexture(ItemData.Icon.LoadSynchronous());
+		ItemIcon->SetBrushFromTexture(NewSlotData.Icon);
 		ItemIcon->SetVisibility(ESlateVisibility::Visible);
 	}
  
 	// 아이템 개수 표시 (중첩 가능한 경우)
 	if (ItemCount)
 	{
-		if (ItemData.bIsStackable && ItemData.Count > 1)
+		if (NewSlotData.Count > 1)
 		{
-			ItemCount->SetText(FText::AsNumber(ItemData.Count));
+			ItemCount->SetText(FText::AsNumber(NewSlotData.Count));
+			
 			ItemCount->SetVisibility(ESlateVisibility::Visible);
 		}
 		else
@@ -53,20 +52,7 @@ void UKYItemSlotWidget::UpdateSlot(const FName& InInstanceID, const FKYItemData&
 	// 장착 아이콘 표시
 	if (EquippedBorder)
 	{
-		if (ItemData.ItemType != EKYItemType::Equipment)
-		{
-			EquippedBorder->SetVisibility(ESlateVisibility::Collapsed);
-			return;
-		}
-		
-		bool bIsEquipped = false;
-		
-		UKYEquipmentItem* EquipItem = Cast<UKYEquipmentItem>(ItemData.SubData);
-		if (EquipItem)
-		{
-			bIsEquipped = EquipItem->bIsEquipped;
-		}
-		EquippedBorder->SetVisibility(bIsEquipped ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		EquippedBorder->SetVisibility(NewSlotData.EquipState != EKYEquipmentState::Inventory ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
 	}
     
 	// 슬롯 버튼 활성화
@@ -78,27 +64,7 @@ void UKYItemSlotWidget::UpdateSlot(const FName& InInstanceID, const FKYItemData&
 
 void UKYItemSlotWidget::ClearSlot()
 {
-	InstanceID = NAME_None;
-    
-	if (ItemIcon)
-	{
-		ItemIcon->SetVisibility(ESlateVisibility::Collapsed);
-	}
-    
-	if (ItemCount)
-	{
-		ItemCount->SetVisibility(ESlateVisibility::Collapsed);
-	}
-    
-	if (EquippedBorder)
-	{
-		EquippedBorder->SetVisibility(ESlateVisibility::Collapsed);
-	}
-    
-	if (SelectionBorder)
-	{
-		SelectionBorder->SetVisibility(ESlateVisibility::Collapsed);
-	}
+	SlotData.ClearData();
     
 	if (ItemButton)
 	{
@@ -108,14 +74,50 @@ void UKYItemSlotWidget::ClearSlot()
 
 void UKYItemSlotWidget::SetIsSelected(bool bSelected)
 {
-	if (SelectionBorder)
-	{
-		SelectionBorder->SetVisibility(bSelected ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	}
+	bIsSelected = bSelected;
 }
 
 
 void UKYItemSlotWidget::OnSlotButtonClicked()
 {
 	OnSlotClicked.Broadcast(this);
+}
+
+FText UKYItemSlotWidget::GetItemCountText() const
+{
+	return FText::AsNumber(SlotData.Count);
+}
+
+FSlateBrush UKYItemSlotWidget::GetItemIconBrush() const
+{
+	FSlateBrush Brush;
+	Brush.DrawAs = ESlateBrushDrawType::Type::NoDrawType;
+	Brush.ImageSize = FVector2D(128, 128);
+	
+	if (SlotData.Icon)
+	{
+		Brush.DrawAs = ESlateBrushDrawType::Type::Image;
+		Brush.SetResourceObject(SlotData.Icon);
+		FIntPoint ImportedSize = SlotData.Icon->GetImportedSize();
+	
+		const FVector2D FinalSize = ImportedSize.GetMin() > 0 ? FVector2D(ImportedSize) : FVector2D(64, 64);
+		Brush.ImageSize = FinalSize;
+	}
+
+	return Brush;
+}
+
+ESlateVisibility UKYItemSlotWidget::GetItemCountVisibility() const
+{
+	return SlotData.Count > 0 ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+}
+
+ESlateVisibility UKYItemSlotWidget::GetSelectionBorderVisibility() const
+{
+	return bIsSelected ? ESlateVisibility::Visible : ESlateVisibility::Hidden;
+}
+
+ESlateVisibility UKYItemSlotWidget::GetEquippedBorderVisibility() const
+{
+	return SlotData.EquipState == EKYEquipmentState::Inventory ? ESlateVisibility::Hidden : ESlateVisibility::Visible;
 }
