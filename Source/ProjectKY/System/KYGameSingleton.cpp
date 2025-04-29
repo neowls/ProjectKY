@@ -21,6 +21,13 @@ UKYGameSingleton::UKYGameSingleton()
 		AbilityDataTable = AbilityDataTableRef.Object;
 		check(AbilityDataTable->GetRowMap().Num() > 0);
 	}
+
+	static ConstructorHelpers::FObjectFinder<UDataTable> ItemDataTableRef(TEXT("/Game/_Dev/DataTable/DT_ItemTable.DT_ItemTable"));
+	if (ItemDataTableRef.Object != nullptr)
+	{
+		ItemDataTable = ItemDataTableRef.Object;
+		check(ItemDataTable->GetRowMap().Num() > 0);
+	}
 }
 
 UKYGameSingleton& UKYGameSingleton::Get()

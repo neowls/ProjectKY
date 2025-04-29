@@ -5,23 +5,20 @@
 #include "MediaSource.h"
 #include "KYStruct.generated.h"
 
-// 아이템 카테고리
+// 아이템 메인타입
 UENUM(BlueprintType)
 enum class EKYItemType : uint8
 {
-	None        UMETA(DisplayName = "None"),
-	Usable      UMETA(DisplayName = "Usable Item"),
-	Misc        UMETA(DisplayName = "Misc"),
-	Head        UMETA(DisplayName = "Head"),
-	Chest       UMETA(DisplayName = "Chest"),
-	Legs		UMETA(DisplayName = "Legs"),
-	Gloves      UMETA(DisplayName = "Gloves"),
-	Feet        UMETA(DisplayName = "Feet"),
-	Weapon      UMETA(DisplayName = "Weapon")
+	None		UMETA(DisplayName = "None"),
+	Weapon		UMETA(DisplayName = "Weapon"),
+	Armor		UMETA(DisplayName = "Armor"),
+	Usable		UMETA(DisplayName = "Usable"),
+	Misc		UMETA(DisplayName = "Misc")
 };
 
+// 무기 서브타입
 UENUM(BlueprintType)
-enum class EKYWeaponType : uint8
+enum class EKYWeaponSubType : uint8
 {
 	None        UMETA(DisplayName = "None"),
 	Sword       UMETA(DisplayName = "Sword"),
@@ -30,6 +27,28 @@ enum class EKYWeaponType : uint8
 	Scythe      UMETA(DisplayName = "Scythe"),
 	Hammer		UMETA(DisplayName = "Hammer"),
 	Spear		UMETA(DisplayName = "Spear")
+};
+
+// 방어구 서브타입
+UENUM(BlueprintType)
+enum class EKYArmorSubType : uint8
+{
+	None	UMETA(DisplayName = "None"),
+	Head	UMETA(DisplayName = "Head"),
+	Chest	UMETA(DisplayName = "Chest"),
+	Legs	UMETA(DisplayName = "Legs"),
+	Hands	UMETA(DisplayName = "Hands"),
+	Feet	UMETA(DisplayName = "Feet")
+};
+
+// 소모품 서브타입
+UENUM(BlueprintType)
+enum class EKYUsableSubType : uint8
+{
+	None   UMETA(DisplayName = "None"),
+	Potion UMETA(DisplayName = "Potion"),
+	Scroll UMETA(DisplayName = "Scroll"),
+	Food   UMETA(DisplayName = "Food")
 };
 
 UENUM(BlueprintType)
@@ -68,8 +87,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
 	EKYItemType ItemType;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta=(EditConditionHides="ItemType == EKYItemType::Weapon"))
-	EKYWeaponType WeaponType;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
+	EKYArmorSubType ArmorType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta=(EditCondition="ItemType == EKYItemType::Weapon", EditConditionHides))
+	EKYWeaponSubType WeaponType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Basic")
 	TObjectPtr<UTexture2D> Icon;
@@ -82,17 +104,23 @@ public:
 	TObjectPtr<class UKYItem> InstanceData;
 
 	FKYItemData()
-	: ItemType(EKYItemType::None)
-	, WeaponType(EKYWeaponType::None)
+	: Name(FText::GetEmpty())
+	, Description(FText::GetEmpty())
+	, ItemType(EKYItemType::None)
+	, ArmorType(EKYArmorSubType::None)
+	, WeaponType(EKYWeaponSubType::None)
 	, Icon(nullptr)
 	, InstanceData(nullptr)
 	{}
 
-	FKYItemData(EKYItemType InType)
-	: ItemType(InType)
-	, WeaponType(EKYWeaponType::None)
-	, Icon(nullptr)
-	, InstanceData(nullptr)
+	FKYItemData(const FText& InName, const FText& InDescription, const EKYItemType InItemType, const EKYArmorSubType InArmorType, const EKYWeaponSubType InWeaponType, const TObjectPtr<UTexture2D>& InIcon, const TObjectPtr<UKYItem>& InInstanceData)
+	: Name(InName)
+	, Description(InDescription)
+	, ItemType(InItemType)
+	, ArmorType(InArmorType)
+	, WeaponType(InWeaponType)
+	, Icon(InIcon)
+	, InstanceData(InInstanceData)
 	{}
 };
 
@@ -104,7 +132,7 @@ enum class EKYEquipmentState : uint8
 	InHand
 };
 
-UCLASS(Abstract, BlueprintType)
+UCLASS(BlueprintType)
 class PROJECTKY_API UKYItem : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
@@ -117,100 +145,12 @@ public:
 	uint8 Count = 0;
 
 	UPROPERTY()
-	int8 AdditionalSlotIndex = -1;
+	uint8 AdditionalSlotIndex = 255;
 
 	UPROPERTY()
 	EKYEquipmentState EquipState = EKYEquipmentState::Inventory;
 };
 
-USTRUCT(BlueprintType)
-struct FKYInventoryWidgetData
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY()
-	FName InstanceID;
-
-	UPROPERTY()
-	FText Name;
-
-	UPROPERTY()
-	FText Description;
-
-	UPROPERTY()
-	EKYItemType Type;
-
-	UPROPERTY()
-	int8 AdditionalSlotIndex;
-
-	UPROPERTY()
-	uint8 Count;
-
-	UPROPERTY()
-	EKYEquipmentState EquipState;
-
-	UPROPERTY()
-	UTexture2D* Icon;
-
-	void ClearData()
-	{
-		InstanceID = NAME_None;
-		Name = FText::GetEmpty();
-		Description = FText::GetEmpty();
-		Type = EKYItemType::None;
-		AdditionalSlotIndex = -1;
-		Count = 0;
-		EquipState = EKYEquipmentState::Inventory;
-		Icon = nullptr;
-	}
-
-	FKYInventoryWidgetData() :
-	InstanceID(NAME_None),
-	Name(FText::GetEmpty()),
-	Description(FText::GetEmpty()),
-	Type(EKYItemType::None),
-	AdditionalSlotIndex(-1),
-	Count(0),
-	EquipState(EKYEquipmentState::Inventory),
-	Icon(nullptr) {}
-
-	// 변환 생성자 추가
-	FKYInventoryWidgetData(const FKYItemData& ItemData)
-		: InstanceID(NAME_None)
-		, Name(ItemData.Name)
-		, Description(ItemData.Description)
-		, Type(ItemData.ItemType)
-		, AdditionalSlotIndex(-1)
-		, Count(0)
-		, EquipState(EKYEquipmentState::Inventory)
-		, Icon(ItemData.Icon)
-	{
-		if (ItemData.InstanceData)
-		{
-			InstanceID = ItemData.InstanceData->GetFName();
-			Count = ItemData.InstanceData->Count;
-			AdditionalSlotIndex = ItemData.InstanceData->AdditionalSlotIndex;
-			EquipState = ItemData.InstanceData->EquipState;
-		}
-	}
-
-	void operator=(const FKYItemData& ItemData)
-	{
-		Name = ItemData.Name;
-		Description = ItemData.Description;
-		Type = ItemData.ItemType;
-		Icon = ItemData.Icon;
-
-		if (ItemData.InstanceData)
-		{
-			InstanceID = ItemData.InstanceData->GetFName();
-			Count = ItemData.InstanceData->Count;
-			AdditionalSlotIndex = ItemData.InstanceData->AdditionalSlotIndex;
-			EquipState = ItemData.InstanceData->EquipState;
-		}
-	}
-};
 
 // 무기 데이터
 USTRUCT(BlueprintType)
@@ -223,7 +163,7 @@ public:
 		: Mesh(nullptr)
 		, AttackSpeed(1.0f)
 		, Damage(0.0f)
-		, Type(EKYWeaponType::None) {}
+		, Type(EKYWeaponSubType::None) {}
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon Info")
 	TObjectPtr<class UStaticMesh> Mesh;
@@ -235,7 +175,7 @@ public:
 	float Damage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Weapon Info")
-	EKYWeaponType Type;
+	EKYWeaponSubType Type;
 };
 
 // 어빌리티 데이터 구조체

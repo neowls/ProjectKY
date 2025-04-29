@@ -198,7 +198,7 @@ void AKYCharacterBase::OnCombatState(const FGameplayTag GameplayTag, int32 Count
 	if (bIsCombat)
 	{
 		UpdateWeaponSocket();
-		if (CurrentWeaponType == EKYWeaponType::DualBlade)
+		if (CurrentWeaponType == EKYWeaponSubType::DualBlade)
 		{
 			UpdateWeaponSocket(false, TEXT("Weapon_L"));
 		}
@@ -258,7 +258,7 @@ void AKYCharacterBase::UpdateWeaponData_Implementation(FWeaponData NewWeapon)
 		
 		CurrentWeaponType = NewWeapon.Type;
 		WeaponCompRight->SetStaticMesh(NewWeapon.Mesh);
-		if (CurrentWeaponType == EKYWeaponType::DualBlade)
+		if (CurrentWeaponType == EKYWeaponSubType::DualBlade)
 		{
 			WeaponCompLeft->SetStaticMesh(NewWeapon.Mesh);
 		}
@@ -268,23 +268,23 @@ void AKYCharacterBase::UpdateWeaponData_Implementation(FWeaponData NewWeapon)
 		
 		switch (CurrentWeaponType)
 		{
-			case EKYWeaponType::None:
+			case EKYWeaponSubType::None:
 				break;
-			case EKYWeaponType::Sword:
+			case EKYWeaponSubType::Sword:
 				UpdateWeaponSocket(true, TEXT("Weapon_OneSword"));
 				break;
-			case EKYWeaponType::GreatSword:
+			case EKYWeaponSubType::GreatSword:
 				UpdateWeaponSocket(true, TEXT("Weapon_GreatSword"));
 				break;
-			case EKYWeaponType::DualBlade:
+			case EKYWeaponSubType::DualBlade:
 				UpdateWeaponSocket(true, TEXT("Weapon_DualBlade_R"));
 				UpdateWeaponSocket(false, TEXT("Weapon_DualBlade_L"));
 				break;
-			case EKYWeaponType::Scythe:
+			case EKYWeaponSubType::Scythe:
 				break;
-			case EKYWeaponType::Hammer:
+			case EKYWeaponSubType::Hammer:
 				break;
-			case EKYWeaponType::Spear:
+			case EKYWeaponSubType::Spear:
 				break;
 		}
 		OnWeaponAnimSetChanged.Broadcast();

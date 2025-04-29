@@ -8,14 +8,16 @@
 #include "Struct/KYStruct.h"
 #include "KYInventoryTabWidget.generated.h"
 
+class UKYConfirmDialogWidget;
+class UKYInventoryItemObject;
+class UListView;
+class UTileView;
 class UImage;
 class UTextBlock;
-class UVerticalBox;
-class UUniformGridPanel;
-class UKYItemSlotWidget;
 class UTextureRenderTarget2D;
 class USkeletalMeshComponent;
 class AKYPlayerState;
+
 
 UCLASS()
 class PROJECTKY_API UKYInventoryTabWidget : public UKYUserWidget, public IKYInputHandlerInterface
@@ -30,21 +32,29 @@ public:
 	virtual bool HandleNavigationInput_Implementation(float AxisX, float AxisY) override;
 	virtual bool HandleConfirmInput_Implementation() override;
 	virtual bool HandleCancelInput_Implementation() override;
+
+	void SetCategory(EKYItemType NewCategory);
 	
 protected:
 	// 인벤토리 각 패널
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UUniformGridPanel> InventoryGrid;
+	TObjectPtr<UTileView> InventoryGrid;
+	    
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UListView> ArmorList;
     
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UVerticalBox> EquipmentBox;
-    
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UVerticalBox> WeaponBox;
-	
+	TObjectPtr<UListView> WeaponList;
+
+
+	// 캐릭터 모델 이미지
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> CharacterModelImage;
 
+	// 아이템 사용 확인 위젯
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<UKYConfirmDialogWidget> ConfirmDialog;
+	
 
 	// 아이템 세부 정보
 	UPROPERTY(meta = (BindWidget))
@@ -53,30 +63,15 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UTextBlock> ItemDescriptionText;
 
-	// 위젯 클래스
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UKYItemSlotWidget> ItemSlotWidgetClass;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UKYItemSlotWidget> EquipmentSlotWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UKYItemSlotWidget> WeaponSlotWidgetClass;
-
-	// 아이템 사용 확인 위젯 클래스
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	TSubclassOf<UKYUserWidget> ConfirmDialogClass;
-	
 	UPROPERTY()
 	TObjectPtr<AKYPlayerState> OwningPlayerState;
 
-	// 그리드 설정
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	int32 GridColumns = 10;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "UI")
-	int32 GridRows = 5;
+	UPROPERTY()
+	EKYItemType CurrentCategory;
 
+	
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TObjectPtr<class UAnimationAsset> PreviewAnimSequence;
 
@@ -88,61 +83,82 @@ protected:
 
 
 private:
-	
-	// 인벤토리 슬롯 관리
+
 	UPROPERTY()
-	TArray<UKYItemSlotWidget*> InventorySlots;
-	
-	UPROPERTY()
-	TMap<uint8, UKYItemSlotWidget*> EquipmentSlots;
-	
-	// 선택된 아이템 인스턴스 ID
-	UPROPERTY()
-	TObjectPtr<UKYItemSlotWidget> SelectedSlot;
+	TObjectPtr<UKYInventoryItemObject> SelectedSlot;
 
 	uint8 SelectedSlotIndex;
 
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> PreviewMaterialInstance;
-	
+
+	// 선택된 아이템 인스턴스 ID
 	FName SelectedInstanceID;
+
+	// 빈 데이터들을 담은 컨테이너
+	UPROPERTY()
+	TSet<TObjectPtr<UKYInventoryItemObject>> WrapperPool;
+
+	// 현재 UI에 보여지는 데이터들을 담은 컨테이너
+	UPROPERTY()
+	TSet<TObjectPtr<UKYInventoryItemObject>> InventoryWrappers;
+
+	UPROPERTY()
+	TMap<FName, TObjectPtr<UKYInventoryItemObject>> InventoryWrapperMap;
+
+	UPROPERTY()
+	TMap<uint8, TObjectPtr<UKYInventoryItemObject>> WeaponWrapperMap;
+
+	UPROPERTY()
+	TMap<EKYArmorSubType, TObjectPtr<UKYInventoryItemObject>> ArmorWrapperMap;
+
 	
 	
 	// 이벤트 핸들러
 	UFUNCTION()
-	void OnSlotClicked(UKYItemSlotWidget* ClickedSlot);
-	
+	void OnHandleItemClicked(UObject* ClickedItem, UListView* SourceView);
+
 	UFUNCTION()
-	void OnInventoryChanged(const FName& InstanceID, bool bAdded);
+	void OnDialogActionSelected(FName Action);
 	
-	UFUNCTION()
-	void OnEquipmentChanged(const FName& InstanceID, bool bEquipped);
-	
-	UFUNCTION()
-	void OnWeaponStateChanged(uint8 SlotIndex, bool bInHand);
-	
-	// UI 업데이트
+	// 세부 정보 갱신
+	void UpdateDetailPanel(const TSharedPtr<FKYItemData>& ItemData);
 	void ClearDetailPanel();
-	void UpdateDetailPanel(FName InstanceID);
 	
-	void SetupPreviewCharacter();
 	void UpdateCharacterPreview(FName InstanceID);
-	
-	void UpdateInventory();
-	void UpdateEquipmentSlots();
+	void SetupPreviewCharacter();
 
-	void SortInventory();
-
-	void UpdateSelectedSlot();
 	
-	// 초기화
-	void InitializeInventorySlots();
-	void InitializeEquipmentSlots();
-	void BindPlayerStateEvents();
+	void InitializeInventory();
+
+	void InitializeEquipments();
+	
+	UKYInventoryItemObject* GetPooledWrapper();
+	
+	void RecycleWrapper(UKYInventoryItemObject* Wrapper);
+
+	
+	// 전체 리스트 갱신
+	UFUNCTION()
+	void RefreshInventory();
+
+	UFUNCTION()
+	void RefreshEquipments();
+
+	
+	// 특정 슬롯 업데이트
+	UFUNCTION()
+	void UpdateInventoryItem(FName InstanceID);
+
+	UFUNCTION()
+	void UpdateArmorItem(EKYArmorSubType ArmorSlot);
+
+	UFUNCTION()
+	void UpdateWeaponItem(uint8 WeaponSlot);
+
 	
 	// 아이템 액션
-	void UseItem(FName InstanceID);
-	void ShowUseItemDialog(FName InstanceID);
+	void ShowItemDialog(const TSharedPtr<FKYItemData>& ItemData);
 };
 
 
