@@ -3,12 +3,14 @@
 
 #include "UI/Window/Tab/KYInventoryTabWidget.h"
 #include "ProjectKY.h"
+#include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/TileView.h"
 #include "Data/KYInventoryItemObject.h"
 #include "Player/KYPlayerState.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Player/KYInventoryViewModel.h"
 #include "System/KYCharacterPreviewSubsystem.h"
 #include "UI/Window/KYConfirmDialogWidget.h"
 
@@ -17,7 +19,9 @@ UKYInventoryTabWidget::UKYInventoryTabWidget()
 	SelectedSlotIndex = 0;
 	SkeletalMeshAsset = nullptr;
 	PreviewMaterial = nullptr;
+	ViewModel = nullptr;
 	CurrentCategory = EKYItemType::None;
+	
 }
 
 void UKYInventoryTabWidget::NativeConstruct()
@@ -25,35 +29,17 @@ void UKYInventoryTabWidget::NativeConstruct()
 	Super::NativeConstruct();
 	
 	// PlayerState 가져오기
-	if (APlayerController* PC = GetOwningPlayer())
+	if (auto PlayerState = GetOwningPlayer()->GetPlayerState<AKYPlayerState>())
 	{
-		OwningPlayerState = Cast<AKYPlayerState>(PC->PlayerState);
-		OwningPlayerState->OnInventoryChanged.AddDynamic(this, &UKYInventoryTabWidget::UpdateInventoryItem);
-	}
+		ViewModel = NewObject<UKYInventoryViewModel>(this);
+		ViewModel->Initialize(PlayerState);
 
-	// 람다 사용해서 Sender 바인딩
-	if (InventoryGrid)
-	{
-		InventoryGrid->OnItemClicked().AddLambda([this](UObject* Item)
-		{
-			OnHandleItemClicked(Item, InventoryGrid);
-		});
-	}
+		PlayerState->OnInventoryDataChanged.AddUObject(this, &ThisClass::HandleInventoryItemDataUpdated);
+		PlayerState->OnInventorySlotChanged.AddUObject(this, &ThisClass::HandleInventoryItemSlotChanged);
+		PlayerState->OnEquipmentChanged.AddUObject(this, &ThisClass::HandleEquippedItemDataChanged);
 
-	if (ArmorList)
-	{
-		ArmorList->OnItemClicked().AddLambda([this](UObject* Item)
-		{
-			OnHandleItemClicked(Item, ArmorList);
-		});
-	}
-
-	if (WeaponList)
-	{
-		WeaponList->OnItemClicked().AddLambda([this](UObject* Item)
-		{
-			OnHandleItemClicked(Item, WeaponList);
-		});
+		RefreshInventory();
+		InitializeEquipmentSlots();
 	}
 
 	if (ConfirmDialog)
@@ -62,74 +48,26 @@ void UKYInventoryTabWidget::NativeConstruct()
 		ConfirmDialog->OnActionSelected.AddUObject(this, &UKYInventoryTabWidget::OnDialogActionSelected);
 	}
 
+	if (InventoryGrid)
+	{
+		InventoryGrid->OnItemSelectionChanged().AddUObject(this, &ThisClass::OnHandleItemSelectionChanged);
+		InventoryGrid->OnItemDoubleClicked().AddUObject(this, &ThisClass::OnHandleItemDoubleClicked);
+	}
+
+	if (WeaponList)
+	{
+		WeaponList->OnItemSelectionChanged().AddUObject(this, &ThisClass::OnHandleItemSelectionChanged);
+		WeaponList->OnItemDoubleClicked().AddUObject(this, &ThisClass::OnHandleItemDoubleClicked);
+	}
+
+	if (ArmorList)
+	{
+		ArmorList->OnItemSelectionChanged().AddUObject(this, &ThisClass::OnHandleItemSelectionChanged);
+		ArmorList->OnItemDoubleClicked().AddUObject(this, &ThisClass::OnHandleItemDoubleClicked);
+	}
+	
 	SetupPreviewCharacter();
 	ClearDetailPanel();
-
-	InitializeInventory();
-	InitializeEquipments();
-	
-	RefreshInventory();
-}
-
-void UKYInventoryTabWidget::InitializeInventory()
-{
-	if (!OwningPlayerState || !InventoryGrid) return;
-	
-	for (const auto& [Key, ItemData] : OwningPlayerState->GetInventoryMap())
-	{
-		if (ItemData.IsValid())
-		{
-			auto Wrapper = GetPooledWrapper();
-			Wrapper->Initialize(ItemData);
-			InventoryWrapperMap.Add(Key, Wrapper);
-		}
-	}
-}
-
-void UKYInventoryTabWidget::InitializeEquipments()
-{
-	if (!OwningPlayerState || !WeaponList || !ArmorList) return;
-
-	// 고정 슬롯 생성
-	for (auto Slot : OwningPlayerState->GetOrderedArmorSlots())
-	{
-		auto Wrapper = NewObject<UKYInventoryItemObject>(this);
-		Wrapper->InitializeEmptyArmor(Slot);
-		ArmorWrapperMap.Add(Slot, Wrapper);
-		ArmorList->AddItem(Wrapper);
-	}
-
-	for (int i = 0; i < 3; i++)
-	{
-		auto Wrapper = NewObject<UKYInventoryItemObject>(this);
-		Wrapper->InitializeEmptyWeapon(i);
-		WeaponWrapperMap.Add(i, Wrapper);
-		WeaponList->AddItem(Wrapper);
-	}
-
-	// 슬롯 업데이트
-	for (const auto& [Key, ItemData]  : OwningPlayerState->GetEquippedArmorMap())
-	{
-		if (ItemData.IsValid())
-		{
-			if (auto Wrapper = ArmorWrapperMap.FindRef(Key))
-			{
-				Wrapper->SetData(ItemData);
-			}
-		}
-	}
-
-	for (const auto& [Key, ItemData]  : OwningPlayerState->GetEquippedWeaponMap())
-	{
-		if (ItemData.IsValid())
-		{
-			if (auto Wrapper = WeaponWrapperMap.FindRef(Key))
-			{
-				Wrapper->SetData(ItemData);
-			}
-		}
-	}
-	
 }
 
 
@@ -137,6 +75,22 @@ void UKYInventoryTabWidget::InitializeEquipments()
 void UKYInventoryTabWidget::SetCategory(EKYItemType NewCategory)
 {
 	CurrentCategory = NewCategory;
+	int32 Index = static_cast<int32>(NewCategory);
+
+	for (auto Item : CategoryBox->GetAllChildren())
+	{
+		if (CategoryBox->GetChildAt(Index) == Item)
+		{
+			Item->SetRenderScale({1.2f, 1.2f});
+			Item->SetRenderOpacity(1.0f);
+		}
+		else
+		{
+			Item->SetRenderScale({1.0f, 1.0f});
+			Item->SetRenderOpacity(0.5f);
+		}
+	}
+	
 	RefreshInventory();
 }
 
@@ -145,222 +99,200 @@ void UKYInventoryTabWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
 	Super::NativeTick(MyGeometry, InDeltaTime);
 	if (UKYCharacterPreviewSubsystem* Subsystem = GetGameInstance()->GetSubsystem<UKYCharacterPreviewSubsystem>())
 	{
-		if (OwningPlayerState)	Subsystem->UpdateScene(InDeltaTime); // 프리뷰 캐릭터 메쉬와 렌더 타겟 텍스쳐를 업데이트 한다.
+		Subsystem->UpdateScene(InDeltaTime); // 프리뷰 캐릭터 메쉬와 렌더 타겟 텍스쳐를 업데이트 한다.
 	}
 }
+
+void UKYInventoryTabWidget::InitializeEquipmentSlots()
+{
+	VisibleWeapons.Reset();
+	VisibleArmors.Reset();
+
+	for (auto& Item : ViewModel->GetEquippedWeapons())
+	{
+		auto Wrapper = NewObject<UKYInventoryItemObject>(this);
+		Wrapper->Initialize(Item);
+		VisibleWeapons.Add(Wrapper);
+	}
+
+	for (auto& Item : ViewModel->GetEquippedArmors())
+	{
+		auto Wrapper = NewObject<UKYInventoryItemObject>(this);
+		Wrapper->Initialize(Item);
+		VisibleArmors.Add(Wrapper);
+	}
+
+	WeaponList->ClearListItems();
+	WeaponList->SetListItems(VisibleWeapons);
+	
+	ArmorList->ClearListItems();
+	ArmorList->SetListItems(VisibleArmors);
+	
+}
+
 
 
 void UKYInventoryTabWidget::RefreshInventory()
 {
-	if (!OwningPlayerState || !InventoryGrid) return;
+	VisibleInventory.Reset();
 
-	TArray<UObject*> WrapperList;
-
-	for (auto& [Key, Wrapper] : InventoryWrapperMap)
+	for (auto& Item : ViewModel->GetFilteredInventory(CurrentCategory))
 	{
-		if (!Wrapper) continue;
-		if (TSharedPtr<FKYItemData> ItemData = Wrapper->GetItemPinned())
+		const FName& ID = Item->InstanceData.InstanceID;
+		UKYInventoryItemObject* Wrapper = WrapperPool.Contains(ID) ? WrapperPool.FindRef(ID) : *NewObject<UKYInventoryItemObject>(this);
+
+		if (!WrapperPool.Contains(ID))
 		{
-			if (CurrentCategory == EKYItemType::None || CurrentCategory == ItemData->ItemType)
-			{
-				WrapperList.Add(Wrapper);
-			}
+			Wrapper->Initialize(Item);
+			WrapperPool.Add(ID, Wrapper);
 		}
+
+		VisibleInventory.Add(Wrapper);
 	}
 
 	InventoryGrid->ClearListItems();
-	InventoryGrid->SetListItems(WrapperList);
+	InventoryGrid->SetListItems(VisibleInventory);
 }
 
 void UKYInventoryTabWidget::RefreshEquipments()
 {
-	if (!ArmorList || !WeaponList) return;
+	VisibleWeapons.Reset();
+	VisibleArmors.Reset();
 
-	TArray<UObject*> ArmorWrapperList;
-	TArray<UObject*> WeaponWrapperList;
-	
-	// 슬롯 업데이트
-	for (const auto& [Key, Wrapper]  : ArmorWrapperMap)
+	for (auto& Item : ViewModel->GetEquippedWeapons())
 	{
-		if (!Wrapper) continue;
-		if (TSharedPtr<FKYItemData> ItemData = Wrapper->GetItemPinned())
-		{
-			ArmorWrapperList.Add(Wrapper);
-		}
+		auto Wrapper = NewObject<UKYInventoryItemObject>(this);
+		Wrapper->Initialize(Item);
+		VisibleWeapons.Add(Wrapper);
 	}
 
-	for (const auto& [Key, Wrapper]  : WeaponWrapperMap)
+	for (auto& Item : ViewModel->GetEquippedArmors())
 	{
-		if (!Wrapper) continue;
-		if (TSharedPtr<FKYItemData> ItemData = Wrapper->GetItemPinned())
-		{
-			ArmorWrapperList.Add(Wrapper);
-		}
+		auto Wrapper = NewObject<UKYInventoryItemObject>(this);
+		Wrapper->Initialize(Item);
+		VisibleArmors.Add(Wrapper);
 	}
-
-	ArmorList->ClearListItems();
-	ArmorList->SetListItems(ArmorWrapperList);
 
 	WeaponList->ClearListItems();
-	WeaponList->SetListItems(WeaponWrapperList);
-
+	WeaponList->SetListItems(VisibleWeapons);
+	
+	ArmorList->ClearListItems();
+	ArmorList->SetListItems(VisibleArmors);
 	
 }
-
-void UKYInventoryTabWidget::UpdateInventoryItem(FName InstanceID)
-{
-	if (!InventoryWrapperMap.Contains(InstanceID) || !InventoryGrid) return;
-
-	if (auto Wrapper = InventoryWrapperMap.FindRef(InstanceID))
-	{
-		TSharedPtr<FKYItemData> ItemData = Wrapper->GetItemPinned();
-		if (!ItemData.IsValid()) return;
-
-		const bool bVisible = InventoryGrid->IsItemVisible(Wrapper);
-		const bool bShouldBeVisible = CurrentCategory == EKYItemType::None || CurrentCategory == ItemData->ItemType;
-
-		if (bVisible && !bShouldBeVisible)
-		{
-			InventoryGrid->RemoveItem(Wrapper);
-		}
-		else if (!bVisible && bShouldBeVisible)
-		{
-			InventoryGrid->AddItem(Wrapper);
-		}
-	}
-}
-
-void UKYInventoryTabWidget::UpdateArmorItem(EKYArmorSubType ArmorSlot)
-{
-	if (!ArmorWrapperMap.Contains(ArmorSlot) || !ArmorList) return;
-
-	
-	
-}
-
-void UKYInventoryTabWidget::UpdateWeaponItem(uint8 WeaponSlot)
-{
-	if (!WeaponWrapperMap.Contains(WeaponSlot) || !WeaponList) return;
-
-	
-}
-
 
 void UKYInventoryTabWidget::ShowItemDialog(const TSharedPtr<FKYItemData>& ItemData)
 {
-	if (!OwningPlayerState || !ConfirmDialog) return;
+	if (!ConfirmDialog) return;
 	if (!ItemData.IsValid()) return;
+	if (ItemData->IsEmpty()) return;
 	
 	ConfirmDialog->SetupDialog(ItemData);
 	ConfirmDialog->SetVisibility(ESlateVisibility::Visible);
 	ConfirmDialog->SetFocus();
-	SelectedInstanceID = ItemData->InstanceData->GetFName();
+	SelectedInstanceID = ItemData->InstanceData.InstanceID;
 }
 
-
-
-UKYInventoryItemObject* UKYInventoryTabWidget::GetPooledWrapper()
+void UKYInventoryTabWidget::OnHandleItemDoubleClicked(UObject* DoubleClickedItem)
 {
-	if (WrapperPool.Num() > 0)
-	{
-		auto It = WrapperPool.CreateIterator();
-		auto Wrapper = *It;
-		WrapperPool.Remove(Wrapper);
-		return Wrapper;
-	}
-	
-	auto NewWrapper = NewObject<UKYInventoryItemObject>(this);
-	InventoryWrappers.Add(NewWrapper);
-	return NewWrapper;
-}
-
-void UKYInventoryTabWidget::RecycleWrapper(UKYInventoryItemObject* Wrapper)
-{
+	if (!DoubleClickedItem) return;
+	auto Wrapper = Cast<UKYInventoryItemObject>(DoubleClickedItem);
 	if (!Wrapper) return;
-
-	if (InventoryWrappers.Contains(Wrapper))
+	
+	if (Wrapper->GetItemPinned().IsValid() && !Wrapper->IsEmpty())
 	{
-		InventoryWrappers.Remove(Wrapper);
+		ShowItemDialog(Wrapper->GetItemPinned());
 	}
-
-	Wrapper->ClearData();
-	WrapperPool.Add(Wrapper);
 }
 
-void UKYInventoryTabWidget::OnHandleItemClicked(UObject* ClickedItem, UListView* SourceView)
+void UKYInventoryTabWidget::OnHandleItemSelectionChanged(UObject* ChangedItem)
 {
-	if (!ClickedItem || !SourceView) return;
-	auto* Wrapper = Cast<UKYInventoryItemObject>(ClickedItem);
+	if (!ChangedItem) return;
+	auto Wrapper = Cast<UKYInventoryItemObject>(ChangedItem);
+	if (!Wrapper) return;
 	
-	if (Wrapper && Wrapper->IsEmpty())
+	TArray<UListView*> ViewList = {InventoryGrid, ArmorList, WeaponList};
+	UListView* CurrentView = nullptr;
+	
+	for (UListView* View :  ViewList)
 	{
-		ClearDetailPanel();
-		KY_LOG(LogKY, Warning, TEXT("Clear Data"));
-		KY_LOG(LogKY, Warning, TEXT("Current Item : %s"), *Wrapper->GetName());
+		if (View->GetSelectedItem() == ChangedItem)
+		{
+			CurrentView = View;
+			break;
+		}
+	}
+
+	if (LastSelectedView && LastSelectedView != CurrentView)
+	{
+		LastSelectedView->ClearSelection();
 	}
 	
-	if (SourceView->GetSelectedItem() != ClickedItem)
+	if (!Wrapper->IsEmpty())
 	{
-		TArray<UListView*> AllViews = { InventoryGrid, ArmorList, WeaponList };
-
-		for (auto View : AllViews)
-		{
-			if (View && View != SourceView)
-			{
-				View->ClearSelection();
-			}
-		}
-		if (Wrapper && !Wrapper->IsEmpty())
-		{
-			UpdateDetailPanel(Wrapper->GetItemPinned());
-		}
+		UpdateDetailPanel(Wrapper->GetItemPinned());
+		SelectedInstanceID = Wrapper->GetItemPinned()->InstanceData.InstanceID;
 	}
 	else
 	{
-		ShowItemDialog(Cast<UKYInventoryItemObject>(ClickedItem)->GetItemPinned());
+		ClearDetailPanel();
+		SelectedInstanceID = NAME_None;
 	}
+
+	LastSelectedView = CurrentView;
+	SelectedSlot = Wrapper;
 	
-	//SourceView->SetSelectedItem(ClickedItem);44
+	KY_LOG(LogKY, Warning, TEXT("Slot Empty : %s"), Wrapper->IsEmpty() ? TEXT("True") : TEXT("False"));
+	KY_LOG(LogKY, Warning, TEXT("Item Type : %d"), Wrapper->GetItemPinned()->ItemType);
+	KY_LOG(LogKY, Warning, TEXT("Item Name : %s"), *Wrapper->GetItemPinned()->Name.ToString());
 }
 
 
 void UKYInventoryTabWidget::OnDialogActionSelected(FName Action)
 {
-	if (!OwningPlayerState) return;
+	if (SelectedSlot->IsEmpty()) return;
 
-	if (Action == "Cancel")
+	if (Action == "Use")
 	{
-		ConfirmDialog->SetVisibility(ESlateVisibility::Collapsed);
-		return;
-	}
-	
-	if (Action == "Equip")
-	{
-		OwningPlayerState->EquipItem(SelectedInstanceID);
-	}
-	else if (Action == "Unequip")
-	{
-		OwningPlayerState->UnequipItem(SelectedInstanceID);
-	}
-	else if (Action == "Use")
-	{
-		OwningPlayerState->UseItem(SelectedInstanceID);
+		ViewModel->UseItem(SelectedSlot->GetItemPinned()->InstanceData.InstanceID);
 	}
 	else if (Action == "Drop")
 	{
-		OwningPlayerState->RemoveItem(SelectedInstanceID);
+		ViewModel->DropItem(SelectedSlot->GetItemPinned()->InstanceData.InstanceID, 1);
 	}
-	
-	RefreshInventory();
-	ConfirmDialog->SetVisibility(ESlateVisibility::Collapsed);
+	else if (Action == "Equip")
+	{
+		ViewModel->EquipItem(SelectedSlot->GetItemPinned()->InstanceData.InstanceID, 0);
+	}
+	else if (Action == "Unequip")
+	{
+		//ViewModel->UnequipItem(SelectedSlot->GetItemPinned()->InstanceData->GetFName(), SelectedItem->InstanceData->AdditionalSlotIndex);
+	}
 }
+
+
+
+void UKYInventoryTabWidget::HandleInventoryItemDataUpdated()
+{
+	InventoryGrid->RequestRefresh();
+}
+
+void UKYInventoryTabWidget::HandleInventoryItemSlotChanged()
+{
+	RefreshInventory();
+}
+
+void UKYInventoryTabWidget::HandleEquippedItemDataChanged()
+{
+	RefreshEquipments();
+}
+
 
 void UKYInventoryTabWidget::UpdateDetailPanel(const TSharedPtr<FKYItemData>& ItemData)
 {
 	if (!ItemData.IsValid())
 	{
 		ClearDetailPanel();
-		KY_LOG(LogKY, Warning, TEXT("Clear Data"));
 		return;
 	}
 
@@ -401,9 +333,21 @@ void UKYInventoryTabWidget::SetupPreviewCharacter()
 	}
 }
 
+void UKYInventoryTabWidget::SelectFirstInventorySlot()
+{
+	for (int32 i = 0; i < InventoryGrid->GetListItems().Num(); ++i)
+	{
+		if (!VisibleInventory[i]->IsEmpty())
+		{
+			InventoryGrid->SetSelectedItem(VisibleInventory[0]);
+			break;
+		}
+	}
+}
+
 void UKYInventoryTabWidget::UpdateCharacterPreview(FName InstanceID)
 {
-	if (!OwningPlayerState || InstanceID.IsNone()) return;
+	if (InstanceID.IsNone()) return;
 	
 	
 	// 장비 메시 로드 및 적용 로직 추가
@@ -411,11 +355,99 @@ void UKYInventoryTabWidget::UpdateCharacterPreview(FName InstanceID)
 }
 
 
+bool UKYInventoryTabWidget::NavigateInventory(int32 DirX, int32 DirY)
+{
+	uint8 GridColumns = 5;
+	int32 Row = SelectedSlotIndex / GridColumns;
+	int32 Col = SelectedSlotIndex % GridColumns;
+
+	int32 NewRow = Row + DirY;
+	int32 NewCol = Col + DirX;
+
+	// 위로 올라가면 카테고리로
+	if (NewRow < 0)
+	{
+		InventoryGrid->ClearSelection();
+		LastSelectedView = nullptr;
+		SelectedSlotIndex = 0;
+		ClearDetailPanel();
+		return true;
+	}
+
+	// 오른쪽 벗어나면 무기 슬롯
+	if (NewCol >= GridColumns)
+	{
+		// Select First Weapon Slot
+		WeaponList->SetSelectedItem(VisibleWeapons[0]);
+		return true;
+	}
+
+	// 위치 계산
+	int32 NewIndex = NewRow * GridColumns + NewCol;
+	if (NewIndex == SelectedSlotIndex) return false;
+	if (!VisibleInventory.IsValidIndex(NewIndex)) return false;
+	if (VisibleInventory[NewIndex]->IsEmpty()) return false;
+	
+	InventoryGrid->SetSelectedItem(VisibleInventory[NewIndex]);
+	SelectedSlotIndex = NewIndex;
+	
+	return true;
+}
+
+bool UKYInventoryTabWidget::NavigateEquipment(int32 DirY, bool bIsWeapon)
+{
+	TArray<TObjectPtr<UKYInventoryItemObject>>& TargetArray = bIsWeapon ? VisibleWeapons : VisibleArmors;
+	UListView* View = bIsWeapon ? WeaponList : ArmorList;
+	int32 SlotIndex = bIsWeapon ? WeaponList->GetIndexForItem(WeaponList->GetSelectedItem()) : ArmorList->GetIndexForItem(ArmorList->GetSelectedItem());
+
+	int32 NewIndex = FMath::Clamp(SlotIndex + DirY, 0, TargetArray.Num() - 1);
+	if (TargetArray.IsValidIndex(NewIndex) && !TargetArray[NewIndex]->IsEmpty())
+	{
+		OnHandleItemSelectionChanged(TargetArray[NewIndex]);
+		return true;
+	}
+	return false;
+}
+
 bool UKYInventoryTabWidget::HandleNavigationInput_Implementation(float AxisX, float AxisY)
 {
 	// 네비게이션 로직
-	//	SelectedSlotIndex = FMath::Clamp(SelectedSlotIndex + FMath::RoundToInt(AxisX) + FMath::RoundToInt(AxisY)*GridRows , 0, InventorySlots.Num()-1);
-	return true;
+	int32 DirX = FMath::RoundToInt(AxisX);
+	int32 DirY = FMath::RoundToInt(AxisY);
+
+	if (!LastSelectedView)
+	{
+		if (DirX != 0)
+		{
+			SetCategory(static_cast<EKYItemType>(FMath::Clamp(static_cast<int32>(CurrentCategory) + DirX, 0, 4)));
+			return true;
+		}
+
+		if (DirY > 0)
+		{
+			SelectFirstInventorySlot();
+			return true;
+		}
+
+		return false;
+	}
+
+	if (LastSelectedView == InventoryGrid)
+	{
+		return NavigateInventory(DirX, DirY);
+	}
+
+	if (LastSelectedView == WeaponList)
+	{
+		return NavigateEquipment(DirY, true);
+	}
+
+	if (LastSelectedView == ArmorList)
+	{
+		return NavigateEquipment(DirY, false);
+	}
+
+	return false;
 }
 
 bool UKYInventoryTabWidget::HandleConfirmInput_Implementation()
@@ -423,15 +455,13 @@ bool UKYInventoryTabWidget::HandleConfirmInput_Implementation()
 	if (!InventoryGrid) return false;
 	
 	// 확인 입력 처리 - 현재 선택된 아이템 액션 실행
-	if (UObject* Selected = InventoryGrid->GetSelectedItem())
+	if (LastSelectedView && LastSelectedView->GetSelectedItem())
 	{
-		if (auto Wrapper = Cast<UKYInventoryItemObject>(Selected))
+		auto Wrapper = Cast<UKYInventoryItemObject>(LastSelectedView->GetSelectedItem());
+		if (Wrapper && Wrapper->GetItemPinned().IsValid())
 		{
-			if (auto Data = Wrapper->GetItemPinned())
-			{
-				ShowItemDialog(Data);
-				return true;
-			}
+			ShowItemDialog(Wrapper->GetItemPinned());
+			return true;
 		}
 	}
 

@@ -4,7 +4,6 @@
 #include "Player/KYPlayerState.h"
 #include "AbilitySystemComponent.h"
 #include "ProjectKY.h"
-#include "Data/KYInventoryItemObject.h"
 #include "GAS/Attribute/KYAttributeSetPlayer.h"
 #include "Struct/KYStruct.h"
 #include "System/KYGameSingleton.h"
@@ -30,12 +29,17 @@ void AKYPlayerState::PreInitializeComponents()
 
 	for (auto Slot : GetOrderedArmorSlots())
 	{
-		EquippedArmors.Add(Slot, MakeShared<FKYItemData>());
+		FKYItemData InitialSlotData;
+		InitialSlotData.ItemType = EKYItemType::Armor;
+		InitialSlotData.ArmorType = Slot;
+		EquippedArmors.Add(Slot, MakeShared<FKYItemData>(InitialSlotData));
 	}
 
 	for (int i = 0; i <3; i++)
 	{
-		EquippedWeapons.Add(i, MakeShared<FKYItemData>());
+		FKYItemData InitialSlotData;
+		InitialSlotData.ItemType = EKYItemType::Weapon;
+		EquippedWeapons.Add(i, MakeShared<FKYItemData>(InitialSlotData));
 	}
 		
 }
@@ -51,16 +55,16 @@ bool AKYPlayerState::AddItem(const FName& BaseItemID, int32 Count)
 	{
 		for (auto& Pair : InventoryItems)
 		{
-			if (Pair.Value->InstanceData->BaseID == BaseItemID)
+			if (Pair.Value->InstanceData.BaseID == BaseItemID)
 			{
 				// 최대 스택 수 체크
-				int32 NewCount = FMath::Min(Pair.Value->InstanceData->Count + Count, MAX_STACK_COUNT);
-				int32 AddedCount = NewCount - Pair.Value->InstanceData->Count;
+				int32 NewCount = FMath::Min(Pair.Value->InstanceData.Count + Count, MAX_STACK_COUNT);
+				int32 AddedCount = NewCount - Pair.Value->InstanceData.Count;
                 
 				if (AddedCount <= 0) return false; // 더 이상 스택 불가능
                 
-				Pair.Value->InstanceData->Count = NewCount;
-				OnInventoryChanged.Broadcast(Pair.Value->InstanceData->GetFName());
+				Pair.Value->InstanceData.Count = NewCount;
+				OnInventoryDataChanged.Broadcast();
 				return true;
 			}
 		}
@@ -72,16 +76,18 @@ bool AKYPlayerState::AddItem(const FName& BaseItemID, int32 Count)
     
 	// 새 인스턴스 생성 (기본 아이템 데이터 복사)
 	auto NewItemData = MakeShared<FKYItemData>(*BaseItemData);
-	NewItemData->InstanceData = NewObject<UKYItem>(this, InstanceID);
-	NewItemData->InstanceData->Count = Count;
-
+	NewItemData->InstanceData.BaseID = BaseItemID;
+	NewItemData->InstanceData.InstanceID = InstanceID;
+	NewItemData->InstanceData.Count = Count;
+	NewItemData->InstanceData.EquipState = EKYEquipmentState::Inventory;
 
 	// 인벤토리에 추가
 	InventoryItems.Add(InstanceID, NewItemData);
+	OnInventorySlotChanged.Broadcast();
 	
-	OnInventoryChanged.Broadcast(InstanceID);
 	return true;
 }
+
 
 bool AKYPlayerState::RemoveItem(const FName& InstanceID, int32 Count)
 {
@@ -89,16 +95,20 @@ bool AKYPlayerState::RemoveItem(const FName& InstanceID, int32 Count)
 	
 	if (!ItemData.IsValid()) return false;
 
+	Count = FMath::Clamp(Count, 1, ItemData->InstanceData.Count);
+
 	// 아이템 개수 감소
-	ItemData->InstanceData->Count -= Count;
+	ItemData->InstanceData.Count -= Count;
     
 	// 개수가 0 이하면 완전히 제거
-	if (ItemData->InstanceData->Count <= 0)
+	if (ItemData->InstanceData.Count <= 0)
 	{
 		InventoryItems.Remove(InstanceID);
+		OnInventorySlotChanged.Broadcast();
+		return true;
 	}
-    
-	OnInventoryChanged.Broadcast(InstanceID);
+
+	OnInventoryDataChanged.Broadcast();
 	return true;
 }
 
@@ -109,18 +119,14 @@ bool AKYPlayerState::UseItem(const FName& InstanceID)
 	
 	if (ItemData->ItemType == EKYItemType::Usable)
 	{
-		// 소비 아이템 사용
-		ApplyItemEffects(InstanceID);
-        
 		// 개수 감소 및 업데이트
-		ItemData->InstanceData->Count--;
-		if (ItemData->InstanceData->Count <= 0)
+		if (RemoveItem(InstanceID))
 		{
-			InventoryItems.Remove(InstanceID);
+			// 소비 아이템 사용
+			ApplyItemEffects(InstanceID);
+			return true;
 		}
-        
-		OnInventoryChanged.Broadcast(InstanceID);
-		return true;
+		return false;
 	}
     
 	return false;
@@ -138,52 +144,84 @@ TArray<FName> AKYPlayerState::GetInventoryItemKeys() const
     return Result;
 }
 
+const TArray<TSharedPtr<FKYItemData>> AKYPlayerState::GetInventoryArray() const
+{
+	TArray<TSharedPtr<FKYItemData>> Result;
+	InventoryItems.GenerateValueArray(Result);
+	return Result;
+}
+
+const TArray<TSharedPtr<FKYItemData>> AKYPlayerState::GetEquippedArmorArray() const
+{
+	TArray<TSharedPtr<FKYItemData>> Result;
+	EquippedArmors.GenerateValueArray(Result);
+	return Result;
+}
+
+const TArray<TSharedPtr<FKYItemData>> AKYPlayerState::GetEquippedWeaponArray() const
+{
+	TArray<TSharedPtr<FKYItemData>> Result;
+	EquippedWeapons.GenerateValueArray(Result);
+	return Result;
+}
+
 bool AKYPlayerState::EquipItem(const FName& InstanceID, uint8 TargetSlotIndex)
 {
 	if (!InventoryItems.Contains(InstanceID)) return false;
 	
     auto NewItem = InventoryItems.FindRef(InstanceID);
+
+	KY_LOG(LogKY, Warning, TEXT("Item Data : %s"), *NewItem->InstanceData.InstanceID.ToString());
+	KY_LOG(LogKY, Warning, TEXT("Item Type : %d"), (int32)NewItem->ItemType);
 	
 	// 장비 아이템이 아닌 경우
-    if (!NewItem.IsValid() || NewItem->ItemType != EKYItemType::Armor || NewItem->ItemType != EKYItemType::Weapon) return false;
+    if (NewItem->ItemType != EKYItemType::Armor && NewItem->ItemType != EKYItemType::Weapon) return false;
 
+	KY_LOG(LogKY, Warning, TEXT("Pass Equipment Check."));
+	
 	// 장착하려는 칸에 다른 아이템이 있는지
 	if (auto OldItem = EquippedItems.FindRef(TargetSlotIndex))
 	{
-		UnequipItem(OldItem->InstanceData.GetFName(), TargetSlotIndex);
+		UnequipItem(OldItem->InstanceData.InstanceID, TargetSlotIndex);
 	}
 	
 	// 방어구라면 효과 바로 적용 (무기의 경우 손에 들고 있어야 적용된다.)
 	if(NewItem->ItemType != EKYItemType::Weapon) ApplyItemEffects(InstanceID);
 
-	 // 타겟 슬롯은 기본적으로 Enum Byte 기준으로 배정된다. 무기 타입의 경우 값이 8이지만 여분의 슬롯이 2개 더있으므로 (10-8) 해서 최대 2까지 남게된다.
-	NewItem->InstanceData->AdditionalSlotIndex = TargetSlotIndex; 
-	NewItem->InstanceData->EquipState = EKYEquipmentState::Equipped;
+	// 타겟 슬롯은 기본적으로 Enum Byte 기준으로 배정된다. 무기 타입의 경우 값이 8이지만 여분의 슬롯이 2개 더있으므로 (10-8) 해서 최대 2까지 남게된다.
+	NewItem->InstanceData.AdditionalSlotIndex = TargetSlotIndex; 
+	NewItem->InstanceData.EquipState = EKYEquipmentState::Equipped;
 	
-	EquippedItems.Add(TargetSlotIndex, NewItem);	// 장비에 추가
-	InventoryItems.Remove(InstanceID);				// 인벤토리에서 제거
 
-	bool bIsArmor = NewItem->ItemType == EKYItemType::Armor;
+	if (NewItem->ItemType == EKYItemType::Weapon)
+	{	
+		*EquippedWeapons[TargetSlotIndex] = *NewItem;
+	}
+	else
+	{
+		*EquippedArmors[NewItem->ArmorType] = *NewItem;
+	}
+	RemoveItem(InstanceID);
 	
-	OnEquipmentChanged.Broadcast(bIsArmor, bIsArmor ? NewItem->ArmorType : TargetSlotIndex); // UI 업데이트
+	OnEquipmentChanged.Broadcast(); // UI 업데이트
+
+	KY_LOG(LogKY, Warning, TEXT("Equipped Success"));
 	return true;
 }
 
 bool AKYPlayerState::UnequipItem(const FName& InstanceID, uint8 TargetSlotIndex)
 {
-	if (auto TargetItem = EquippedItems.FindRef(TargetSlotIndex))
+	if (auto NewItem = EquippedItems.FindRef(TargetSlotIndex))
 	{
 		RemoveItemEffects(InstanceID);
 		
-		TargetItem->InstanceData->AdditionalSlotIndex = 255;
-		TargetItem->InstanceData->EquipState = EKYEquipmentState::Inventory;
+		NewItem->InstanceData.AdditionalSlotIndex = 255;
+		NewItem->InstanceData.EquipState = EKYEquipmentState::Inventory;
 		
-		InventoryItems.Add(InstanceID, TargetItem);		// 인벤토리에 추가
+		InventoryItems.Add(InstanceID, NewItem);
 		EquippedItems.Remove(TargetSlotIndex);			// 장비에서 제거
 
-		bool bIsArmor = TargetItem->ItemType == EKYItemType::Armor;
-		
-		OnEquipmentChanged.Broadcast(bIsArmor, bIsArmor ? TargetItem->ArmorType : TargetSlotIndex); // UI 업데이트
+		OnEquipmentChanged.Broadcast(); // UI 업데이트
 		return true;
 	}
 
@@ -214,19 +252,16 @@ bool AKYPlayerState::EquipWeapon(const FName& InstanceID, uint8 NewSlotIndex)
 {
 	auto NewWeapon = InventoryItems.FindRef(InstanceID);
 	if (!NewWeapon.IsValid() || NewWeapon->ItemType != EKYItemType::Weapon) return false;
+	
+	UnequipWeapon(NewSlotIndex);
 
-	if(EquippedWeapons.Contains(NewSlotIndex))
-	{
-		UnequipWeapon(NewSlotIndex);
-	}
+	NewWeapon->InstanceData.EquipState = EKYEquipmentState::Equipped;
+	NewWeapon->InstanceData.AdditionalSlotIndex = NewSlotIndex;
+
+	*EquippedWeapons[NewSlotIndex] = *NewWeapon;
+	RemoveItem(InstanceID);
 	
-	NewWeapon->InstanceData->EquipState = EKYEquipmentState::Equipped;
-	NewWeapon->InstanceData->AdditionalSlotIndex = NewSlotIndex;
-	
-	EquippedWeapons.Add(NewSlotIndex, NewWeapon);
-	InventoryItems.Remove(InstanceID);
-	
-	OnEquipmentChanged.Broadcast(false, NewSlotIndex);
+	OnEquipmentChanged.Broadcast();
 	return true;
 }
 
@@ -235,62 +270,52 @@ bool AKYPlayerState::EquipArmor(const FName& InstanceID)
 	auto NewArmor = InventoryItems.FindRef(InstanceID);
 	if(!NewArmor.IsValid() || NewArmor->ItemType != EKYItemType::Armor) return false;
 
-	//방어구 아이템 착용중인지
-	if(auto OldArmor = EquippedArmors.FindRef(NewArmor->ArmorType))
-	{
-		UnequipArmor(OldArmor->ArmorType);
-	}
+	UnequipArmor(NewArmor->ArmorType);
 
-	NewArmor->InstanceData->EquipState = EKYEquipmentState::Equipped;
-	NewArmor->InstanceData->AdditionalSlotIndex = 0;
+	NewArmor->InstanceData.EquipState = EKYEquipmentState::Equipped;
 	
-	EquippedArmors.Add(NewArmor->ArmorType, NewArmor);
-	InventoryItems.Remove(InstanceID);
+	*EquippedArmors[NewArmor->ArmorType] = *NewArmor;
+	RemoveItem(InstanceID);
 
-	const uint8 TargetSlotIndex = static_cast<uint8>(NewArmor->ArmorType);
-	
-	OnEquipmentChanged.Broadcast(true, TargetSlotIndex);
+
+	OnEquipmentChanged.Broadcast();
 	return true;
 }
 
 bool AKYPlayerState::UnequipWeapon(uint8 TargetSlotIndex)
 {
-	if (auto TargetItem = EquippedWeapons.FindRef(TargetSlotIndex))
+	if (auto TargetItem = EquippedWeapons.FindRef(TargetSlotIndex); !TargetItem->IsEmpty())
 	{
-		TargetItem->InstanceData->EquipState = EKYEquipmentState::Inventory;
-		TargetItem->InstanceData->AdditionalSlotIndex = -1;
+		TargetItem->InstanceData.EquipState = EKYEquipmentState::Inventory;
+		TargetItem->InstanceData.AdditionalSlotIndex = 255;
 		
-		InventoryItems.Add(TargetItem->InstanceData->GetFName(), TargetItem);
-		EquippedWeapons.Remove(TargetSlotIndex);
+		InventoryItems.Add(TargetItem->InstanceData.InstanceID, TargetItem);
+		EquippedWeapons[TargetSlotIndex]->ClearData();
 		
-		OnEquipmentChanged.Broadcast(false, TargetSlotIndex);
+		OnEquipmentChanged.Broadcast();
 		return true;
 	}
 
-	KY_LOG(LogKY, Warning, TEXT("Can't Find WeaponSlot : %d"), TargetSlotIndex);
+	KY_LOG(LogKY, Warning, TEXT("WeaponSlot : %d Is Empty"), TargetSlotIndex);
 	return false;
 }
 
 bool AKYPlayerState::UnequipArmor(EKYArmorSubType TargetType)
 {
-	if (auto TargetItem = EquippedArmors.FindRef(TargetType))
+	if (auto TargetItem = EquippedArmors.FindRef(TargetType); !TargetItem->IsEmpty())
 	{
-		TargetItem->InstanceData->EquipState = EKYEquipmentState::Inventory;
-		TargetItem->InstanceData->AdditionalSlotIndex = -1;
+		TargetItem->InstanceData.EquipState = EKYEquipmentState::Inventory;
 
-		InventoryItems.Add(TargetItem->InstanceData->GetFName(), TargetItem);
-		EquippedArmors.Remove(TargetType);
-
-		const uint8 TargetSlotIndex = static_cast<uint8>(TargetType);
+		InventoryItems.Add(TargetItem->InstanceData.InstanceID, TargetItem);
+		EquippedArmors[TargetType]->ClearData();
 		
-		OnEquipmentChanged.Broadcast(true, TargetSlotIndex);
+		OnEquipmentChanged.Broadcast();
 		return true;
 	}
 
-	KY_LOG(LogKY, Warning, TEXT("Can't Find Armor : %d"), TargetType);
+	KY_LOG(LogKY, Warning, TEXT("ArmorSlot : %d Is Empty"), TargetType);
 	return false;
 }
-
 
 
 TArray<uint8> AKYPlayerState::GetEquippedItemIndex() const
@@ -305,34 +330,45 @@ TArray<uint8> AKYPlayerState::GetEquippedItemIndex() const
 }
 
 
-bool AKYPlayerState::ToggleWeaponInHand(const FName& InstanceID)
+bool AKYPlayerState::ToggleWeaponInHand(uint8 SlotIndex)
 {
-    auto ItemData = InventoryItems.FindRef(InstanceID);
+    const auto ItemData = EquippedWeapons.FindRef(SlotIndex);
     if (!ItemData || ItemData->ItemType != EKYItemType::Weapon) return false;
 	
     // 장착되지 않았을 경우
-    if (ItemData->InstanceData->EquipState != EKYEquipmentState::Equipped) return false;
+    if (ItemData->InstanceData.EquipState != EKYEquipmentState::Equipped) return false;
     
     // 현재 무기를 들고 있는 경우
     if (TSharedPtr<FKYItemData> PreviousWeapon = GetCurrentInHandWeapon())
     {
-    	PreviousWeapon->InstanceData->EquipState = EKYEquipmentState::Equipped;
-    	OnWeaponStateChanged.Broadcast();
-    	
+    	PreviousWeapon->InstanceData.EquipState = EKYEquipmentState::Equipped;
+    	SetCurrentInHandWeapon(nullptr);
     	// 만약 동일한 무기라면 내리고 끝난다.
     	if (ItemData == PreviousWeapon)
     	{
-    		SetCurrentInHandWeapon(nullptr);
+    		OnEquipmentChanged.Broadcast();
     		return true;
     	}
     }
 	
 	// 다른 무기였다면 해당 무기를 들며 업데이트
-	ItemData->InstanceData->EquipState = EKYEquipmentState::InHand;
+	ItemData->InstanceData.EquipState = EKYEquipmentState::InHand;
 	SetCurrentInHandWeapon(ItemData);
-	OnWeaponStateChanged.Broadcast();
-	
+	OnEquipmentChanged.Broadcast();
     return true;
+}
+
+void AKYPlayerState::SetCurrentInHandWeapon(const TSharedPtr<FKYItemData>& NewWeapon)
+{
+	if (NewWeapon)
+	{
+		ApplyItemEffects(NewWeapon->InstanceData.InstanceID);
+	}
+	else
+	{
+		RemoveItemEffects(InHandWeapon->InstanceData.InstanceID);
+	}
+	InHandWeapon = NewWeapon;
 }
 
 
@@ -344,14 +380,13 @@ void AKYPlayerState::ApplyItemEffects(const FName& InstanceID)
 	if (!ItemData || !ItemData->EffectClass) return;
     
 	// 이미 적용된 효과가 있으면 제거
-	RemoveItemEffects(InstanceID);
+	if (EffectHandles.Contains(InstanceID)) RemoveItemEffects(InstanceID);
     
 	// 새 효과 적용
 	FGameplayEffectContextHandle EffectContext = ASC->MakeEffectContext();
 	EffectContext.AddSourceObject(this);
     
-	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(
-		ItemData->EffectClass, 1, EffectContext);
+	FGameplayEffectSpecHandle SpecHandle = ASC->MakeOutgoingSpec(ItemData->EffectClass, 1, EffectContext);
     
 	if (SpecHandle.IsValid())
 	{

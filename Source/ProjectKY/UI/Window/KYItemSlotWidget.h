@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UI/KYUserWidget.h"
 #include "Blueprint/IUserObjectListEntry.h"
 #include "Struct/KYStruct.h"
-#include "UI/KYUserWidget.h"
 #include "KYItemSlotWidget.generated.h"
 
 class UTextBlock;
@@ -21,6 +21,7 @@ public:
 
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	virtual void NativeOnItemSelectionChanged(bool bIsSelected) override;
+	
 	
 	// 슬롯 비우기
 	UFUNCTION(BlueprintCallable, Category = "Inventory")

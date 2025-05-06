@@ -14,8 +14,7 @@
 				"GameFeatures",
 				"AIModule",
 				"UMG",
-				"CoreUObject",
-				"CommonUI"
+				"CoreUObject"
 			]
 		}
 	],

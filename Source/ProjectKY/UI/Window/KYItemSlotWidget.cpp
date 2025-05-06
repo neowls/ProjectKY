@@ -2,7 +2,6 @@
 
 
 #include "KYItemSlotWidget.h"
-
 #include "ProjectKY.h"
 #include "Components/Image.h"
 #include "Components/ListView.h"
@@ -21,6 +20,8 @@ void UKYItemSlotWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	const auto* Wrapper = Cast<UKYInventoryItemObject>(ListItemObject);
 	if (!Wrapper) return;
 
+	KY_LOG(LogKY, Warning, TEXT("Wrapper Empty? : %s"), Wrapper->IsEmpty() ? TEXT("True") : TEXT("False"));
+
 	if (Wrapper->IsEmpty())
 	{
 		ItemIcon->SetBrush(FSlateBrush());
@@ -36,9 +37,9 @@ void UKYItemSlotWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	ItemIcon->SetBrush(GetItemIconBrush(Data));
 	ItemIcon->SetVisibility(ESlateVisibility::HitTestInvisible);
 	
-	if (Data->InstanceData->Count > 1)
+	if (Data->InstanceData.Count > 1)
 	{
-		ItemCount->SetText(FText::AsNumber(Data->InstanceData->Count));
+		ItemCount->SetText(FText::AsNumber(Data->InstanceData.Count));
 		ItemCount->SetVisibility(ESlateVisibility::HitTestInvisible);
 	}
 	
@@ -52,6 +53,8 @@ void UKYItemSlotWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 	{
 		SelectionImage->SetVisibility(ESlateVisibility::Hidden);
 	}
+
+	bIsEmpty = false;
 }
 
 void UKYItemSlotWidget::NativeOnItemSelectionChanged(bool bIsSelected)

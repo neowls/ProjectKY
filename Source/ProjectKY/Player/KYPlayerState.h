@@ -6,15 +6,13 @@
 #include "GameFramework/PlayerState.h"
 #include "AbilitySystemInterface.h"
 #include "ActiveGameplayEffectHandle.h"
-#include "Data/KYInventoryItemObject.h"
 #include "Struct/KYStruct.h"
 #include "KYPlayerState.generated.h"
 
 class UKYItem;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInventoryChanged, FName, InstanceID);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, bool, bIsArmor, uint8, EnumIndex);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponStateChanged);
+DECLARE_MULTICAST_DELEGATE(FOnInventoryChanged);
+DECLARE_MULTICAST_DELEGATE(FOnEquipmentChanged);
 
 UCLASS()
 class PROJECTKY_API AKYPlayerState : public APlayerState, public IAbilitySystemInterface
@@ -31,7 +29,7 @@ public:
 	// 인벤토리
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool AddItem(const FName&  BaseItemID, int32 Count = 1);
-    
+	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool RemoveItem(const FName& InstanceID, int32 Count = 1);
 
@@ -62,9 +60,11 @@ public:
 	
 	const TMap<uint8, TSharedPtr<FKYItemData>>& GetEquippedWeaponMap() const { return EquippedWeapons; }
 
-	
-	/*UFUNCTION(BlueprintPure, Category = "Inventory")
-	TArray<FName> GetInventoryItemKeysByType(EKYItemType ItemType) const;*/
+	const TArray<TSharedPtr<FKYItemData>> GetInventoryArray() const;
+
+	const TArray<TSharedPtr<FKYItemData>> GetEquippedArmorArray() const;
+
+	const TArray<TSharedPtr<FKYItemData>> GetEquippedWeaponArray() const;
 	
 
 	
@@ -97,21 +97,19 @@ public:
 	
 	// 무기 관리
 	UFUNCTION(BlueprintCallable, Category = "Weapon")
-	bool ToggleWeaponInHand(const FName& InstanceID);
+	bool ToggleWeaponInHand(uint8 SlotIndex);
 	
 	TSharedPtr<FKYItemData> GetCurrentInHandWeapon() const { return InHandWeapon; }
 
-	void SetCurrentInHandWeapon(const TSharedPtr<FKYItemData>& NewWeapon) { InHandWeapon = NewWeapon; };
+	void SetCurrentInHandWeapon(const TSharedPtr<FKYItemData>& NewWeapon);
 
 	// 이벤트
-	FOnInventoryChanged OnInventoryChanged;
-    
-	UPROPERTY(BlueprintAssignable)
+	FOnInventoryChanged OnInventoryDataChanged;
+	FOnInventoryChanged OnInventorySlotChanged;
+	
 	FOnEquipmentChanged OnEquipmentChanged;
-    
-	UPROPERTY(BlueprintAssignable)
-	FOnWeaponStateChanged OnWeaponStateChanged;
 
+	
 	UPROPERTY(EditAnywhere, Category = "Debug")
 	FTransform PreviewModelCamTransform;
 	
