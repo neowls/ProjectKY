@@ -15,51 +15,66 @@ void UKYItemSlotWidget::NativeConstruct()
 	ClearSlot();
 }
 
+
+// 오브젝트가 지정될 때 호출된다. (리스트뷰에 할당 시)
 void UKYItemSlotWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 {
-	const auto* Wrapper = Cast<UKYInventoryItemObject>(ListItemObject);
+	auto* Wrapper = Cast<UKYInventoryItemObject>(ListItemObject);
 	if (!Wrapper) return;
+	
+	if (Wrapper->OnChanged.IsBound())
+	{
+		Wrapper->OnChanged.Clear();
+	}
 
-	KY_LOG(LogKY, Warning, TEXT("Wrapper Empty? : %s"), Wrapper->IsEmpty() ? TEXT("True") : TEXT("False"));
-
+	if (Wrapper->IsValidLowLevel())
+	{
+		Wrapper->OnChanged.BindDynamic(this, &ThisClass::UpdateSlot);
+	}
+	else
+	{
+		KY_LOG(LogKY, Warning, TEXT("Wrapper Invalid Low Level"));
+		return;
+	}
+	
 	if (Wrapper->IsEmpty())
 	{
-		ItemIcon->SetBrush(FSlateBrush());
-		ItemCount->SetText(FText::GetEmpty());
-		SelectionImage->SetVisibility(ESlateVisibility::Hidden);
-		bIsEmpty = true;
+		ClearSlot();
 		return;
 	}
 
-	const auto Data =  Wrapper->GetItemPinned();
-	if (!Data.IsValid()) return;
-	
-	ItemIcon->SetBrush(GetItemIconBrush(Data));
-	ItemIcon->SetVisibility(ESlateVisibility::HitTestInvisible);
-	
-	if (Data->InstanceData.Count > 1)
-	{
-		ItemCount->SetText(FText::AsNumber(Data->InstanceData.Count));
-		ItemCount->SetVisibility(ESlateVisibility::HitTestInvisible);
-	}
-	
+	// 선택 체크
 	UListView* OwningList = Cast<UListView>(GetOwningListView());
 	if (OwningList && OwningList->GetSelectedItem() == ListItemObject)
 	{
 		SelectionImage->SetVisibility(ESlateVisibility::HitTestInvisible);
-		KY_LOG(LogKY, Log, TEXT("Selected : %s"), *ListItemObject->GetName());
 	}
 	else
 	{
 		SelectionImage->SetVisibility(ESlateVisibility::Hidden);
 	}
 
-	bIsEmpty = false;
+	auto const ItemData =  Wrapper->GetItemData();
+	UpdateSlot(ItemData);
 }
+
+void UKYItemSlotWidget::UpdateSlot(const FKYItemData& InData)
+{
+	ItemIcon->SetBrush(GetItemIconBrush(InData));
+	ItemIcon->SetVisibility(ESlateVisibility::HitTestInvisible);
+	
+	if (InData.InstanceData.Count > 1)
+	{
+		ItemCount->SetText(FText::AsNumber(InData.InstanceData.Count));
+		ItemCount->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+
+}
+
+
 
 void UKYItemSlotWidget::NativeOnItemSelectionChanged(bool bIsSelected)
 {
-	if(bIsEmpty) return;
 	SelectionImage->SetVisibility(bIsSelected ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Hidden);
 }
 
@@ -73,7 +88,7 @@ void UKYItemSlotWidget::ClearSlot()
 
 	if (ItemCount)
 	{
-		ItemCount->SetText(FText::AsNumber(0));
+		ItemCount->SetText(FText::GetEmpty());
 		ItemCount->SetVisibility(ESlateVisibility::Collapsed);
 	}
 
@@ -83,15 +98,15 @@ void UKYItemSlotWidget::ClearSlot()
 	}
 }
 
-FSlateBrush UKYItemSlotWidget::GetItemIconBrush(const TSharedPtr<FKYItemData>& InData)
+FSlateBrush UKYItemSlotWidget::GetItemIconBrush(const FKYItemData& InData)
 {
 	FSlateBrush Brush;
 	Brush.DrawAs = ESlateBrushDrawType::Type::NoDrawType;
 	Brush.ImageSize = FVector2D(128.0f, 128.0f);
-	if (InData)
+	if (!InData.IsEmpty())
 	{
 		Brush.DrawAs = ESlateBrushDrawType::Type::Image;
-		Brush.SetResourceObject(InData->Icon);
+		Brush.SetResourceObject(InData.Icon);
 	}
 	
 	return Brush;

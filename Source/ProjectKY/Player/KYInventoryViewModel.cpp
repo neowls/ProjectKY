@@ -3,43 +3,114 @@
 #include "Player/KYInventoryViewModel.h"
 
 #include "ProjectKY.h"
+#include "Data/KYInventoryItemObject.h"
 #include "Player/KYPlayerState.h"
 
 void UKYInventoryViewModel::Initialize(AKYPlayerState* InPlayerState)
 {
 	PlayerState = InPlayerState;
+
+	if (!PlayerState.IsValid()) return;
+	
+	PlayerState->OnInventorySlotChanged.AddUObject(this, &ThisClass::RefreshInventoryWrapperList);
+	PlayerState->OnInventoryDataChanged.AddUObject(this, &ThisClass::FlushInventoryChanges);
+	PlayerState->OnEquipmentChanged.AddUObject(this, &ThisClass::FlushEquipmentChanges);
+	
+	RefreshInventoryWrapperList();
+	InitializeEquipmentWrappers();
 }
 
-TArray<TSharedPtr<FKYItemData>> UKYInventoryViewModel::GetFilteredInventory(EKYItemType Category) const
+void UKYInventoryViewModel::SetFilterCategory(EKYItemType Category)
 {
-	TArray<TSharedPtr<FKYItemData>> Result;
-	if (!PlayerState.IsValid()) return Result;
+	CurrentFilterCategory = Category;
+	RefreshInventoryWrapperList();
+}
 
-	for (const auto& Item : PlayerState->GetInventoryArray())
+void UKYInventoryViewModel::FlushAllItemChanges()
+{
+	FlushInventoryChanges();
+	FlushEquipmentChanges();
+}
+
+void UKYInventoryViewModel::FlushInventoryChanges()
+{
+	for (auto& Wrapper : VisibleInventory)
 	{
-		if (Item.IsValid() && (Category == EKYItemType::None || Item->ItemType == Category))
+		if (!Wrapper->IsEmpty() && Wrapper->IsValidLowLevel() && Wrapper->GetItemData().InstanceData.IsDirty())
 		{
-			Result.Add(Item);
+			Wrapper->HandleDataChanged();
+		}
+	}
+}
+
+void UKYInventoryViewModel::FlushEquipmentChanges()
+{
+	for (auto& Wrapper : VisibleWeapons)
+	{
+		if (!Wrapper->IsEmpty() && Wrapper->GetItemData().InstanceData.IsDirty())
+		{
+			Wrapper->HandleDataChanged();
+		}
+	}
+
+	for (auto& Wrapper : VisibleArmors)
+	{
+		if (!Wrapper->IsEmpty() && Wrapper->GetItemData().InstanceData.IsDirty())
+		{
+			Wrapper->HandleDataChanged();
+		}
+	}
+}
+
+void UKYInventoryViewModel::InitializeEquipmentWrappers()
+{
+	VisibleWeapons.Reset();
+	VisibleArmors.Reset();
+
+	// 무기 슬롯
+	for (auto Data : PlayerState->GetEquippedWeaponArray())
+	{
+		UKYInventoryItemObject* Wrapper = NewObject<UKYInventoryItemObject>(this);
+		Wrapper->SetData(Data);
+		VisibleWeapons.Add(Wrapper);
+	}
+
+	// 방어구 슬롯
+	for (auto Data : PlayerState->GetEquippedArmorArray())
+	{
+		UKYInventoryItemObject* Wrapper = NewObject<UKYInventoryItemObject>(this);
+		Wrapper->SetData(Data);
+		VisibleArmors.Add(Wrapper);
+	}
+}
+
+void UKYInventoryViewModel::RefreshInventoryWrapperList()
+{
+	VisibleInventory.Reset();
+	if (PlayerState->GetInventoryArray().Num() == 0) return;
+
+	for (auto& Item : PlayerState->GetInventoryArray())
+	{
+		if (!Item.IsValid()) continue;
+		
+		const FName& ID = Item->InstanceData.InstanceID;
+		UKYInventoryItemObject* Wrapper = WrapperPool.Contains(ID) ? WrapperPool.FindRef(ID) : *NewObject<UKYInventoryItemObject>(this);
+		
+		if (!WrapperPool.Contains(ID))
+		{
+			Wrapper->SetData(Item);
+			WrapperPool.Add(ID, Wrapper);
+		}
+
+		Wrapper->OnChanged.Clear();
+		
+		if (CurrentFilterCategory == EKYItemType::None || Item->ItemType == CurrentFilterCategory)
+		{
+			VisibleInventory.Add(Wrapper);
 		}
 	}
 	
-	return Result;
-}
-
-TArray<TSharedPtr<FKYItemData>> UKYInventoryViewModel::GetEquippedWeapons() const
-{
-	TArray<TSharedPtr<FKYItemData>> Result;
-	
-	if (!PlayerState.IsValid()) return Result;
-	return PlayerState->GetEquippedWeaponArray();
-}
-
-TArray<TSharedPtr<FKYItemData>> UKYInventoryViewModel::GetEquippedArmors() const
-{
-	TArray<TSharedPtr<FKYItemData>> Result;
-
-	if (!PlayerState.IsValid()) return Result;
-	return PlayerState->GetEquippedArmorArray();
+	OnItemSlotChanged.ExecuteIfBound();
 }
 
 bool UKYInventoryViewModel::UseItem(const FName& InstanceID)
@@ -60,17 +131,16 @@ bool UKYInventoryViewModel::DeleteItem(const FName& InstanceID)
 }
 
 
-bool UKYInventoryViewModel::EquipItem(const FName& InstanceID, uint8 Slot)
+bool UKYInventoryViewModel::EquipItem(const FName& InstanceID, uint8 Slot) const
 {
 	if (!PlayerState.IsValid()) return false;
-	KY_LOG(LogKY, Warning, TEXT("Equip %s Item"), *InstanceID.ToString());
 	return PlayerState->EquipItem(InstanceID, Slot);;
 }
 
-bool UKYInventoryViewModel::UnequipItem(const FName& InstanceID, uint8 Slot)
+bool UKYInventoryViewModel::UnequipItem(const FName& InstanceID, uint8 Slot, const EKYItemType& ItemType)
 {
 	if (!PlayerState.IsValid()) return false;
-	return PlayerState->UnequipItem(InstanceID, Slot);;
+	return PlayerState->UnequipItem(InstanceID, Slot, ItemType);
 }
 
 bool UKYInventoryViewModel::SwapWeaponSlot(uint8 From, uint8 To)

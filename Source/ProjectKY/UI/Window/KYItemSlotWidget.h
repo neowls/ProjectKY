@@ -27,11 +27,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void ClearSlot();
 
-	FSlateBrush GetItemIconBrush(const TSharedPtr<FKYItemData>& InData);
+	FSlateBrush GetItemIconBrush(const FKYItemData& InData);
 
 
 protected:
 	virtual void NativeConstruct() override;
+
+	UFUNCTION()
+	void UpdateSlot(const FKYItemData& InData);
 	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> ItemIcon;
@@ -42,6 +45,4 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UImage> SelectionImage;
 
-	UPROPERTY(Transient)
-	bool bIsEmpty = false;
 };

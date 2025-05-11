@@ -31,6 +31,7 @@ public:
 	
 	virtual bool HandleNavigationInput_Implementation(float AxisX, float AxisY) override;
 	virtual bool HandleTabSwitchInput_Implementation(int32 TabIndex) override;
+	virtual bool HandleWindowInput_Implementation() override;
 	
 protected:
 	virtual void NativeConstruct() override;

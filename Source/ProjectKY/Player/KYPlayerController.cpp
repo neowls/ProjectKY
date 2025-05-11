@@ -91,6 +91,7 @@ void AKYPlayerController::ToggleStatusWindow()
 		KY_LOG(LogKY, Log, TEXT("상태 창 닫기 시도"));
 		SetPause(false);
 		StatusWindowWidget->DeactivateWindow();
+		StatusWindowWidget->HandleWindowInput_Implementation();
 		SetWindowInputContext(GameplayContext);
 		KY_LOG(LogKY, Log, TEXT("상태 창 닫기 완료"));
 	}
@@ -133,7 +134,6 @@ void AKYPlayerController::NavigateStatusWindowTab(const FInputActionValue& Input
 	if(IKYInputHandlerInterface::Execute_HandleNavigationInput(StatusWindowWidget, NavigateValue.X, NavigateValue.Y))
 	{
 		KY_LOG(LogKY, Log, TEXT("Navigate %s"), *NavigateValue.ToString());
-		return;
 	}
 }
 

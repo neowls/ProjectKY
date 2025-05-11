@@ -70,10 +70,10 @@ public:
 	
 	// 장비 관리
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	bool EquipItem(const FName& InstanceID, uint8 TargetSlotIndex = 3);
+	bool EquipItem(const FName& InstanceID, uint8 TargetSlotIndex = 0);
 
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
-	bool UnequipItem(const FName& InstanceID, uint8 TargetSlotIndex = 3);
+	bool UnequipItem(const FName& InstanceID, uint8 TargetSlotIndex = 0, const EKYItemType& ItemType = EKYItemType::Weapon);
 
 	UFUNCTION(BlueprintCallable, Category = "Equipment")
 	bool SwapWeaponSlot(uint8 FromSlotIndex, uint8 ToSlotIndex);

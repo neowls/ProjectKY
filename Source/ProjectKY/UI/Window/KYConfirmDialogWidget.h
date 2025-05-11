@@ -17,7 +17,7 @@ public:
 
 	virtual void NativeConstruct() override;
 	
-	void SetupDialog(const TSharedPtr<FKYItemData>& ItemData);
+	void SetupDialog(const FKYItemData& ItemData);
 
 	// 델리게이트로 결과 전달
 	FOnDialogActionSelected OnActionSelected;

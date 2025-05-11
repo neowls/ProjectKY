@@ -170,9 +170,6 @@ bool AKYPlayerState::EquipItem(const FName& InstanceID, uint8 TargetSlotIndex)
 	if (!InventoryItems.Contains(InstanceID)) return false;
 	
     auto NewItem = InventoryItems.FindRef(InstanceID);
-
-	KY_LOG(LogKY, Warning, TEXT("Item Data : %s"), *NewItem->InstanceData.InstanceID.ToString());
-	KY_LOG(LogKY, Warning, TEXT("Item Type : %d"), (int32)NewItem->ItemType);
 	
 	// 장비 아이템이 아닌 경우
     if (NewItem->ItemType != EKYItemType::Armor && NewItem->ItemType != EKYItemType::Weapon) return false;
@@ -195,33 +192,44 @@ bool AKYPlayerState::EquipItem(const FName& InstanceID, uint8 TargetSlotIndex)
 
 	if (NewItem->ItemType == EKYItemType::Weapon)
 	{	
-		*EquippedWeapons[TargetSlotIndex] = *NewItem;
+		EquippedWeapons[TargetSlotIndex]->SetData(*NewItem);
 	}
 	else
 	{
-		*EquippedArmors[NewItem->ArmorType] = *NewItem;
+		EquippedArmors[NewItem->ArmorType]->SetData(*NewItem);
 	}
+	
 	RemoveItem(InstanceID);
 	
 	OnEquipmentChanged.Broadcast(); // UI 업데이트
 
-	KY_LOG(LogKY, Warning, TEXT("Equipped Success"));
 	return true;
 }
 
-bool AKYPlayerState::UnequipItem(const FName& InstanceID, uint8 TargetSlotIndex)
+bool AKYPlayerState::UnequipItem(const FName& InstanceID, uint8 TargetSlotIndex, const EKYItemType& ItemType)
 {
-	if (auto NewItem = EquippedItems.FindRef(TargetSlotIndex))
+	TSharedPtr<FKYItemData> NewItem = ItemType == EKYItemType::Weapon ?
+	EquippedWeapons[TargetSlotIndex] : EquippedArmors[static_cast<EKYArmorSubType>(TargetSlotIndex)];
+	if (NewItem.IsValid())
 	{
 		RemoveItemEffects(InstanceID);
 		
 		NewItem->InstanceData.AdditionalSlotIndex = 255;
 		NewItem->InstanceData.EquipState = EKYEquipmentState::Inventory;
+
+		if (ItemType == EKYItemType::Weapon)
+		{
+			EquippedWeapons[TargetSlotIndex]->ClearData();
+		}
+		else
+		{
+			EquippedArmors[NewItem->ArmorType]->ClearData();
+		}
 		
 		InventoryItems.Add(InstanceID, NewItem);
-		EquippedItems.Remove(TargetSlotIndex);			// 장비에서 제거
 
 		OnEquipmentChanged.Broadcast(); // UI 업데이트
+		
 		return true;
 	}
 

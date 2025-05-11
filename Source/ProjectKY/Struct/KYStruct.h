@@ -91,6 +91,9 @@ public:
 	FName InstanceID = NAME_None;
 
 	UPROPERTY()
+	bool bIsDirty = false;
+
+	UPROPERTY()
 	uint8 Count = 0;
 
 	UPROPERTY()
@@ -98,6 +101,46 @@ public:
 
 	UPROPERTY()
 	EKYEquipmentState EquipState = EKYEquipmentState::None;
+
+
+public:
+	void SetCount(int32 InCount)
+	{
+		if (Count != InCount)
+		{
+			Count = InCount;
+			bIsDirty = true;
+		}
+	}
+
+	void SetEquipState(EKYEquipmentState InEquipState)
+	{
+		if (EquipState != InEquipState)
+		{
+			EquipState = InEquipState;
+			bIsDirty = true;
+		}
+	}
+	
+	void FlushChanges()
+	{
+		if (bIsDirty)
+		{
+			bIsDirty = false;
+		}
+	}
+
+	void SetData(const FKYItemInstanceData& NewInstanceData)
+	{
+		BaseID = NewInstanceData.BaseID;
+		InstanceID = NewInstanceData.InstanceID;
+		Count = NewInstanceData.Count;
+		AdditionalSlotIndex = NewInstanceData.AdditionalSlotIndex;
+		EquipState = NewInstanceData.EquipState;
+		bIsDirty = true;
+	}
+
+	bool IsDirty() const { return bIsDirty; }
 	
 	void ClearData()
 	{
@@ -171,6 +214,13 @@ public:
 		Icon = nullptr;
 		InstanceData.ClearData();
 	}
+
+	bool operator==(const FKYItemData& InData) const
+	{
+		return	InstanceData.Count == InData.InstanceData.Count &&
+				InstanceData.EquipState == InData.InstanceData.EquipState &&
+				InstanceData.AdditionalSlotIndex == InData.InstanceData.AdditionalSlotIndex;
+	};
 
 	FKYItemData()
 	: Name(FText::GetEmpty())

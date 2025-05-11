@@ -9,7 +9,7 @@ void UKYConfirmDialogWidget::NativeConstruct()
 	ActionListView->OnItemClicked().AddUObject(this, &UKYConfirmDialogWidget::HandleItemClicked);
 }
 
-void UKYConfirmDialogWidget::SetupDialog(const TSharedPtr<FKYItemData>& ItemData)
+void UKYConfirmDialogWidget::SetupDialog(const FKYItemData& ItemData)
 {
 	EntryObjects.Reset();
 
@@ -21,11 +21,14 @@ void UKYConfirmDialogWidget::SetupDialog(const TSharedPtr<FKYItemData>& ItemData
 		return Entry;
 	};
 
-	if (ItemData->ItemType == EKYItemType::Armor || ItemData->ItemType == EKYItemType::Weapon)
+	if (ItemData.ItemType == EKYItemType::Armor || ItemData.ItemType == EKYItemType::Weapon)
 	{
+		if (ItemData.InstanceData.EquipState == EKYEquipmentState::Inventory)
 		EntryObjects.Add(CreateEntry("Equip", FText::FromString(TEXT("Equip"))));
+		else if (ItemData.InstanceData.EquipState == EKYEquipmentState::Equipped)
+		EntryObjects.Add(CreateEntry("Unequip", FText::FromString(TEXT("Unequip"))));
 	}
-	else if (ItemData->ItemType == EKYItemType::Usable)
+	else if (ItemData.ItemType == EKYItemType::Usable)
 	{
 		EntryObjects.Add(CreateEntry("Use", FText::FromString(TEXT("Use"))));
 	}

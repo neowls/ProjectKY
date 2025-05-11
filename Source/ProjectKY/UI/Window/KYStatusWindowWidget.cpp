@@ -198,6 +198,12 @@ bool UKYStatusWindowWidget::HandleTabSwitchInput_Implementation(int32 TabIndex)
 	return true;
 }
 
+bool UKYStatusWindowWidget::HandleWindowInput_Implementation()
+{
+	if (ActiveTabWidget) return IKYInputHandlerInterface::Execute_HandleWindowInput(ActiveTabWidget);
+	return false;
+}
+
 
 void UKYStatusWindowWidget::SwitchToNextTab()
 {

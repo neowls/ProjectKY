@@ -19,6 +19,15 @@ class UTextBlock;
 class UTextureRenderTarget2D;
 class USkeletalMeshComponent;
 
+UENUM(BlueprintType)
+enum class EInventoryFocusViewState : uint8
+{
+	None UMETA(DisplayName = "None"),
+	Inventory UMETA(DisplayName = "Inventory"),
+	Weapon UMETA(DisplayName = "Weapon"),
+	Armor UMETA(DisplayName = "Armor")
+};
+
 
 UCLASS()
 class PROJECTKY_API UKYInventoryTabWidget : public UKYUserWidget, public IKYInputHandlerInterface
@@ -31,7 +40,7 @@ public:
 	virtual void NativeConstruct() override;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
-	UFUNCTION()
+	UFUNCTION(blueprintcallable, Category = "Inventory")
 	void SetCategory(EKYItemType NewCategory);
 
 	// 전체 리스트 갱신
@@ -39,7 +48,7 @@ public:
 	void RefreshInventory();
 
 	UFUNCTION()
-	void RefreshEquipments();
+	void RefreshEquipments() const;
 
 	// 이벤트 핸들러
 	UFUNCTION()
@@ -50,11 +59,14 @@ public:
 
 	UFUNCTION()
 	void OnDialogActionSelected(FName Action);
+
+	void SetSlotSelectMode(const bool bInSlotSelectMode) { EquipSlotSelectMode = bInSlotSelectMode; }
 	
 protected:
 	virtual bool HandleNavigationInput_Implementation(float AxisX, float AxisY) override;
 	virtual bool HandleConfirmInput_Implementation() override;
 	virtual bool HandleCancelInput_Implementation() override;
+	virtual bool HandleWindowInput_Implementation() override;
 	
 	// 인벤토리 각 패널
 	UPROPERTY(meta = (BindWidget))
@@ -97,29 +109,11 @@ protected:
 	UMaterial* PreviewMaterial;
 
 private:
-
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> PreviewMaterialInstance;
+	
 	UPROPERTY()
 	UKYInventoryViewModel* ViewModel;
-
-	UPROPERTY()
-	TArray<TObjectPtr<UKYInventoryItemObject>> VisibleInventory;
-	
-	UPROPERTY()
-	TArray<TObjectPtr<UKYInventoryItemObject>> VisibleWeapons;
-	
-	UPROPERTY()
-	TArray<TObjectPtr<UKYInventoryItemObject>> VisibleArmors;
-
-
-	void HandleInventoryItemDataUpdated();
-
-	void HandleInventoryItemSlotChanged();
-
-	void HandleEquippedItemDataChanged();
-	
-	
-	UPROPERTY()
-	EKYItemType CurrentCategory;
 
 	UPROPERTY()
 	TObjectPtr<UKYInventoryItemObject> SelectedSlot;
@@ -127,37 +121,42 @@ private:
 	UPROPERTY()
 	TObjectPtr<UListView> LastSelectedView;
 
+	uint8 LastSelectedViewIndex;
+
 	UPROPERTY()
 	int32 SelectedSlotIndex;
 
 	UPROPERTY()
-	TObjectPtr<class UMaterialInstanceDynamic> PreviewMaterialInstance;
-
-	// 선택된 아이템 인스턴스 ID
 	FName SelectedInstanceID;
 
-	// 빈 데이터들을 담은 컨테이너
 	UPROPERTY()
-	TMap<FName ,TObjectPtr<UKYInventoryItemObject>> WrapperPool;
+	bool EquipSlotSelectMode;
 
-
-	void InitializeEquipmentSlots();
+	EInventoryFocusViewState CurrentFocusViewState;
+	
+	void InitializeViews();
 	
 	// 세부 정보 갱신
-	void UpdateDetailPanel(const TSharedPtr<FKYItemData>& ItemData);
-	void ClearDetailPanel();
+	void UpdateDetailPanel(const FKYItemData& ItemData) const;
+	void ClearDetailPanel() const;
 	
 	void UpdateCharacterPreview(FName InstanceID);
 	
 	void SetupPreviewCharacter();
-
-	void SelectFirstInventorySlot();
-
-	bool NavigateInventory(int32 DirX, int32 DirY);
-	bool NavigateEquipment(int32 DirY, bool bIsWeapon);
+	void SetupListView(UListView* InListView);
 	
+	void SelectWeaponSlot();
+	
+	bool NavigateView(const int32& DirX = 0);
+	bool NavigateInventory(const int32& DirX = 0, const int32& DirY = 0);
+	bool NavigateEquipment(const int32& DirY = 0);
+	bool NavigateCategory(const int32& DirX = 0, const int32& DirY = 0);
+
+	
+	void SelectInventoryView();
+
 	// 아이템 액션
-	void ShowItemDialog(const TSharedPtr<FKYItemData>& ItemData);
+	void ShowItemDialog(const FKYItemData& ItemData);
 };
 
 
