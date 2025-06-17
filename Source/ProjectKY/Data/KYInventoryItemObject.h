@@ -16,6 +16,7 @@ class PROJECTKY_API UKYInventoryItemObject : public UObject, public IUserObjectL
 	
 public:
 	FOnChanged OnChanged;
+	
 	const TWeakPtr<FKYItemData>& GetItemRef()
 	{
 		return ItemData;

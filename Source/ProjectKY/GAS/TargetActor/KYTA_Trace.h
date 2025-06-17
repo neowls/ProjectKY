@@ -39,7 +39,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
 	float TraceRange = 1000.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace", meta=(EditCondition="bShapeTrace", EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace", meta=(EditCondition="bUseShape", EditConditionHides))
 	float TraceRadius = 100.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Trace")
